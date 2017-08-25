@@ -1,0 +1,17 @@
+1. Create zetteli client
+  - sketch out react components
+    - addNoteView
+      - state: notes
+    - addNoteForm
+      - form values as state
+      - valid/invalid as state.
+      - submitted/ready
+    - dateField
+      - no state
+    - textarea
+      - no state (for now)
+    - tags
+      - valid/invalid
+
+  - implement react components
+    - maybe use localStorage to save state.
