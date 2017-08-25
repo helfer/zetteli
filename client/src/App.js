@@ -11,8 +11,38 @@ class App extends Component {
           <img src={logo} className="App-logo" alt="logo" />
           <h2>Welcome to React</h2>
         </div>
-        <div className="App-intro">
-          <AddNoteView />
+        <div className="App-body">
+
+          <div className="zetteli">
+            <div className="zetteli-header">
+              <div className="zetteli-date">
+                <span className="date">Fr. 25.8.2017 09:50</span>
+              </div>
+              <div className="zetteli-tags">
+                <span className="tag">log</span>
+                <span className="tag">personal</span>
+              </div>
+            </div>
+            <div className="zetteli-body">
+              <p>This is the first hard-coded zetteli in history!</p>
+            </div>
+          </div>
+
+          <div className="zetteli">
+            <div className="zetteli-header">
+              <div className="zetteli-date">
+                <span className="date">Fr. 25.8.2017 09:54</span>
+              </div>
+              <div className="zetteli-tags">
+                <span className="tag">log</span>
+                <span className="tag">personal</span>
+              </div>
+            </div>
+            <div className="zetteli-body">
+              <p contenteditable="true">This zetteli is currently being edited!</p>
+            </div>
+          </div>
+          <button className="add-zetteli button">+</button>
         </div>
       </div>
     );
