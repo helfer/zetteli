@@ -13,8 +13,8 @@ class App extends Component {
         </div>
         <div className="App-body">
 
-          <div className="zetteli">
-            <div className="zetteli-header">
+          <div className="ui card centered">
+            <div className="content"><div className="header">
               <div className="zetteli-date">
                 <span className="date">Fr. 25.8.2017 09:50</span>
               </div>
@@ -22,13 +22,13 @@ class App extends Component {
                 <span className="tag">log</span>
                 <span className="tag">personal</span>
               </div>
-            </div>
+            </div></div>
             <div className="zetteli-body">
               <p>This is the first hard-coded zetteli in history!</p>
             </div>
           </div>
 
-          <div className="zetteli">
+          <div className="ui card centered">
             <div className="zetteli-header">
               <div className="zetteli-date">
                 <span className="date">Fr. 25.8.2017 09:54</span>
