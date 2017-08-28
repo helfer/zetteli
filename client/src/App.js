@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import AddNoteView from './components/AddNoteView';
+
+import ZetteliList from './components/ZetteliList';
 
 class App extends Component {
   render() {
@@ -27,41 +28,7 @@ class App extends Component {
               </div>
             </div>
           </div>
-          <div className="ui card centered fluid">
-            <div className="extra content">
-              <span className="left floated">
-                Friday, 8/25/2017 09:50
-              </span>
-              <span className="right floated">
-                <a className="ui label small">
-                  log
-                </a>
-                <a className="ui label small">
-                  personal
-                </a>
-              </span>
-            </div>
-            <div className="left aligned content">
-              <p>This is the first hard-coded zetteli in history!</p>
-            </div>
-          </div>
-
-          <div className="ui card centered fluid">
-            <div className="extra content">
-                <span className="left floated">Friday, 8/25/2017 09:54</span>
-              <span className="right floated">
-                <span className="ui label small">
-                  log
-                </span>
-                <span className="ui label small">
-                  personal
-                </span>
-              </span>
-            </div>
-            <div className="left aligned content">
-              <p contentEditable="true">This zetteli is currently being edited!</p>
-            </div>
-          </div>
+          <ZetteliList />
           <button className="ui circular icon button">
             <i className="plus icon"></i>
           </button>
