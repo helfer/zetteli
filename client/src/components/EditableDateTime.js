@@ -1,10 +1,12 @@
 import React from 'react';
+import moment from 'moment';
 
 export default class EditableDateTime extends React.Component {
+    //TODO specify prop types
     render() {
         return (
             <span className="left floated">
-                Friday, 8/25/2017 09:50
+               {moment(this.props.datetime).format()} 
             </span>
         );
     }

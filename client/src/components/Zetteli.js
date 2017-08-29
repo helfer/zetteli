@@ -9,10 +9,10 @@ export default class Zetteli extends React.Component {
         return (
           <div className="ui card centered fluid">
             <div className="extra content">
-              <EditableDateTime /> 
-              <EditableTagList /> 
+              <EditableDateTime datetime={this.props.datetime} /> 
+              <EditableTagList tags={this.props.tags}/> 
             </div>
-            <EditableText /> 
+            <EditableText text={this.props.body} /> 
           </div>
         );
     }
