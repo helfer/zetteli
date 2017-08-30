@@ -16,6 +16,17 @@ export default class ZetteliList extends React.Component {
             },
         ],
     }
+
+    createNewZetteli = () => {
+        this.setState( state => ({
+            zettelis: [ ...state.zettelis, {
+                tags: ['log', 'personal'],
+                datetime: new Date(),
+                body: '',
+            }]
+        }));
+    };
+
     render() {
         return (
           <div>
@@ -26,8 +37,8 @@ export default class ZetteliList extends React.Component {
                    body={zli.body}
                  />
               )}
-              <div>
-                <button className="ui circular icon button">
+              <div className="ui center aligned segment">
+                <button className="ui circular icon button" onClick={this.createNewZetteli}>
                     <i className="plus icon"></i>
                 </button>
               </div>
