@@ -8,11 +8,13 @@ export default class ZetteliList extends React.Component {
                 tags: ['log', 'personal'],
                 datetime: new Date(),
                 body: 'This is Zetteli #1',
+                id: '0'
             },
             {
                 tags: ['note'],
                 datetime: new Date(),
                 body: 'This is Zetteli #2',
+                id: '1',
             },
         ],
     }
@@ -23,9 +25,22 @@ export default class ZetteliList extends React.Component {
                 tags: ['log', 'personal'],
                 datetime: new Date(),
                 body: '',
+                id: Math.random()
             }]
         }));
     };
+
+    updateZetteli = (modifiedZetteli) => {
+        this.setState( state => ({
+            zettelis: state.zettelis.map( zli => {
+                if (zli.id === modifiedZetteli.id) {
+                    return { ...zli, ...modifiedZetteli };
+                } else {
+                    return zli;
+                }
+            }),
+        }));
+    }
 
     render() {
         return (
@@ -35,6 +50,9 @@ export default class ZetteliList extends React.Component {
                    tags={zli.tags}
                    datetime={zli.datetime}
                    body={zli.body}
+                   key={zli.id}
+                   id={zli.id}
+                   onUpdate={this.updateZetteli}
                  />
               )}
               <div className="ui center aligned segment">
