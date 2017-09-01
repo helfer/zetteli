@@ -28,6 +28,11 @@ export default class ZetteliList extends React.Component {
         .then(() => this.refetchZettelis());
     }
 
+    deleteZetteli = (id) => {
+        client.deleteZetteli(id)
+        .then(() => this.refetchZettelis());
+    }
+
     componentWillMount(){
         client.getAllZettelis().then( zettelis => {
             this.setState({ zettelis, loading: false });
@@ -52,6 +57,7 @@ export default class ZetteliList extends React.Component {
                    key={zli.id}
                    id={zli.id}
                    onUpdate={this.updateZetteli}
+                   onDelete={this.deleteZetteli}
                  />
               )}
               <div className="ui center aligned segment">

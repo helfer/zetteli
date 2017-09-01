@@ -38,7 +38,7 @@ export default class ZetteliClient {
         return Promise.resolve(true);
     }
 
-    removeZetteli(id) {
+    deleteZetteli(id) {
         this.zettelis = this.zettelis.filter( zli => zli.id !== id );
         this.writeToLocalStorage();
         return Promise.resolve(true);
