@@ -63,7 +63,7 @@ export default class ZetteliClient {
 
     getAllZettelis() {
         return new Promise( (resolve, reject) => {
-            setTimeout(() => resolve(this.zettelis), 1000);
+            setTimeout(() => resolve(this.zettelis), 300);
         });
     }
 }
