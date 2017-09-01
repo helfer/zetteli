@@ -1,48 +1,47 @@
 import React from 'react';
 import Zetteli from './Zetteli';
 
+import ZetteliClient from '../services/ZetteliClient';
+
+const client = new ZetteliClient();
+
 export default class ZetteliList extends React.Component {
     state = {
-        zettelis: [
-            {
-                tags: ['log', 'personal'],
-                datetime: new Date(),
-                body: 'This is Zetteli #1',
-                id: '0'
-            },
-            {
-                tags: ['note'],
-                datetime: new Date(),
-                body: 'This is Zetteli #2',
-                id: '1',
-            },
-        ],
+        loading: true,
+        zettelis: [],
+    }
+
+    refetchZettelis() {
+        // TODO: Because this will only work if the call doesn't take too long.
+        client.getAllZettelis().then( zettelis => {
+            this.setState({ zettelis });
+        });
     }
 
     createNewZetteli = () => {
-        this.setState( state => ({
-            zettelis: [ ...state.zettelis, {
-                tags: ['log', 'personal'],
-                datetime: new Date(),
-                body: '',
-                id: Math.random()
-            }]
-        }));
+        client.createNewZetteli()
+        .then(() => this.refetchZettelis());
     };
 
     updateZetteli = (modifiedZetteli) => {
-        this.setState( state => ({
-            zettelis: state.zettelis.map( zli => {
-                if (zli.id === modifiedZetteli.id) {
-                    return { ...zli, ...modifiedZetteli };
-                } else {
-                    return zli;
-                }
-            }),
-        }));
+        client.updateZetteli(modifiedZetteli.id, modifiedZetteli)
+        .then(() => this.refetchZettelis());
+    }
+
+    componentWillMount(){
+        client.getAllZettelis().then( zettelis => {
+            this.setState({ zettelis, loading: false });
+        });
     }
 
     render() {
+        if (this.state.loading) {
+            return (
+                <div className="ui active inverted dimmer">
+                    <div className="ui text loader">Loading</div>
+                </div>
+            );
+        }
         return (
           <div>
               {this.state.zettelis.map( zli => 
