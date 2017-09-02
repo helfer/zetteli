@@ -14,6 +14,13 @@ export default class Zetteli extends React.Component {
        });
     }
     
+    updateTags = newTags => {
+       this.props.onUpdate({
+           id: this.props.id,
+           tags: newTags,
+       });
+    }
+
     onDelete = () => {
         this.props.onDelete(this.props.id);
     }
@@ -26,7 +33,7 @@ export default class Zetteli extends React.Component {
               <span className="right floated">
                 <i className="trash icon" onClick={this.onDelete} />
               </span>
-              <EditableTagList tags={this.props.tags}/> 
+              <EditableTagList tags={this.props.tags} updateTags={this.updateTags}/> 
             </div>
             <EditableText text={this.props.body} onChange={this.updateText} /> 
           </div>
