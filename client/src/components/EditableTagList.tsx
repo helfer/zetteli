@@ -38,7 +38,7 @@ export default class EditableTagList extends React.Component<Props, object> {
         }
 
         return (
-            <span className="right floated" onClick={this.startEditing}>
+            <span className="right floated tagList" onClick={this.startEditing}>
                 {this.props.tags.map(tag => <a className="ui label small" key={tag}> {tag} </a>)}
             </span>
         );
