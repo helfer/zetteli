@@ -1,15 +1,14 @@
 import * as React from 'react';
 
 export interface Props {
-    tags: string[],
-    updateTags: (newTags: string[]) => void,
+    tags: string[];
+    updateTags: (newTags: string[]) => void;
 }
 
 export default class EditableTagList extends React.Component<Props, object> {
-
     state = {
         editing: false,
-    }
+    };
 
     startEditing = () => {
         this.setState({ editing: true });
@@ -24,15 +23,15 @@ export default class EditableTagList extends React.Component<Props, object> {
     }
 
     render() {
-        if (this.state.editing){
+        if (this.state.editing) {
             return (
                 <span className="right floated" onClick={this.startEditing}>
                     <input
                         type="text"
                         onKeyUp={this.onKeyUp}
                         defaultValue={this.props.tags.join(' ')}
-                        autoFocus
-                     />
+                        autoFocus={true}
+                    />
                 </span>
             );
         }

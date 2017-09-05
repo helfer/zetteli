@@ -1,11 +1,6 @@
-const LOCAL_STORAGE_KEY = 'Zetteli.zettelis';
+import { ZetteliType } from '../types/Zetteli';
 
-export interface Zetteli {
-    id: string,
-    body: string,
-    tags: string[],
-    datetime: Date,
-}
+const LOCAL_STORAGE_KEY = 'Zetteli.zettelis';
 
 export default class ZetteliClient {
     // XXX reading from and writing to local storage
@@ -13,7 +8,7 @@ export default class ZetteliClient {
     // writes are not synced and overwrite current contents.
     // That could be solved very easily, but it's not a goal
     // right now.
-    private zettelis: Zetteli[]
+    private zettelis: ZetteliType[];
 
     constructor(private store: Storage) {
         this.zettelis = this.readFromStore();
@@ -39,19 +34,19 @@ export default class ZetteliClient {
         return Promise.resolve(true);
     }
 
-    addZetteli(zli) {
+    addZetteli(zli: ZetteliType) {
         this.zettelis = [ ...this.zettelis, zli];
         this.writeToStore();
         return Promise.resolve(true);
     }
 
-    deleteZetteli(id) {
+    deleteZetteli(id: string) {
         this.zettelis = this.zettelis.filter( zli => zli.id !== id );
         this.writeToStore();
         return Promise.resolve(true);
     }
 
-    updateZetteli(id, data) {
+    updateZetteli(id: string, data: ZetteliType) {
         this.zettelis = this.zettelis.map( zli => {
             if (zli.id === id) {
                 return { ...zli, ...data };
@@ -63,7 +58,7 @@ export default class ZetteliClient {
         return Promise.resolve(true);
     }
 
-    getZetteli(id) {
+    getZetteli(id: string) {
         // TODO: reject when Zetteli cannot be found?
         return Promise.resolve(this.zettelis.find( zli => zli.id === id ));
     }

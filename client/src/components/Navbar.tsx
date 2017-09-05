@@ -6,7 +6,8 @@ export interface Props {
 
 export default class Navbar extends React.Component<Props, object> {
     render() {
-        return <div className="ui pointing secondary menu">
+        return (
+          <div className="ui pointing secondary menu">
             <a className="active item">
               Home
             </a>
@@ -20,10 +21,11 @@ export default class Navbar extends React.Component<Props, object> {
               <div className="item">
                 <div className="ui transparent icon input">
                   <input type="text" placeholder="Search..." />
-                  <i className="search link icon"></i>
+                  <i className="search link icon" />
                 </div>
               </div>
             </div>
-          </div>;
+          </div>
+        );
     }
 }

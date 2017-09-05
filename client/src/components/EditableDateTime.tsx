@@ -2,11 +2,11 @@ import * as React from 'react';
 import moment from 'moment';
 
 export interface Props {
-    datetime: Date,
+    datetime: Date;
 }
 
 export default class EditableDateTime extends React.Component<Props, object> {
-    //TODO specify prop types
+    // TODO specify prop types
     render() {
         return (
             <span className="left floated">

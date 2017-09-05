@@ -5,17 +5,15 @@ import EditableTagList from './EditableTagList';
 import EditableText from './EditableText';
 
 export interface Props {
-    id: string,
-    body: string,
-    tags: string[],
-    datetime: Date,
-    onUpdate: (arg: {id: string, tags?: string[], body?: string}) => void,
-    onDelete: (id: string) => void
+    id: string;
+    body: string;
+    tags: string[];
+    datetime: Date;
+    onUpdate: (arg: {id: string, tags?: string[], body?: string}) => void;
+    onDelete: (id: string) => void;
 }
 
 export default class Zetteli extends React.Component<Props, object> {
-
-
     updateText = evt => {
        this.props.onUpdate({
            id: this.props.id,

@@ -3,13 +3,15 @@ import Zetteli from './Zetteli';
 
 import ZetteliClient from '../services/ZetteliClient';
 
+import { ZetteliType } from '../types/Zetteli';
+
 const client = new ZetteliClient(localStorage);
 
 export default class ZetteliList extends React.Component<object, object> {
     state = {
         loading: true,
-        zettelis: [] as any[],
-    }
+        zettelis: [] as ZetteliType[],
+    };
 
     refetchZettelis() {
         // TODO: Because this will only work if the call doesn't take too long.
@@ -21,7 +23,7 @@ export default class ZetteliList extends React.Component<object, object> {
     createNewZetteli = () => {
         client.createNewZetteli()
         .then(() => this.refetchZettelis());
-    };
+    }
 
     updateZetteli = (modifiedZetteli) => {
         client.updateZetteli(modifiedZetteli.id, modifiedZetteli)
@@ -33,7 +35,7 @@ export default class ZetteliList extends React.Component<object, object> {
         .then(() => this.refetchZettelis());
     }
 
-    componentWillMount(){
+    componentWillMount() {
         client.getAllZettelis().then( zettelis => {
             this.setState({ zettelis, loading: false });
         });
@@ -62,7 +64,7 @@ export default class ZetteliList extends React.Component<object, object> {
               )}
               <div className="ui center aligned segment">
                 <button className="ui circular icon button" onClick={this.createNewZetteli}>
-                    <i className="plus icon"></i>
+                    <i className="plus icon" />
                 </button>
               </div>
           </div>
