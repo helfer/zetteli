@@ -15,16 +15,16 @@ export default class ZetteliClient {
     // right now.
     private zettelis: Zetteli[]
 
-    constructor() {
-        this.zettelis = this.readFromLocalStorage();
+    constructor(private store: Storage) {
+        this.zettelis = this.readFromStore();
     }
 
-    writeToLocalStorage() {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(this.zettelis));
+    writeToStore() {
+        this.store.setItem(LOCAL_STORAGE_KEY, JSON.stringify(this.zettelis));
     }
 
-    readFromLocalStorage() {
-        return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+    readFromStore() {
+        return JSON.parse(this.store.getItem(LOCAL_STORAGE_KEY) || '[]');
     }
 
     createNewZetteli() {
@@ -35,19 +35,19 @@ export default class ZetteliClient {
             id: Math.random().toString(),
         };
         this.zettelis = [ ...this.zettelis, newZetteli ];
-        this.writeToLocalStorage();
+        this.writeToStore();
         return Promise.resolve(true);
     }
 
     addZetteli(zli) {
         this.zettelis = [ ...this.zettelis, zli];
-        this.writeToLocalStorage();
+        this.writeToStore();
         return Promise.resolve(true);
     }
 
     deleteZetteli(id) {
         this.zettelis = this.zettelis.filter( zli => zli.id !== id );
-        this.writeToLocalStorage();
+        this.writeToStore();
         return Promise.resolve(true);
     }
 
@@ -59,7 +59,7 @@ export default class ZetteliClient {
                 return zli;
             }
         });
-        this.writeToLocalStorage();
+        this.writeToStore();
         return Promise.resolve(true);
     }
 
