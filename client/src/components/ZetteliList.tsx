@@ -25,12 +25,12 @@ export default class ZetteliList extends React.Component<object, object> {
         .then(() => this.refetchZettelis());
     }
 
-    updateZetteli = (modifiedZetteli) => {
+    updateZetteli = (modifiedZetteli: ZetteliType) => {
         client.updateZetteli(modifiedZetteli.id, modifiedZetteli)
         .then(() => this.refetchZettelis());
     }
 
-    deleteZetteli = (id) => {
+    deleteZetteli = (id: string) => {
         client.deleteZetteli(id)
         .then(() => this.refetchZettelis());
     }

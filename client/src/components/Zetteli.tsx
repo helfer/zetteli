@@ -14,14 +14,14 @@ export interface Props {
 }
 
 export default class Zetteli extends React.Component<Props, object> {
-    updateText = evt => {
+    updateText = (evt: Event) => {
        this.props.onUpdate({
            id: this.props.id,
-           body: evt.target.value,
+           body: (evt.target as HTMLInputElement).value,
        });
     }
     
-    updateTags = newTags => {
+    updateTags = (newTags: string[]) => {
        this.props.onUpdate({
            id: this.props.id,
            tags: newTags,
