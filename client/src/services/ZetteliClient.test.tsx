@@ -8,7 +8,7 @@ describe('ZetteliClient', () => {
     beforeEach(() => {
         storage = new Map();
         store = {
-            getItem: key => storage.get(key),
+            getItem: key => storage.get(key) || null,
             length: storage.size,
             clear: () => { storage.clear()},
             setItem: (key, item) => storage.set(key, item),
