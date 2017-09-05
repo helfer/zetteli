@@ -3,7 +3,7 @@ import Zetteli from './Zetteli';
 
 import ZetteliClient from '../services/ZetteliClient';
 
-const client = new ZetteliClient();
+const client = new ZetteliClient(localStorage);
 
 export default class ZetteliList extends React.Component<object, object> {
     state = {
