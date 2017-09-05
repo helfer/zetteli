@@ -1,7 +1,11 @@
-import React from 'react';
+import * as React from 'react';
 import moment from 'moment';
 
-export default class EditableDateTime extends React.Component {
+export interface Props {
+    datetime: Date,
+}
+
+export default class EditableDateTime extends React.Component<Props, object> {
     //TODO specify prop types
     render() {
         return (

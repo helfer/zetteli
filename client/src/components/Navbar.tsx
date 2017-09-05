@@ -1,6 +1,10 @@
-import React from 'react';
+import * as React from 'react';
 
-export default class Navbar extends React.Component {
+export interface Props {
+  
+}
+
+export default class Navbar extends React.Component<Props, object> {
     render() {
         return <div className="ui pointing secondary menu">
             <a className="active item">

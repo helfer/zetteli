@@ -1,13 +1,22 @@
-import React from 'react';
+import * as React from 'react';
 
 import EditableDateTime from './EditableDateTime';
 import EditableTagList from './EditableTagList';
 import EditableText from './EditableText';
 
-export default class Zetteli extends React.Component {
+export interface Props {
+    id: string,
+    body: string,
+    tags: string[],
+    datetime: Date,
+    onUpdate: (arg: {id: string, tags?: string[], body?: string}) => void,
+    onDelete: (id: string) => void
+}
+
+export default class Zetteli extends React.Component<Props, object> {
 
 
-    updateText = (evt) => {
+    updateText = evt => {
        this.props.onUpdate({
            id: this.props.id,
            body: evt.target.value,

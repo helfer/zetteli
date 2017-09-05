@@ -1,14 +1,14 @@
-import React from 'react';
+import * as React from 'react';
 import Zetteli from './Zetteli';
 
 import ZetteliClient from '../services/ZetteliClient';
 
 const client = new ZetteliClient();
 
-export default class ZetteliList extends React.Component {
+export default class ZetteliList extends React.Component<object, object> {
     state = {
         loading: true,
-        zettelis: [],
+        zettelis: [] as any[],
     }
 
     refetchZettelis() {

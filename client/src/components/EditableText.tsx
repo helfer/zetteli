@@ -1,7 +1,12 @@
-import React from 'react';
+import * as React from 'react';
 import ContentEditable from 'react-contenteditable';
 
-export default class EditableText extends React.Component {
+export interface Props {
+    text: string,
+    onChange: (evt: Event) => void,
+}
+
+export default class EditableText extends React.Component<Props, object> {
     render() {
         return (<div className="left aligned content">
             <ContentEditable 

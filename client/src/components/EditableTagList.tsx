@@ -1,6 +1,11 @@
-import React from 'react';
+import * as React from 'react';
 
-export default class EditableTagList extends React.Component {
+export interface Props {
+    tags: string[],
+    updateTags: (newTags: string[]) => void,
+}
+
+export default class EditableTagList extends React.Component<Props, object> {
 
     state = {
         editing: false,
