@@ -5,7 +5,7 @@ env:
   - TEST_DIR=client
 
 script:
-  - cd $TEST_DIR && yarn install && yarn test
+  - cd $TEST_DIR && yarn install && yarn test && yarn run coverage
 
 sudo: false
 
