@@ -30,6 +30,7 @@ export default class EditableTagList extends React.Component<Props, object> {
                     <input
                         type="text"
                         onKeyUp={this.onKeyUp}
+                        className='tagInput'
                         defaultValue={this.props.tags.join(' ')}
                         autoFocus={true}
                     />
