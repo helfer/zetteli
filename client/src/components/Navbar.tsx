@@ -4,7 +4,7 @@ export interface Props {
   
 }
 
-export default class Navbar extends React.Component<Props, object> {
+export default class Navbar extends React.PureComponent<Props, never> {
     render() {
         return (
           <div className="ui pointing secondary menu">

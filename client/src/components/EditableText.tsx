@@ -5,7 +5,7 @@ export interface Props {
     onChange: (evt: Event) => void;
 }
 
-export default class EditableText extends React.Component<Props, object> {
+export default class EditableText extends React.PureComponent<Props, never> {
     render() {
         return (
           <div className="left aligned content">

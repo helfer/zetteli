@@ -5,7 +5,7 @@ export interface Props {
     datetime: Date;
 }
 
-export default class EditableDateTime extends React.Component<Props, object> {
+export default class EditableDateTime extends React.PureComponent<Props, never> {
     // TODO specify prop types
     render() {
         return (

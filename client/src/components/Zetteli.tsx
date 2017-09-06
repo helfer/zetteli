@@ -13,7 +13,7 @@ export interface Props {
     onDelete: (id: string) => void;
 }
 
-export default class Zetteli extends React.Component<Props, object> {
+export default class Zetteli extends React.PureComponent<Props, never> {
     updateText = (evt: Event) => {
        this.props.onUpdate({
            id: this.props.id,
