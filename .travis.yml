@@ -1,0 +1,13 @@
+language: node_js
+node_js:
+  - "6"
+env:
+  - TEST_DIR=client
+
+script:
+  - cd $TEST_DIR && yarn install && yarn test
+
+sudo: false
+
+notifications:
+  email: false
