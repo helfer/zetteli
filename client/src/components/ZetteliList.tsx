@@ -1,9 +1,11 @@
 import * as React from 'react';
+import Mousetrap from 'mousetrap';
+
 import Zetteli from './Zetteli';
-
 import ZetteliClient from '../services/ZetteliClient';
-
 import { ZetteliType } from '../types/Zetteli';
+
+Mousetrap.prototype.stopCallback = () => false;
 
 const client = new ZetteliClient(localStorage);
 
@@ -41,6 +43,14 @@ export default class ZetteliList extends React.Component<object, object> {
         });
     }
 
+    componentDidMount() {
+        Mousetrap.bind(['command+shift+u'], this.createNewZetteli);
+
+    }
+    componentWillUnmount() {
+        Mousetrap.unbind(['command+shift+u']);
+    }
+
     render() {
         if (this.state.loading) {
             return (
@@ -62,11 +72,11 @@ export default class ZetteliList extends React.Component<object, object> {
                    onDelete={this.deleteZetteli}
                  />
               )}
-              <div className="ui center aligned segment">
-                <button className="ui circular icon button" onClick={this.createNewZetteli}>
+              <div style={{textAlign: 'center'}}>
+                <button className="ui center aligned circular icon button" onClick={this.createNewZetteli}>
                     <i className="plus icon" />
                 </button>
-              </div>
+            </div>
           </div>
         );
     }

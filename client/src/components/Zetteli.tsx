@@ -33,8 +33,15 @@ export default class Zetteli extends React.PureComponent<Props, never> {
     }
 
     render() {
+        const zetteliStyle = { 
+            backgroundColor: 'white', 
+            marginBottom: '12px',
+            padding: '8px',
+            fontFamily: 'Times, serif',
+            fontSize: '12px',
+        };
         return (
-          <div className="ui card centered fluid">
+          <div className="ui centered fluid" style={zetteliStyle}>
             <div className="extra content">
               <EditableDateTime datetime={this.props.datetime} /> 
               <span className="right floated">
