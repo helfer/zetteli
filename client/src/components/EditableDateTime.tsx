@@ -10,7 +10,7 @@ export default class EditableDateTime extends React.PureComponent<Props, never> 
     render() {
         return (
             <span className="left floated">
-               {moment(this.props.datetime).format()} 
+               {moment(this.props.datetime).format('LLLL')} 
             </span>
         );
     }
