@@ -31,7 +31,7 @@
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
     "lint": "tslint src/**/*.ts[x]",
-    "test": "react-scripts-ts test --env=jsdom --coverage",
+    "test": "react-scripts-ts test --env=jsdom --coverage && yarn run lint",
     "testonly": "react-scripts-ts test --env=jsdom",
     "coverage": "codecov -f coverage/*.json",
     "eject": "react-scripts-ts eject"

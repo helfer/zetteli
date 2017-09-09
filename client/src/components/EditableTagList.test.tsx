@@ -4,15 +4,15 @@ import EditableTagList from './EditableTagList';
 
 it('renders the tags', () => {
   const tags = ['t1', 't2'];
-  const updateTags = (newTags: string[]) => {};
+  const updateTags = (newTags: string[]) => null;
   const tagList = enzyme.shallow(<EditableTagList tags={tags} updateTags={updateTags}/>);
-  expect(tagList.find(".tagList").text()).toContain('t1');
-  expect(tagList.find(".tagList").text()).toContain('t2');
+  expect(tagList.find('.tagList').text()).toContain('t1');
+  expect(tagList.find('.tagList').text()).toContain('t2');
 });
 
 it('renders an input box with the tags on click', () => {
   const tags = ['t1', 't2'];
-  const updateTags = (newTags: string[]) => {};
+  const updateTags = (newTags: string[]) => null;
   const tagList = enzyme.shallow(<EditableTagList tags={tags} updateTags={updateTags}/>);
   tagList.simulate('click');
   expect(tagList.find('.tagInput').exists()).toBe(true);

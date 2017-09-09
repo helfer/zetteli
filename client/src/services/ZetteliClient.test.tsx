@@ -10,7 +10,7 @@ describe('ZetteliClient', () => {
         store = {
             getItem: key => storage.get(key) || null,
             length: storage.size,
-            clear: () => { storage.clear()},
+            clear: () => { storage.clear(); },
             setItem: (key, item) => storage.set(key, item),
             removeItem: key => storage.delete(key),
             key: i => '', // not implemented
