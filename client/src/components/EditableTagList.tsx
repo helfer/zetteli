@@ -30,7 +30,7 @@ export default class EditableTagList extends React.Component<Props, object> {
                     <input
                         type="text"
                         onKeyUp={this.onKeyUp}
-                        className='tagInput'
+                        className="tagInput"
                         defaultValue={this.props.tags.join(' ')}
                         autoFocus={true}
                     />
@@ -39,7 +39,7 @@ export default class EditableTagList extends React.Component<Props, object> {
         }
 
         return (
-            <span style={{ float: 'right' }} className='tagList' onClick={this.startEditing}>
+            <span style={{ float: 'right' }} className="tagList" onClick={this.startEditing}>
                 {this.props.tags.map(tag => <a className="ui label mini" key={tag}> {tag} </a>)}
             </span>
         );

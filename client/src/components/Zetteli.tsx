@@ -51,7 +51,7 @@ export default class Zetteli extends React.PureComponent<Props, never> {
               </span>
               <EditableTagList tags={this.props.tags} updateTags={this.updateTags}/> 
             </div>
-            <div className="ui divider"></div>
+            <div className="ui divider"/>
             <EditableText text={this.props.body} onChange={this.updateText} /> 
           </div>
         );
