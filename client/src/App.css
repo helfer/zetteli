@@ -26,3 +26,9 @@
 [contenteditable]:focus {
     outline: 0px solid transparent;
 }
+
+.zetteliList
+{
+    /*Gives space for the sticky content*/
+    margin-top: 44px !important;
+}

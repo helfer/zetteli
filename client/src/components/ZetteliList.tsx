@@ -60,7 +60,7 @@ export default class ZetteliList extends React.Component<object, object> {
             );
         }
         return (
-          <div>
+          <div style={{ marginBottom: '20em' }} className="zetteliList">
               {this.state.zettelis.map( zli => 
                  <Zetteli
                    tags={zli.tags}

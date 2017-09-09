@@ -7,7 +7,13 @@ export interface Props {
 export default class Navbar extends React.PureComponent<Props, never> {
     render() {
         return (
-          <div className="ui pointing secondary menu">
+          <div className="ui pointing secondary menu" style={{
+            position: 'fixed',
+            top: 0,
+            width: '700px',
+            backgroundColor: '#CCC',
+           }}
+          >
             <a className="active item">
               Home
             </a>

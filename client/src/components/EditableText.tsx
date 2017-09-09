@@ -1,5 +1,6 @@
 import * as React from 'react';
 import ContentEditable from 'react-contenteditable';
+
 export interface Props {
     text: string;
     onChange: (evt: Event) => void;
