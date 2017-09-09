@@ -5071,11 +5071,11 @@ source-map-support@^0.4.15, source-map-support@^0.4.4:
   dependencies:
     source-map "^0.5.6"
 
-source-map@0.5.6, source-map@^0.5.3, source-map@^0.5.6, source-map@~0.5.1:
+source-map@0.5.6, source-map@^0.5.3, source-map@^0.5.6:
   version "0.5.6"
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.5.6.tgz#75ce38f52bf0733c5a7f0c118d81334a2bb5f412"
 
-source-map@0.5.x, source-map@^0.5.7, source-map@~0.5.3:
+source-map@0.5.x, source-map@^0.5.7, source-map@~0.5.1, source-map@~0.5.3:
   version "0.5.7"
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.5.7.tgz#8a039d2d1021d22d1ea14c80d8ea468ba2ef3fcc"
 
@@ -5489,7 +5489,7 @@ tslint-react@^3.0.0:
   dependencies:
     tsutils "^2.8.0"
 
-tslint@^5.2.0:
+tslint@^5.2.0, tslint@^5.7.0:
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/tslint/-/tslint-5.7.0.tgz#c25e0d0c92fa1201c2bc30e844e08e682b4f3552"
   dependencies:
