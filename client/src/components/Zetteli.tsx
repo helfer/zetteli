@@ -29,7 +29,9 @@ export default class Zetteli extends React.PureComponent<Props, never> {
     }
 
     onDelete = () => {
-        this.props.onDelete(this.props.id);
+        if (confirm('Really delete?')) {
+            this.props.onDelete(this.props.id);
+        }
     }
 
     render() {
@@ -37,18 +39,19 @@ export default class Zetteli extends React.PureComponent<Props, never> {
             backgroundColor: 'white', 
             marginBottom: '12px',
             padding: '8px',
-            fontFamily: 'Times, serif',
+            fontFamily: 'Helvetica, sans',
             fontSize: '12px',
         };
         return (
           <div className="ui centered fluid" style={zetteliStyle}>
-            <div className="extra content">
+            <div>
               <EditableDateTime datetime={this.props.datetime} /> 
-              <span className="right floated">
+              <span style={{ float: 'right' }}>
                 <i className="trash icon" onClick={this.onDelete} />
               </span>
               <EditableTagList tags={this.props.tags} updateTags={this.updateTags}/> 
             </div>
+            <div className="ui divider"></div>
             <EditableText text={this.props.body} onChange={this.updateText} /> 
           </div>
         );
