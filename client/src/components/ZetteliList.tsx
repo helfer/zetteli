@@ -44,11 +44,11 @@ export default class ZetteliList extends React.Component<object, object> {
     }
 
     componentDidMount() {
-        Mousetrap.bind(['command+shift+u'], this.createNewZetteli);
+        Mousetrap.bind(['command+u'], this.createNewZetteli);
 
     }
     componentWillUnmount() {
-        Mousetrap.unbind(['command+shift+u']);
+        Mousetrap.unbind(['command+u']);
     }
 
     render() {
