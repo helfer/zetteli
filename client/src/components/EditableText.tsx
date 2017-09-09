@@ -7,11 +7,12 @@ export interface Props {
 }
 
 export default class EditableText extends React.PureComponent<Props, never> {
-    contentEditable: any = null; // TODO it's a React Element, but what exactly?
+    contentEditable: ContentEditable;
 
     componentDidMount() {
-        // NOTE(helfer): Poor man's autofocus. If the element was just created,
-        // it's text will be empty, and we focus on it.
+        // NOTE(helfer): A simple autofocus implementation. If the element was just created,
+        // its text will be empty, and the element will get focus. If there are multiple
+        // elements without foucs, the last one will win, which is usually what we want.
         if (!this.props.text && this.contentEditable) {
             this.contentEditable.htmlEl.focus();
         }
@@ -23,7 +24,7 @@ export default class EditableText extends React.PureComponent<Props, never> {
             <ContentEditable
               onChange={this.props.onChange}
               html={this.props.text}
-              ref={(el: any) => { this.contentEditable = el; }}
+              ref={(el: ContentEditable) => { this.contentEditable = el; }}
             />
           </div>
         );
