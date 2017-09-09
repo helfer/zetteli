@@ -29,6 +29,7 @@
   "scripts": {
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
+    "lint": "tslint src/**/*.ts[x]",
     "test": "react-scripts-ts test --env=jsdom --coverage",
     "testonly": "react-scripts-ts test --env=jsdom",
     "coverage": "codecov -f coverage/*.json",
