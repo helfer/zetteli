@@ -334,7 +334,7 @@ aws4@^1.2.1:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.6.0.tgz#83ef5ca860b2b32e4a0deedee8c771b9db57471e"
 
-babel-code-frame@6.22.0, babel-code-frame@^6.11.0, babel-code-frame@^6.22.0:
+babel-code-frame@6.22.0:
   version "6.22.0"
   resolved "https://registry.yarnpkg.com/babel-code-frame/-/babel-code-frame-6.22.0.tgz#027620bee567a88c32561574e7fd0801d33118e4"
   dependencies:
@@ -342,7 +342,7 @@ babel-code-frame@6.22.0, babel-code-frame@^6.11.0, babel-code-frame@^6.22.0:
     esutils "^2.0.2"
     js-tokens "^3.0.0"
 
-babel-code-frame@^6.26.0:
+babel-code-frame@^6.11.0, babel-code-frame@^6.22.0, babel-code-frame@^6.26.0:
   version "6.26.0"
   resolved "https://registry.yarnpkg.com/babel-code-frame/-/babel-code-frame-6.26.0.tgz#63fd43f7dc1e3bb7ce35947db8fe369a3f58c74b"
   dependencies:
@@ -4501,7 +4501,7 @@ react-error-overlay@^1.0.8:
     settle-promise "1.0.0"
     source-map "0.5.6"
 
-react-scripts-ts@2.6.0:
+react-scripts-ts@^2.6.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/react-scripts-ts/-/react-scripts-ts-2.6.0.tgz#75667fe16beeefcd551e44f607ed12b35e34b672"
   dependencies:
@@ -5071,11 +5071,11 @@ source-map-support@^0.4.15, source-map-support@^0.4.4:
   dependencies:
     source-map "^0.5.6"
 
-source-map@0.5.6, source-map@^0.5.3, source-map@^0.5.6:
+source-map@0.5.6, source-map@^0.5.3, source-map@^0.5.6, source-map@~0.5.1:
   version "0.5.6"
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.5.6.tgz#75ce38f52bf0733c5a7f0c118d81334a2bb5f412"
 
-source-map@0.5.x, source-map@^0.5.7, source-map@~0.5.1, source-map@~0.5.3:
+source-map@0.5.x, source-map@^0.5.7, source-map@~0.5.3:
   version "0.5.7"
   resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.5.7.tgz#8a039d2d1021d22d1ea14c80d8ea468ba2ef3fcc"
 
