@@ -17,13 +17,14 @@
     "react-contenteditable": "^2.0.4",
     "react-dom": "^15.6.1",
     "semantic-ui-css": "^2.2.12",
-    "semantic-ui-react": "^0.71.5"
+    "semantic-ui-react": "^0.72.0"
   },
   "devDependencies": {
     "@types/enzyme": "^2.8.6",
     "enzyme": "^2.9.1",
     "react-addons-test-utils": "^15.6.0",
-    "react-scripts-ts": "2.6.0"
+    "react-scripts-ts": "2.6.0",
+    "react-test-renderer": "^15.6.1"
   },
   "scripts": {
     "start": "react-scripts-ts start",

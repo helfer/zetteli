@@ -4540,6 +4540,13 @@ react-scripts-ts@2.6.0:
   optionalDependencies:
     fsevents "1.1.2"
 
+react-test-renderer@^15.6.1:
+  version "15.6.1"
+  resolved "https://registry.yarnpkg.com/react-test-renderer/-/react-test-renderer-15.6.1.tgz#026f4a5bb5552661fd2cc4bbcd0d4bc8a35ebf7e"
+  dependencies:
+    fbjs "^0.8.9"
+    object-assign "^4.1.0"
+
 react@^15.6.1:
   version "15.6.1"
   resolved "https://registry.yarnpkg.com/react/-/react-15.6.1.tgz#baa8434ec6780bde997cdc380b79cd33b96393df"
@@ -4873,9 +4880,9 @@ semantic-ui-css@^2.2.12:
   dependencies:
     jquery x.*
 
-semantic-ui-react@^0.71.5:
-  version "0.71.5"
-  resolved "https://registry.yarnpkg.com/semantic-ui-react/-/semantic-ui-react-0.71.5.tgz#c8713f1cbdd63815843949fb611602541d3a20d8"
+semantic-ui-react@^0.72.0:
+  version "0.72.0"
+  resolved "https://registry.yarnpkg.com/semantic-ui-react/-/semantic-ui-react-0.72.0.tgz#d3d3f61e2d1e86a7a1d83de551ed6d62e014fbb0"
   dependencies:
     babel-runtime "^6.25.0"
     classnames "^2.2.5"
