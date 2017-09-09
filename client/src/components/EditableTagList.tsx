@@ -26,7 +26,7 @@ export default class EditableTagList extends React.Component<Props, object> {
     render() {
         if (this.state.editing) {
             return (
-                <span className="right floated" onClick={this.startEditing}>
+                <span style={{ float: 'right' }} className="right floated" onClick={this.startEditing}>
                     <input
                         type="text"
                         onKeyUp={this.onKeyUp}
@@ -39,8 +39,8 @@ export default class EditableTagList extends React.Component<Props, object> {
         }
 
         return (
-            <span className="right floated tagList" onClick={this.startEditing}>
-                {this.props.tags.map(tag => <a className="ui label small" key={tag}> {tag} </a>)}
+            <span style={{ float: 'right' }} onClick={this.startEditing}>
+                {this.props.tags.map(tag => <a className="ui label mini" key={tag}> {tag} </a>)}
             </span>
         );
     }
