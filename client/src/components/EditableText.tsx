@@ -14,8 +14,12 @@ export default class EditableText extends React.PureComponent<Props, never> {
         // its text will be empty, and the element will get focus. If there are multiple
         // elements without foucs, the last one will win, which is usually what we want.
         if (!this.props.text && this.contentEditable) {
-            this.contentEditable.htmlEl.focus();
+            this.focus();
         }
+    }
+
+    focus() {
+        this.contentEditable.htmlEl.focus();
     }
 
     render() {

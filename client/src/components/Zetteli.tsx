@@ -14,6 +14,8 @@ export interface Props {
 }
 
 export default class Zetteli extends React.PureComponent<Props, never> {
+    editableText: EditableText;
+
     updateText = (evt: Event) => {
        this.props.onUpdate({
            id: this.props.id,
@@ -26,12 +28,17 @@ export default class Zetteli extends React.PureComponent<Props, never> {
            id: this.props.id,
            tags: newTags,
        });
+       this.editableText.focus();
     }
 
     onDelete = () => {
         if (confirm('Really delete?')) {
             this.props.onDelete(this.props.id);
         }
+    }
+
+    editableTextRef = (ref: EditableText) => {
+        this.editableText = ref;
     }
 
     render() {
@@ -52,7 +59,11 @@ export default class Zetteli extends React.PureComponent<Props, never> {
               <EditableTagList tags={this.props.tags} updateTags={this.updateTags}/> 
             </div>
             <div className="ui divider"/>
-            <EditableText text={this.props.body} onChange={this.updateText} /> 
+            <EditableText
+              text={this.props.body}
+              onChange={this.updateText}
+              ref={this.editableTextRef}
+            />
           </div>
         );
     }
