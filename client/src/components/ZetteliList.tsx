@@ -7,9 +7,11 @@ import { ZetteliType } from '../types/Zetteli';
 
 Mousetrap.prototype.stopCallback = () => false;
 
-const client = new ZetteliClient(localStorage);
+export interface Props {
+    client: ZetteliClient;
+}
 
-export default class ZetteliList extends React.Component<object, object> {
+export default class ZetteliList extends React.Component<Props, object> {
     state = {
         loading: true,
         zettelis: [] as ZetteliType[],
@@ -17,28 +19,28 @@ export default class ZetteliList extends React.Component<object, object> {
 
     refetchZettelis() {
         // TODO: Because this will only work if the call doesn't take too long.
-        client.getAllZettelis().then( zettelis => {
+        this.props.client.getAllZettelis().then( zettelis => {
             this.setState({ zettelis });
         });
     }
 
     createNewZetteli = () => {
-        client.createNewZetteli()
+        this.props.client.createNewZetteli()
         .then(() => this.refetchZettelis());
     }
 
     updateZetteli = (modifiedZetteli: ZetteliType) => {
-        client.updateZetteli(modifiedZetteli.id, modifiedZetteli)
+        this.props.client.updateZetteli(modifiedZetteli.id, modifiedZetteli)
         .then(() => this.refetchZettelis());
     }
 
     deleteZetteli = (id: string) => {
-        client.deleteZetteli(id)
+        this.props.client.deleteZetteli(id)
         .then(() => this.refetchZettelis());
     }
 
     componentWillMount() {
-        client.getAllZettelis().then( zettelis => {
+        this.props.client.getAllZettelis().then( zettelis => {
             this.setState({ zettelis, loading: false });
         });
     }
