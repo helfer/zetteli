@@ -29,6 +29,15 @@ describe('EditableText', () => {
         expect(spy).toHaveBeenCalled();
     });
 
+    // TODO(helfer): somehow test that the right element has focus. Might need jsdom for that.
+    /* it('focuses the text if focus() is called', () => {
+        const testText = 'x';
+        const oc = jest.fn();
+        const editableText = enzyme.mount(<EditableText text={testText} onChange={oc}/>);
+        (editableText.instance() as EditableText).focus();
+        expect(true).toBe(false);
+    }); */
+
     // TODO(helfer): I'm not sure how to test this.
     // it('focuses the text if focus() is called', () => {
     // });
