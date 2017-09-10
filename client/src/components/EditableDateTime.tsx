@@ -6,11 +6,10 @@ export interface Props {
 }
 
 export default class EditableDateTime extends React.PureComponent<Props, never> {
-    // TODO specify prop types
     render() {
         return (
             <span className="left floated">
-               {moment(this.props.datetime).format('LLLL')} 
+               {moment(this.props.datetime).format('dddd, MMMM Do YYYY, HH:mm:ss')} 
             </span>
         );
     }
