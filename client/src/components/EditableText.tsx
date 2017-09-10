@@ -26,6 +26,7 @@ export default class EditableText extends React.PureComponent<Props, never> {
         return (
           <div className="left aligned content">
             <ContentEditable
+              className="editableText"
               onChange={this.props.onChange}
               html={this.props.text}
               ref={(el: ContentEditable) => { this.contentEditable = el; }}
