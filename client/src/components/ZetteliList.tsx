@@ -3,7 +3,7 @@ import Mousetrap from 'mousetrap';
 
 import Zetteli from './Zetteli';
 import ZetteliClient from '../services/ZetteliClient';
-import { ZetteliType } from '../types/Zetteli';
+import { ZetteliType } from './Zetteli';
 
 Mousetrap.prototype.stopCallback = () => false;
 

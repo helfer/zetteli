@@ -1,4 +1,4 @@
-import { ZetteliType } from '../types/Zetteli';
+import { ZetteliType } from '../components/Zetteli';
 
 const LOCAL_STORAGE_KEY = 'Zetteli.zettelis';
 

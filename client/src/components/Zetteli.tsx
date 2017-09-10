@@ -13,6 +13,13 @@ export interface Props {
     onDelete: (id: string) => void;
 }
 
+export interface ZetteliType {
+    id: string;
+    body: string;
+    tags: string[];
+    datetime: Date;
+}
+
 export default class Zetteli extends React.PureComponent<Props, never> {
     editableText: EditableText;
 
