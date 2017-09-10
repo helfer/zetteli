@@ -25,6 +25,7 @@
     "react-addons-test-utils": "^15.6.0",
     "react-scripts-ts": "^2.6.0",
     "react-test-renderer": "^15.6.1",
+    "timezone-mock": "^0.0.5",
     "tslint": "^5.7.0"
   },
   "scripts": {
