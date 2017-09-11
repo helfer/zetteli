@@ -10,7 +10,8 @@ export default class ZetteliClient {
     // right now.
     private zettelis: ZetteliType[];
 
-    constructor(private store: Storage) {
+    constructor(private store: Storage, private delay: number = 300) {
+        // NOTE(helfer): Using a delay here to simulate network roundtrip
         this.zettelis = this.readFromStore();
     }
 
@@ -65,7 +66,7 @@ export default class ZetteliClient {
 
     getAllZettelis() {
         return new Promise( (resolve, reject) => {
-            setTimeout(() => resolve(this.zettelis), 300);
+            setTimeout(() => { resolve(this.zettelis); }, this.delay);
         });
     }
 }
