@@ -15,20 +15,12 @@ export default class ZetteliClient {
         this.zettelis = this.readFromStore();
     }
 
-    writeToStore() {
-        this.store.setItem(LOCAL_STORAGE_KEY, JSON.stringify(this.zettelis));
-    }
-
-    readFromStore() {
-        return JSON.parse(this.store.getItem(LOCAL_STORAGE_KEY) || '[]');
-    }
-
     createNewZetteli() {
         const newZetteli = {
             tags: ['log', 'personal'],
             datetime: new Date(),
             body: '',
-            id: Math.random().toString(),
+            id: Math.random().toString(), // TODO(helfer): this is just asking for trouble
         };
         this.zettelis = [ ...this.zettelis, newZetteli ];
         this.writeToStore();
@@ -68,5 +60,13 @@ export default class ZetteliClient {
         return new Promise( (resolve, reject) => {
             setTimeout(() => { resolve(this.zettelis); }, this.delay);
         });
+    }
+
+    private writeToStore() {
+        this.store.setItem(LOCAL_STORAGE_KEY, JSON.stringify(this.zettelis));
+    }
+
+    private readFromStore() {
+        return JSON.parse(this.store.getItem(LOCAL_STORAGE_KEY) || '[]');
     }
 }
