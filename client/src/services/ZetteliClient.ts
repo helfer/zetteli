@@ -6,7 +6,7 @@ const LOCAL_STORAGE_KEY = 'Zetteli.zettelis';
 interface SerializedZetteli {
     id: string;
     body: string;
-    tags: [string];
+    tags: string[];
     datetime: string;
 }
 
@@ -64,7 +64,7 @@ export default class ZetteliClient {
         return Promise.resolve(this.zettelis.find( zli => zli.id === id ));
     }
 
-    getAllZettelis(): Promise<[ZetteliType]> {
+    getAllZettelis(): Promise<ZetteliType[]> {
         this.pullFromStore();
         // NOTE(helfer): Using a delay here to simulate network roundtrip
         return new Promise( (resolve, reject) => {
@@ -76,7 +76,7 @@ export default class ZetteliClient {
         this.store.setItem(LOCAL_STORAGE_KEY, JSON.stringify(this.zettelis));
     }
 
-    private readFromStore(): [ZetteliType] {
+    private readFromStore(): ZetteliType[] {
         return JSON.parse(this.store.getItem(LOCAL_STORAGE_KEY) || '[]')
         .map(this.parseZetteli);
     }
