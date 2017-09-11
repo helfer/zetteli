@@ -2,6 +2,14 @@ import { ZetteliType } from '../components/Zetteli';
 
 const LOCAL_STORAGE_KEY = 'Zetteli.zettelis';
 
+// TODO(helfer): how do I keep this in sync with ZetteliType?
+interface SerializedZetteli {
+    id: string;
+    body: string;
+    tags: [string];
+    datetime: string;
+}
+
 export default class ZetteliClient {
     // XXX reading from and writing to local storage
     // will only work in one tab at a time, because
@@ -11,11 +19,10 @@ export default class ZetteliClient {
     private zettelis: ZetteliType[];
 
     constructor(private store: Storage, private delay: number = 300) {
-        // NOTE(helfer): Using a delay here to simulate network roundtrip
-        this.zettelis = this.readFromStore();
+        this.pullFromStore();
     }
 
-    createNewZetteli() {
+    createNewZetteli(): Promise<boolean> {
         const newZetteli = {
             tags: ['log', 'personal'],
             datetime: new Date(),
@@ -27,19 +34,19 @@ export default class ZetteliClient {
         return Promise.resolve(true);
     }
 
-    addZetteli(zli: ZetteliType) {
+    addZetteli(zli: ZetteliType): Promise<boolean> {
         this.zettelis = [ ...this.zettelis, zli];
         this.writeToStore();
         return Promise.resolve(true);
     }
 
-    deleteZetteli(id: string) {
+    deleteZetteli(id: string): Promise<boolean> {
         this.zettelis = this.zettelis.filter( zli => zli.id !== id );
         this.writeToStore();
         return Promise.resolve(true);
     }
 
-    updateZetteli(id: string, data: ZetteliType) {
+    updateZetteli(id: string, data: ZetteliType): Promise<boolean> {
         this.zettelis = this.zettelis.map( zli => {
             if (zli.id === id) {
                 return { ...zli, ...data };
@@ -51,22 +58,37 @@ export default class ZetteliClient {
         return Promise.resolve(true);
     }
 
-    getZetteli(id: string) {
+    getZetteli(id: string): Promise<ZetteliType | undefined> {
+        this.pullFromStore();
         // TODO: reject when Zetteli cannot be found?
         return Promise.resolve(this.zettelis.find( zli => zli.id === id ));
     }
 
-    getAllZettelis() {
+    getAllZettelis(): Promise<[ZetteliType]> {
+        this.pullFromStore();
+        // NOTE(helfer): Using a delay here to simulate network roundtrip
         return new Promise( (resolve, reject) => {
             setTimeout(() => { resolve(this.zettelis); }, this.delay);
         });
     }
 
-    private writeToStore() {
+    private writeToStore(): void {
         this.store.setItem(LOCAL_STORAGE_KEY, JSON.stringify(this.zettelis));
     }
 
-    private readFromStore() {
-        return JSON.parse(this.store.getItem(LOCAL_STORAGE_KEY) || '[]');
+    private readFromStore(): [ZetteliType] {
+        return JSON.parse(this.store.getItem(LOCAL_STORAGE_KEY) || '[]')
+        .map(this.parseZetteli);
+    }
+
+    private parseZetteli(zli: SerializedZetteli): ZetteliType {
+        return {
+            ...zli,
+            datetime: new Date(zli.datetime),
+        };
+    }
+
+    private pullFromStore(): void {
+        this.zettelis = this.readFromStore();
     }
 }

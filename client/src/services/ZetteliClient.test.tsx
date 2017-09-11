@@ -52,7 +52,7 @@ describe('ZetteliClient', () => {
         });
 
         it('can read a single zetteli', () => {
-            return expect(client.getZetteli('1')).resolves.toBe(zli);
+            return expect(client.getZetteli('1')).resolves.toEqual(zli);
         });
 
         it('can delete a zetteli', () => {
