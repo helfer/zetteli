@@ -30,6 +30,7 @@ describe('Zetteli', () => {
         expect(conf).toHaveBeenCalled();
         expect(props.onDelete).toHaveBeenCalledWith(props.id);
     });
+    // TODO(helfer): Implement these additional tests
     // Delete doesn't ask for confirmation if Zetteli is empty
     // Test that updateTags calls onUpdate
     // Test that updating tags calls focus
