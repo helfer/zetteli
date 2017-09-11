@@ -54,7 +54,7 @@ export default class Zetteli extends React.PureComponent<Props, never> {
             marginBottom: '12px',
             padding: '8px',
             fontFamily: 'Helvetica, sans',
-            fontSize: '12px',
+            fontSize: '13px',
         };
         return (
           <div className="ui centered fluid" style={zetteliStyle}>
