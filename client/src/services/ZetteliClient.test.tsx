@@ -17,7 +17,7 @@ describe('ZetteliClient', () => {
             key: i => '', // not implemented
         };
 
-        client = new ZetteliClient(store);
+        client = new ZetteliClient(store, 1);
     });
 
     it('can add a Zetteli and read it back', () => {
@@ -28,11 +28,12 @@ describe('ZetteliClient', () => {
             tags: ['t1', 't2'],
         };
         client.addZetteli(zli);
-        expect(client.getAllZettelis()).resolves.toEqual(zli);
+        expect(client.getAllZettelis()).resolves.toEqual([zli]);
     });
 
     describe('basics', () => {
         let zli: ZetteliType;
+        let zli2: ZetteliType;
         beforeEach(() => {
             zli = {
                 id: '1',
@@ -40,28 +41,37 @@ describe('ZetteliClient', () => {
                 datetime: new Date(),
                 tags: ['t1', 't2'],
             };
+            zli2 = {
+                id: '2',
+                body: 'bye',
+                datetime: new Date(),
+                tags: ['t3', 't2'],
+            };
             client.addZetteli(zli);
+            client.addZetteli(zli2);
         });
 
         it('can read a single zetteli', () => {
-            expect(client.getZetteli('1')).resolves.toBe(zli);
+            return expect(client.getZetteli('1')).resolves.toBe(zli);
         });
 
         it('can delete a zetteli', () => {
             return client.deleteZetteli('1').then(() => {
                 expect(client.getZetteli('1')).resolves.toBeUndefined();
+                expect(client.getAllZettelis()).resolves.toHaveLength(1);
             });
         });
 
         it('can update a zetteli', () => {
             return client.updateZetteli('1', { ...zli, body: 'uhu' }).then(() => {
                 expect(client.getZetteli('1')).resolves.toEqual({ ...zli, body: 'uhu' });
+                expect(client.getZetteli('2')).resolves.toEqual(zli2);
             });   
         });
 
         it('can create a new blank zetteli', () => {
             return client.createNewZetteli().then(() => {
-                expect(client.getAllZettelis()).resolves.toHaveLength(2);
+                return expect(client.getAllZettelis()).resolves.toHaveLength(3);
             });
         });
     });
