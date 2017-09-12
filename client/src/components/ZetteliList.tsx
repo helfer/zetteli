@@ -1,5 +1,7 @@
 import * as React from 'react';
 import Mousetrap from 'mousetrap';
+import FileSaver from 'file-saver';
+import moment from 'moment';
 
 // import Zetteli from './Zetteli';
 import FullscreenableZetteli from './FullscreenableZetteli';
@@ -40,6 +42,29 @@ export default class ZetteliList extends React.Component<Props, object> {
         .then(() => this.refetchZettelis());
     }
 
+    // Allows the user to save displayed zettelis to a local file
+    downloadZettelis = () => {
+        function serializeZetteli(z: ZetteliType): string {
+            const DATE_RFC2822 = 'ddd, MM MMM YYYY HH:mm:ss [GMT]';
+            const time = moment.utc(z.datetime).format(DATE_RFC2822);
+            // TODO(helfer): Make this string less ugly
+            // TODO(helfer): Make sure the date is formatted correctly.
+            // NOTE(helfer): Should we strip HTML?
+            return `
+---
+>${moment(time).format()}
+[${z.tags.join(' ')}]
+
+${z.body}
+
+            `;
+        }
+
+        const serializedZettelis = this.state.zettelis.map(serializeZetteli);
+        var blob = new Blob(serializedZettelis, {type: 'text/plain;charset=utf-8'});
+        FileSaver.saveAs(blob, `heftli-${moment().utc().format()}.txt`);
+    }
+
     componentWillMount() {
         this.props.client.getAllZettelis().then( zettelis => {
             this.setState({ zettelis, loading: false });
@@ -47,7 +72,16 @@ export default class ZetteliList extends React.Component<Props, object> {
     }
 
     componentDidMount() {
-        Mousetrap.bind(['command+u'], this.createNewZetteli);
+        Mousetrap.bind('command+u', this.createNewZetteli);
+        Mousetrap.bind(['ctrl+s', 'meta+s'], (e) => {
+            if (e.preventDefault) {
+                e.preventDefault();
+            } else {
+                // internet explorer
+                e.returnValue = false;
+            }
+            this.downloadZettelis();
+        });
 
     }
     componentWillUnmount() {

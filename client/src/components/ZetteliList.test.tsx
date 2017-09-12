@@ -62,7 +62,12 @@ describe('ZetteliList', () => {
     // TODO(helfer): that test is actually a bit tricky. Let's keep that for later
     it('listens to command+u and adds a new zetteli if called', () => {
         let cb: Function = () => null;
-        Mousetrap.bind = jest.fn( (key, func) => { cb = func; });
+        Mousetrap.bind = jest.fn( (key, func) => {
+            // avoid capturing ctrl+s / meta+s
+            if (key === 'command+u') {
+                cb = func;
+            }
+        });
         Mousetrap.unbind = jest.fn();
         client.createNewZetteli = jest.fn(() => Promise.resolve([]));
 
