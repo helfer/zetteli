@@ -2,8 +2,6 @@ import * as React from 'react';
 import ContentEditable from 'react-contenteditable';
 
 export interface Props {
-    isFullscreen?: boolean;
-    toggleFullscreen?: () => void;
     text: string;
     onChange: (evt: Event) => void;
 }
@@ -27,7 +25,6 @@ export default class EditableText extends React.PureComponent<Props, never> {
     render() {
         return (
           <div className="left aligned content">
-              <button onClick={this.props.toggleFullscreen}>FS</button>
             <ContentEditable
               className="editableText"
               onChange={this.props.onChange}

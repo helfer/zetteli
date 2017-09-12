@@ -2,7 +2,8 @@ import * as React from 'react';
 import * as enzyme from 'enzyme';
 
 import ZetteliList from './ZetteliList';
-import Zetteli, { ZetteliType } from './Zetteli';
+import { Props as ZetteliProps, ZetteliType } from './Zetteli';
+import FullscreenableZetteli from './FullscreenableZetteli';
 import ZetteliClient from '../services/ZetteliClient';
 
 describe('ZetteliList', () => {
@@ -51,10 +52,11 @@ describe('ZetteliList', () => {
         // figure out how to successfuly let the ZetteliClient promise update the state.
         zetteliList.setState({ zettelis: [zli, zli2], loading: false });
         zetteliList.update();
-        expect(zetteliList.find(Zetteli).at(0).props().id).toBe('1');
-        expect(zetteliList.find(Zetteli).at(0).props().onUpdate).toBeDefined();
-        expect(zetteliList.find(Zetteli).at(1).props().id).toBe('2');
-        expect(zetteliList.find(Zetteli).at(1).props().onDelete).toBeDefined();
+        // TODO(helfer): Fix the type declaration of the Fullscreenable HOC soyou don't need to coerce type
+        expect((zetteliList.find(FullscreenableZetteli).at(0).props() as ZetteliProps).id).toBe('1');
+        expect((zetteliList.find(FullscreenableZetteli).at(0).props() as ZetteliProps).onUpdate).toBeDefined();
+        expect((zetteliList.find(FullscreenableZetteli).at(1).props() as ZetteliProps).id).toBe('2');
+        expect((zetteliList.find(FullscreenableZetteli).at(1).props() as ZetteliProps).onDelete).toBeDefined();
     });
     // listens to cmd+u and creates a new Zetteli if it's pressed
     // TODO(helfer): that test is actually a bit tricky. Let's keep that for later

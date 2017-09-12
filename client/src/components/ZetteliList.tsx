@@ -1,7 +1,8 @@
 import * as React from 'react';
 import Mousetrap from 'mousetrap';
 
-import Zetteli from './Zetteli';
+// import Zetteli from './Zetteli';
+import FullscreenableZetteli from './FullscreenableZetteli';
 import ZetteliClient from '../services/ZetteliClient';
 import { ZetteliType } from './Zetteli';
 
@@ -64,7 +65,7 @@ export default class ZetteliList extends React.Component<Props, object> {
         return (
           <div style={{ marginBottom: '20em' }} className="zetteliList">
               {this.state.zettelis.map( zli => 
-                 <Zetteli
+                 <FullscreenableZetteli
                    tags={zli.tags}
                    datetime={zli.datetime}
                    body={zli.body}

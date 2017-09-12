@@ -3,7 +3,6 @@ import * as React from 'react';
 import EditableDateTime from './EditableDateTime';
 import EditableTagList from './EditableTagList';
 import EditableText from './EditableText';
-import FullscreenableText from './FullscreenableText';
 
 export interface Props {
     id: string;
@@ -12,6 +11,9 @@ export interface Props {
     datetime: Date;
     onUpdate: (arg: {id: string, tags?: string[], body?: string}) => void;
     onDelete: (id: string) => void;
+
+    isFullscreen?: boolean;
+    toggleFullscreen?: () => void;
 }
 
 export interface ZetteliType {
@@ -20,6 +22,14 @@ export interface ZetteliType {
     tags: string[];
     datetime: Date;
 }
+
+const zetteliStyle = { 
+    backgroundColor: 'white', 
+    marginBottom: '12px',
+    padding: '8px',
+    fontFamily: 'Helvetica, sans',
+    fontSize: '13px',
+};
 
 export default class Zetteli extends React.PureComponent<Props, never> {
     editableText: EditableText;
@@ -50,16 +60,16 @@ export default class Zetteli extends React.PureComponent<Props, never> {
     }
 
     render() {
-        const zetteliStyle = { 
-            backgroundColor: 'white', 
-            marginBottom: '12px',
-            padding: '8px',
-            fontFamily: 'Helvetica, sans',
-            fontSize: '13px',
-        };
+        if (this.props.isFullscreen) {
+            return this.renderFullscreen();
+        }
+
         return (
           <div className="ui centered fluid" style={zetteliStyle}>
             <div>
+              <span style={{ float: 'right' }}>
+                <i className="window maximize icon" onClick={this.props.toggleFullscreen}/>
+              </span>
               <EditableDateTime datetime={this.props.datetime} /> 
               <span style={{ float: 'right' }}>
                 <i className="trash icon" onClick={this.onDelete} />
@@ -67,11 +77,38 @@ export default class Zetteli extends React.PureComponent<Props, never> {
               <EditableTagList tags={this.props.tags} updateTags={this.updateTags}/> 
             </div>
             <div className="ui divider"/>
-            <FullscreenableText
+            <EditableText
               text={this.props.body}
               onChange={this.updateText}
               ref={this.editableTextRef}
             />
+          </div>
+        );
+    }
+
+    renderFullscreen = () => {
+        const fullscreenStyle = {
+            width: '50%',
+            margin: 'auto',
+            paddingTop: '10em',
+            fontSize: '18px',
+            fontFamily: 'serif',
+        };
+
+        return (
+          <div className="ui centered fluid" style={zetteliStyle}>
+            <div>
+              <span style={{ float: 'right' }}>
+                <i className="window close outline icon" onClick={this.props.toggleFullscreen}/>
+              </span>
+            </div>
+            <div style={fullscreenStyle}>
+                <EditableText
+                    text={this.props.body}
+                    onChange={this.updateText}
+                    ref={this.editableTextRef}
+                />
+            </div>
           </div>
         );
     }
