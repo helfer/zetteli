@@ -30,6 +30,14 @@ describe('Zetteli', () => {
         expect(conf).toHaveBeenCalled();
         expect(props.onDelete).toHaveBeenCalledWith(props.id);
     });
+    it('renders in full-screen mode', () => {
+        const zetteli = enzyme.shallow(<Zetteli {...props} isFullscreen={true} />);
+        expect(zetteli.find(EditableText).props().text).toEqual(props.body);
+        expect(zetteli.find(EditableTagList).length).toBe(0);
+        expect(zetteli.containsMatchingElement(
+            <i className="window close outline icon" />
+        )).toBe(true);
+    });
     // TODO(helfer): Implement these additional tests
     // Delete doesn't ask for confirmation if Zetteli is empty
     // Test that updateTags calls onUpdate
