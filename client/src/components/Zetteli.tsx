@@ -3,6 +3,7 @@ import * as React from 'react';
 import EditableDateTime from './EditableDateTime';
 import EditableTagList from './EditableTagList';
 import EditableText from './EditableText';
+import FullscreenableText from './FullscreenableText';
 
 export interface Props {
     id: string;
@@ -66,7 +67,7 @@ export default class Zetteli extends React.PureComponent<Props, never> {
               <EditableTagList tags={this.props.tags} updateTags={this.updateTags}/> 
             </div>
             <div className="ui divider"/>
-            <EditableText
+            <FullscreenableText
               text={this.props.body}
               onChange={this.updateText}
               ref={this.editableTextRef}
