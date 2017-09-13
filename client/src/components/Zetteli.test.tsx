@@ -15,6 +15,9 @@ describe('Zetteli', () => {
         tags: ['a'],
         body: 'Something',
     };
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
     it('shows the date, tags, text and delete button', () => {
         const zetteli = enzyme.shallow(<Zetteli {...props} />);
         expect(zetteli.find(EditableText).props().text).toEqual(props.body);
@@ -30,6 +33,14 @@ describe('Zetteli', () => {
         expect(conf).toHaveBeenCalled();
         expect(props.onDelete).toHaveBeenCalledWith(props.id);
     });
+    it('does not call onDelete if confirm returns false', () => {
+        const conf = jest.fn(() => false);
+        window.confirm = conf;
+        const zetteli = enzyme.shallow(<Zetteli {...props} />);
+        zetteli.find('.trash').simulate('click');
+        expect(conf).toHaveBeenCalled();
+        expect(props.onDelete).not.toHaveBeenCalled();
+    });
     it('renders in full-screen mode', () => {
         const zetteli = enzyme.shallow(<Zetteli {...props} isFullscreen={true} />);
         expect(zetteli.find(EditableText).props().text).toEqual(props.body);
@@ -38,9 +49,14 @@ describe('Zetteli', () => {
             <i className="window close outline icon" />
         )).toBe(true);
     });
+    it('calls focus() on EditableText after updating tags', () => {
+        const mockFocus = jest.fn();
+        const zetteli = enzyme.mount(<Zetteli {...props} isFullscreen={true} />);
+        (zetteli.instance() as Zetteli).editableText.focus = mockFocus;
+        (zetteli.instance() as Zetteli).updateTags(['a', 'b']);
+        expect(mockFocus).toHaveBeenCalled();
+    });
     // TODO(helfer): Implement these additional tests
     // Delete doesn't ask for confirmation if Zetteli is empty
     // Test that updateTags calls onUpdate
-    // Test that updating tags calls focus
-    // Test that updateText
 });
