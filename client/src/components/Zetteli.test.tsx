@@ -27,7 +27,7 @@ describe('Zetteli', () => {
     });
     it('calls onDelete after confirming if you click the delete button', () => {
         const conf = jest.fn(() => true);
-        window.confirm = conf; // TODO(helfer): This is not good. Get spyOn to work properly instead.
+        window.confirm = conf;
         const zetteli = enzyme.shallow(<Zetteli {...props} />);
         zetteli.find('.trash').simulate('click');
         expect(conf).toHaveBeenCalled();
@@ -41,6 +41,14 @@ describe('Zetteli', () => {
         expect(conf).toHaveBeenCalled();
         expect(props.onDelete).not.toHaveBeenCalled();
     });
+    it('calls onDelete without confirming if body is empty', () => {
+        const conf = jest.fn(() => false);
+        window.confirm = conf;
+        const zetteli = enzyme.shallow(<Zetteli {...props} body="" />);
+        zetteli.find('.trash').simulate('click');
+        expect(conf).not.toHaveBeenCalled();
+        expect(props.onDelete).toHaveBeenCalledWith(props.id);
+    });
     it('renders in full-screen mode', () => {
         const zetteli = enzyme.shallow(<Zetteli {...props} isFullscreen={true} />);
         expect(zetteli.find(EditableText).props().text).toEqual(props.body);
@@ -51,13 +59,12 @@ describe('Zetteli', () => {
     });
     it('calls focus() on EditableText after updating tags', () => {
         const mockFocus = jest.fn();
+        const newTags = ['a', 'b'];
         const zetteli = enzyme.mount(<Zetteli {...props} isFullscreen={true} />);
         (zetteli.instance() as Zetteli).editableText.focus = mockFocus;
-        (zetteli.instance() as Zetteli).updateTags(['a', 'b']);
+        (zetteli.instance() as Zetteli).updateTags(newTags);
+        expect(props.onUpdate).toHaveBeenCalledWith({ id: props.id, tags: newTags });
         expect(mockFocus).toHaveBeenCalled();
         zetteli.unmount();
     });
-    // TODO(helfer): Implement these additional tests
-    // Delete doesn't ask for confirmation if Zetteli is empty
-    // Test that updateTags calls onUpdate
 });

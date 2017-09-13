@@ -3,50 +3,51 @@ import * as enzyme from 'enzyme';
 import EditableText from './EditableText';
 
 describe('EditableText', () => {
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
     it('renders the text', () => {
         const testText = 'Hi there!';
         const oc = jest.fn();
-        const editableText = enzyme.render(<EditableText text={testText} onChange={oc}/>);
-        expect(editableText.text()).toContain('Hi there!');
+        const et = enzyme.render(<EditableText text={testText} onChange={oc}/>);
+        expect(et.text()).toContain('Hi there!');
     });
 
     it('does not autofocus the text if it is not empty', () => {
         const testText = 'x';
         const oc = jest.fn();
         const spy = spyOn(EditableText.prototype, 'focus');
-        enzyme.mount(<EditableText text={testText} onChange={oc}/>);
+        const et = enzyme.mount(<EditableText text={testText} onChange={oc}/>);
         expect(spy).not.toHaveBeenCalled();
-        // TODO(helfer): I couldn't figure out how to restore the mocked functions
-        // so right now the tests using spyOn actually have shared context and may break.
-        // For example, if you switch around the order of this test and the next, it will fail.
+        et.unmount();
     });
 
     it('autofocuses the text if it is empty', () => {
         const testText = '';
         const oc = jest.fn();
         const spy = spyOn(EditableText.prototype, 'focus');
-        enzyme.mount(<EditableText text={testText} onChange={oc}/>);
+        const et = enzyme.mount(<EditableText text={testText} onChange={oc}/>);
         expect(spy).toHaveBeenCalled();
+        et.unmount();
     });
 
-    // TODO(helfer): somehow test that the right element has focus. Might need jsdom for that.
-    /* it('focuses the text if focus() is called', () => {
+    it('focuses the text if focus() is called', () => {
         const testText = 'x';
         const oc = jest.fn();
-        const editableText = enzyme.mount(<EditableText text={testText} onChange={oc}/>);
-        (editableText.instance() as EditableText).focus();
-        expect(true).toBe(false);
-    }); */
-
-    // TODO(helfer): I'm not sure how to test this.
-    // it('focuses the text if focus() is called', () => {
-    // });
+        const et = enzyme.mount(<EditableText text={testText} onChange={oc}/>);
+        const spy = spyOn((et.instance() as EditableText).contentEditable.htmlEl, 'focus');
+        (et.instance() as EditableText).focus();
+        expect(spy).toHaveBeenCalled();
+        et.unmount();
+    });
 
     it('calls onChange if the text is modified', () => {
         const testText = 'Something';
         const oc = jest.fn();
-        const editableText = enzyme.mount(<EditableText text={testText} onChange={oc}/>);
-        editableText.find('.editableText').simulate('input');
+        const et = enzyme.mount(<EditableText text={testText} onChange={oc}/>);
+        et.find('.editableText').simulate('input');
         expect(oc).toHaveBeenCalled();
+        et.unmount();
     });
 });

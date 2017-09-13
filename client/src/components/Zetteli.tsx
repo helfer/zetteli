@@ -50,7 +50,7 @@ export default class Zetteli extends React.PureComponent<Props, never> {
     }
 
     onDelete = () => {
-        if (confirm('Really delete?')) {
+        if (this.props.body === '' || confirm('Really delete?')) {
             this.props.onDelete(this.props.id);
         }
     }
