@@ -55,6 +55,7 @@ describe('Zetteli', () => {
         (zetteli.instance() as Zetteli).editableText.focus = mockFocus;
         (zetteli.instance() as Zetteli).updateTags(['a', 'b']);
         expect(mockFocus).toHaveBeenCalled();
+        zetteli.unmount();
     });
     // TODO(helfer): Implement these additional tests
     // Delete doesn't ask for confirmation if Zetteli is empty
