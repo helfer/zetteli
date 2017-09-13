@@ -1,3 +1,5 @@
+import uuid from 'uuid';
+
 import { ZetteliType } from '../components/Zetteli';
 
 const LOCAL_STORAGE_KEY = 'Zetteli.zettelis';
@@ -27,7 +29,7 @@ export default class ZetteliClient {
             tags: ['log', 'personal'],
             datetime: new Date(),
             body: '',
-            id: Math.random().toString(), // TODO(helfer): this is just asking for trouble
+            id: uuid.v4(), // TODO(helfer): this is just asking for trouble
         };
         this.zettelis = [ ...this.zettelis, newZetteli ];
         this.writeToStore();
