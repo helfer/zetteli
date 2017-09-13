@@ -7,8 +7,7 @@ import moment from 'moment';
 import FullscreenableZetteli from './FullscreenableZetteli';
 import ZetteliClient from '../services/ZetteliClient';
 import { ZetteliType } from './Zetteli';
-
-Mousetrap.prototype.stopCallback = () => false;
+import preventDefault from '../utils/preventDefault';
 
 export interface Props {
     client: ZetteliClient;
@@ -72,14 +71,10 @@ ${z.body}
     }
 
     componentDidMount() {
+        Mousetrap.prototype.stopCallback = () => false;
         Mousetrap.bind('command+u', this.createNewZetteli);
         Mousetrap.bind(['ctrl+s', 'meta+s'], (e) => {
-            if (e.preventDefault) {
-                e.preventDefault();
-            } else {
-                // internet explorer
-                e.returnValue = false;
-            }
+            preventDefault(e); 
             this.downloadZettelis();
         });
 
