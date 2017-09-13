@@ -46,19 +46,17 @@ export default class ZetteliList extends React.Component<Props, object> {
     // Allows the user to save displayed zettelis to a local file
     downloadZettelis = () => {
         function serializeZetteli(z: ZetteliType): string {
-            const DATE_RFC2822 = 'ddd, MM MMM YYYY HH:mm:ss [GMT]';
+            const DATE_RFC2822 = 'ddd, MM MMM YYYY HH:mm:ss ZZ';
             const time = moment.utc(z.datetime).format(DATE_RFC2822);
             // TODO(helfer): Make this string less ugly
-            // TODO(helfer): Make sure the date is formatted correctly.
             // NOTE(helfer): Should we strip HTML?
             return `
 ---
->${moment(time).format()}
+>${time}
 [${z.tags.join(' ')}]
 
 ${z.body}
-
-            `;
+`;
         }
 
         const serializedZettelis = this.state.zettelis.map(serializeZetteli);

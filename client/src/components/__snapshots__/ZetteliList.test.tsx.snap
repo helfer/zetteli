@@ -5,20 +5,18 @@ Object {
   "content": Array [
     "
 ---
->2017-07-06T19:40:00-07:00
+>Fri, 07 Jul 2017 02:40:00 +0000
 [t1 t2]
 
 hello
-
-            ",
+",
     "
 ---
->2017-07-06T19:40:05-07:00
+>Fri, 07 Jul 2017 02:40:05 +0000
 [t3 t4]
 
 hello2
-
-            ",
+",
   ],
   "options": Object {
     "type": "text/plain;charset=utf-8",
