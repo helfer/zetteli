@@ -85,7 +85,8 @@ ${z.body}
 
     }
     componentWillUnmount() {
-        Mousetrap.unbind(['command+u']);
+        Mousetrap.unbind('command+u');
+        Mousetrap.unbind(['ctrl+s', 'meta+s']);
     }
 
     render() {
