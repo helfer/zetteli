@@ -19,6 +19,8 @@ export default class ZetteliList extends React.Component<Props, object> {
         zettelis: [] as ZetteliType[],
     };
 
+    mousetrap: MousetrapInstance;
+
     refetchZettelis() {
         // TODO: Because this will only work if the call doesn't take too long.
         this.props.client.getAllZettelis().then( zettelis => {
@@ -71,17 +73,20 @@ ${z.body}
     }
 
     componentDidMount() {
-        Mousetrap.prototype.stopCallback = () => false;
-        Mousetrap.bind('command+u', this.createNewZetteli);
-        Mousetrap.bind(['ctrl+s', 'meta+s'], (e) => {
+        // NOTE(helfer): new Mousetrap() works and will bind to document.
+        // tslint:disable-next-line no-any
+        this.mousetrap = new Mousetrap(undefined as any);
+        this.mousetrap.stopCallback = () => false;
+        this.mousetrap.bind('command+u', this.createNewZetteli);
+        this.mousetrap.bind(['ctrl+s', 'meta+s'], (e) => {
             preventDefault(e); 
             this.downloadZettelis();
         });
 
     }
     componentWillUnmount() {
-        Mousetrap.unbind('command+u');
-        Mousetrap.unbind(['ctrl+s', 'meta+s']);
+        this.mousetrap.unbind('command+u');
+        this.mousetrap.unbind(['ctrl+s', 'meta+s']);
     }
 
     render() {

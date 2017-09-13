@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as enzyme from 'enzyme';
 import FileSaver from 'file-saver';
-import Mousetrap from 'mousetrap';
 
 import ZetteliList from './ZetteliList';
 import { Props as ZetteliProps, ZetteliType } from './Zetteli';
@@ -63,24 +62,12 @@ describe('ZetteliList', () => {
     // listens to cmd+u and creates a new Zetteli if it's pressed
     // TODO(helfer): that test is actually a bit tricky. Let's keep that for later
     it('listens to command+u and adds a new zetteli if called', () => {
-        let cb: Function = () => null;
-        Mousetrap.bind = jest.fn( (key, func) => {
-            // avoid capturing ctrl+s / meta+s
-            if (key === 'command+u') {
-                cb = func;
-            }
-        });
-        Mousetrap.unbind = jest.fn();
         client.createNewZetteli = jest.fn(() => Promise.resolve([]));
-
         // NOTE(helfer): Have to mount here to get lifecycle events
         const zetteliList = enzyme.mount(<ZetteliList client={client} />);
-        expect(Mousetrap.bind).toHaveBeenCalled();
-        cb(); // Should have been assigned by now
+        (zetteliList.instance() as ZetteliList).mousetrap.trigger('command+u');
         expect(client.createNewZetteli).toHaveBeenCalled();
         zetteliList.unmount();
-        expect(Mousetrap.unbind).toHaveBeenCalledWith('command+u');
-
         // TODO(helfer): Do the mock functions get removed after every test?
     });
 
@@ -95,6 +82,17 @@ describe('ZetteliList', () => {
         zetteliList.update();
         (zetteliList.instance() as ZetteliList).downloadZettelis();
         expect(mockSaveAs.mock.calls[0][0]).toMatchSnapshot();
+    });
+
+    it('Ctrl+s calls downloadZettelis', () => {
+        const zetteliList = enzyme.mount(<ZetteliList client={client} />);
+        const mockDownload = jest.fn();
+        (zetteliList.instance() as ZetteliList).downloadZettelis = mockDownload;
+        zetteliList.setState({ zettelis: [zli, zli2], loading: false });
+        zetteliList.update();
+        (zetteliList.instance() as ZetteliList).mousetrap.trigger('ctrl+s');
+        zetteliList.unmount();
+        expect(mockDownload).toHaveBeenCalled();
     });
 
     // deleteZetteli calls client.delete
