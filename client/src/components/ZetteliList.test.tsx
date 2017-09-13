@@ -1,5 +1,7 @@
 import * as React from 'react';
 import * as enzyme from 'enzyme';
+import FileSaver from 'file-saver';
+import Mousetrap from 'mousetrap';
 
 import ZetteliList from './ZetteliList';
 import { Props as ZetteliProps, ZetteliType } from './Zetteli';
@@ -29,14 +31,14 @@ describe('ZetteliList', () => {
         zli = {
             id: '1',
             body: 'hello',
-            datetime: new Date(),
+            datetime: new Date(1500000000000),
             tags: ['t1', 't2'],
         };
         client.addZetteli(zli);
         zli2 = {
             id: '2',
             body: 'hello2',
-            datetime: new Date(),
+            datetime: new Date(1500000005000),
             tags: ['t3', 't4'],
         };
         client.addZetteli(zli2);
@@ -77,9 +79,22 @@ describe('ZetteliList', () => {
         cb(); // Should have been assigned by now
         expect(client.createNewZetteli).toHaveBeenCalled();
         zetteliList.unmount();
-        expect(Mousetrap.unbind).toHaveBeenCalledWith(['command+u']);
+        expect(Mousetrap.unbind).toHaveBeenCalledWith('command+u');
 
         // TODO(helfer): Do the mock functions get removed after every test?
+    });
+
+    it('downloadZettelis saves zettelis to file', () => {
+        const mockSaveAs = jest.fn();
+        FileSaver.saveAs = mockSaveAs;
+        // TODO(helfer): Find out why global.Blob is not defined
+        // tslint:disable-next-line no-any
+        (global as any).Blob = (content: string, options: {}) => ({content, options}); 
+        const zetteliList = enzyme.shallow(<ZetteliList client={client} />);
+        zetteliList.setState({ zettelis: [zli, zli2], loading: false });
+        zetteliList.update();
+        (zetteliList.instance() as ZetteliList).downloadZettelis();
+        expect(mockSaveAs.mock.calls[0][0]).toMatchSnapshot();
     });
 
     // deleteZetteli calls client.delete

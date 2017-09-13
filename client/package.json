@@ -35,7 +35,7 @@
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
     "lint": "tslint src/**/*.ts*",
-    "test": "react-scripts-ts test --env=jsdom --coverage --collectCoverageFrom=src/**/*.ts* --collectCoverageFrom=!src/index.tsx && yarn run lint",
+    "test": "react-scripts-ts test --env=jsdom --coverage --collectCoverageFrom=src/**/*.ts* --collectCoverageFrom=!src/index.tsx --collectCoverageFrom=!src/**/*.snap && yarn run lint",
     "testonly": "react-scripts-ts test --env=jsdom",
     "coverage": "codecov -f coverage/*.json",
     "eject": "react-scripts-ts eject"

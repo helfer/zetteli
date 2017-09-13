@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ZetteliList downloadZettelis saves zettelis to file 1`] = `
+Object {
+  "content": Array [
+    "
+---
+>2017-07-06T19:40:00-07:00
+[t1 t2]
+
+hello
+
+            ",
+    "
+---
+>2017-07-06T19:40:05-07:00
+[t3 t4]
+
+hello2
+
+            ",
+  ],
+  "options": Object {
+    "type": "text/plain;charset=utf-8",
+  },
+}
+`;
