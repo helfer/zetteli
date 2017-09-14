@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+import { Link } from 'react-router-dom';
+
 export interface Props {
   
 }
@@ -16,15 +18,9 @@ export default class Navbar extends React.PureComponent<Props, never> {
               backgroundColor: '#CCC',
             }}
           >
-            <a className="active item">
-              Home
-            </a>
-            <a className="item">
-              Archive
-            </a>
-            <a className="item">
-              Settings
-            </a>
+            <Link className="item" to="/">Home</Link>
+            <Link className="item" to="/archive">Archive</Link>
+            <Link className="item" to="/settings">Settings</Link>
             <div className="right menu">
               <div className="item">
                 <div className="ui transparent icon input">

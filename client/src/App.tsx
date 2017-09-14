@@ -1,4 +1,9 @@
 import * as React from 'react';
+import { 
+  BrowserRouter as Router,
+  Route,
+} from 'react-router-dom';
+
 import './App.css';
 
 import Navbar from './components/Navbar';
@@ -12,10 +17,26 @@ export interface Props {
 class App extends React.Component<Props, never> {
   render() {
     return (
-      <div className="ui text container">
-        <Navbar /> 
-        <ZetteliList client={this.props.client}/>
-      </div>
+      <Router>
+        <div className="ui text container">
+            <Navbar />
+            <Route 
+              exact={true}
+              path="/"
+              render={() => <ZetteliList client={this.props.client} />}
+            />
+            <Route
+              exact={true}
+              path="/archive"
+              render={() => <ZetteliList client={this.props.client} />}
+            />
+            <Route
+              exact={true}
+              path="/settings"
+              render={() => <div className="content">Settings doth go here</div>}
+            />
+        </div>
+      </Router>
     );
   }
 }
