@@ -11,6 +11,11 @@ import preventDefault from '../utils/preventDefault';
 
 export interface Props {
     client: ZetteliClient;
+    // TODO(helfer): Is this the best way of controlling which Zettelis to show?
+    // TODO(helfer): Make this a dumb component and build a ZetteliListContainer
+    // to do all the data loading.
+    filterBy?: (z: ZetteliType) => boolean;
+    // last?: number;
 }
 
 export default class ZetteliList extends React.Component<Props, object> {
@@ -23,7 +28,14 @@ export default class ZetteliList extends React.Component<Props, object> {
 
     refetchZettelis() {
         // TODO: Because this will only work if the call doesn't take too long.
-        this.props.client.getAllZettelis().then( zettelis => {
+        return this.props.client.getAllZettelis().then( zlis => {
+            let zettelis = zlis;
+            // if (this.props.last) {
+            //     zettelis = zettelis.slice(zettelis.length - this.props.last);
+            // }
+            if (this.props.filterBy) {
+                zettelis = zettelis.filter(this.props.filterBy);
+            }
             this.setState({ zettelis });
         });
     }
@@ -65,8 +77,8 @@ ${z.body}
     }
 
     componentWillMount() {
-        this.props.client.getAllZettelis().then( zettelis => {
-            this.setState({ zettelis, loading: false });
+        this.refetchZettelis().then( () => {
+            this.setState({ loading: false });
         });
     }
 
@@ -96,7 +108,7 @@ ${z.body}
             );
         }
         return (
-          <div style={{ marginBottom: '20em' }} className="zetteliList">
+          <div style={{ marginBottom: '20em' }} className="contentContainer">
               {this.state.zettelis.map( zli => 
                  <FullscreenableZetteli
                    tags={zli.tags}
