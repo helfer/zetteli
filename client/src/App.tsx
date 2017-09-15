@@ -24,12 +24,28 @@ const last24h = (z: ZetteliType) => {
   return moment(z.datetime).isAfter(moment().subtract(1, 'd').startOf('day'));
 }
 
-class App extends React.Component<Props, never> {
+class App extends React.Component<Props, {}> {
+  state = {
+    search: '',
+  };
+
+  onSearchChange = (newSearch: string) => {
+    this.setState({ search: newSearch });
+    console.log(newSearch);
+  };
+
+  searchFilter = (z: ZetteliType) => {
+    if (this.state.search.length < 3){
+      return true;
+    }
+    return z.body.includes(this.state.search);
+  }
+
   render() {
     return (
       <Router>
         <div className="ui text container">
-            <Navbar />
+            <Navbar search={this.state.search} onSearchChange={this.onSearchChange}/>
             <Route 
               exact={true}
               path="/"
@@ -38,7 +54,7 @@ class App extends React.Component<Props, never> {
             <Route
               exact={true}
               path="/archive"
-              render={() => <ZetteliList client={this.props.client} />}
+              render={() => <ZetteliList client={this.props.client} filterBy={this.searchFilter}/>}
             />
             <Route
               exact={true}

@@ -3,10 +3,17 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 
 export interface Props {
-  
+  search: string;
+  onSearchChange: (search: string) => void;
 }
 
 export default class Navbar extends React.PureComponent<Props, never> {
+
+    onChange = (e: any) => {  
+        const newText = e.target.value;  
+        this.props.onSearchChange(newText); 
+    }
+
     render() {
         return (
           <div
@@ -24,7 +31,12 @@ export default class Navbar extends React.PureComponent<Props, never> {
             <div className="right menu">
               <div className="item">
                 <div className="ui transparent icon input">
-                  <input type="text" placeholder="Search..." />
+                  <input 
+                    type="text"
+                    placeholder="Search..."
+                    value={this.props.search}
+                    onChange={this.onChange}
+                  />
                   <i className="search link icon" />
                 </div>
               </div>

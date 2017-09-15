@@ -27,15 +27,9 @@ export default class ZetteliList extends React.Component<Props, object> {
     mousetrap: MousetrapInstance;
 
     refetchZettelis() {
+        console.log('refetching');
         // TODO: Because this will only work if the call doesn't take too long.
-        return this.props.client.getAllZettelis().then( zlis => {
-            let zettelis = zlis;
-            // if (this.props.last) {
-            //     zettelis = zettelis.slice(zettelis.length - this.props.last);
-            // }
-            if (this.props.filterBy) {
-                zettelis = zettelis.filter(this.props.filterBy);
-            }
+        return this.props.client.getAllZettelis().then( zettelis => {
             this.setState({ zettelis });
         });
     }
@@ -99,7 +93,12 @@ ${z.body}
         this.mousetrap.unbind(['ctrl+s', 'meta+s']);
     }
 
+    componente() {
+        this.refetchZettelis();
+    }
+
     render() {
+        console.log('rendering');
         if (this.state.loading) {
             return (
                 <div className="ui active inverted dimmer">
@@ -107,9 +106,13 @@ ${z.body}
                 </div>
             );
         }
+        let zettelis = this.state.zettelis;
+        if (this.props.filterBy) {
+            zettelis = zettelis.filter(this.props.filterBy);
+        }
         return (
           <div style={{ marginBottom: '20em' }} className="contentContainer">
-              {this.state.zettelis.map( zli => 
+              {zettelis.map( zli => 
                  <FullscreenableZetteli
                    tags={zli.tags}
                    datetime={zli.datetime}

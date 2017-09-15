@@ -6,7 +6,11 @@ import { MemoryRouter } from 'react-router';
 
 describe('Navbar', () => {
     it('renders the menu', () => {
-        const navbar = enzyme.render(<MemoryRouter><Navbar /></MemoryRouter>);
+        const navbar = enzyme.render(
+            <MemoryRouter>
+                <Navbar search="" onSearchChange={() => null} />
+            </MemoryRouter>
+        );
         expect(navbar.text()).toContain('Home');
         expect(navbar.text()).toContain('Archive');
         expect(navbar.text()).toContain('Settings');
