@@ -36,4 +36,3 @@ describe('App', () => {
     ReactDOM.render(<App client={client}/>, div);
   });
 });
-    

@@ -22,7 +22,7 @@ export interface Props {
 // }
 const last24h = (z: ZetteliType) => {
   return moment(z.datetime).isAfter(moment().subtract(1, 'd').startOf('day'));
-}
+};
 
 class App extends React.Component<Props, {}> {
   state = {
@@ -31,10 +31,10 @@ class App extends React.Component<Props, {}> {
 
   onSearchChange = (newSearch: string) => {
     this.setState({ search: newSearch });
-  };
+  }
 
   searchFilter = (z: ZetteliType) => {
-    if (this.state.search.length < 3){
+    if (this.state.search.length < 3) {
       return true;
     }
     return z.body.includes(this.state.search);
