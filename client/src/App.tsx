@@ -31,7 +31,6 @@ class App extends React.Component<Props, {}> {
 
   onSearchChange = (newSearch: string) => {
     this.setState({ search: newSearch });
-    console.log(newSearch);
   };
 
   searchFilter = (z: ZetteliType) => {

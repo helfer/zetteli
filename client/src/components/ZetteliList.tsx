@@ -27,7 +27,6 @@ export default class ZetteliList extends React.Component<Props, object> {
     mousetrap: MousetrapInstance;
 
     refetchZettelis() {
-        console.log('refetching');
         // TODO: Because this will only work if the call doesn't take too long.
         return this.props.client.getAllZettelis().then( zettelis => {
             this.setState({ zettelis });
@@ -98,7 +97,6 @@ ${z.body}
     }
 
     render() {
-        console.log('rendering');
         if (this.state.loading) {
             return (
                 <div className="ui active inverted dimmer">
