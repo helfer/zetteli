@@ -9,8 +9,8 @@ export interface Props {
 
 export default class Navbar extends React.PureComponent<Props, never> {
 
-    onChange = (e: any) => {  
-        const newText = e.target.value;  
+    onChange = (e: React.SyntheticEvent<HTMLInputElement>) => {  
+        const newText = e.currentTarget.value;  
         this.props.onSearchChange(newText); 
     }
 
