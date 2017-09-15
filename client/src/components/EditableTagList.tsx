@@ -16,7 +16,7 @@ export default class EditableTagList extends React.Component<Props, object> {
 
     onKeyUp = (evt: React.KeyboardEvent<HTMLInputElement> ) => {
         if (evt.keyCode === 13) {
-            const newTags: string[] = (evt.target as HTMLInputElement).value.split(' ');
+            const newTags: string[] = evt.currentTarget.value.split(' ');
             this.props.updateTags(newTags);
             this.setState({ editing: false });
         }

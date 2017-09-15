@@ -37,6 +37,7 @@ export default class Zetteli extends React.PureComponent<Props, never> {
     updateText = (evt: Event) => {
        this.props.onUpdate({
            id: this.props.id,
+           // TODO(helfer): Fix typings here
            body: (evt.target as HTMLInputElement).value,
        });
     }
