@@ -20,7 +20,7 @@ export interface Props {
 // const today = (z: ZetteliType) => {
 //   return moment().isSame(moment(z.datetime), 'd');
 // }
-const last24h = (z: ZetteliType) => {
+export const last2days = (z: ZetteliType) => {
   return moment(z.datetime).isAfter(moment().subtract(1, 'd').startOf('day'));
 };
 
@@ -48,7 +48,7 @@ class App extends React.Component<Props, {}> {
             <Route 
               exact={true}
               path="/"
-              render={() => <ZetteliList client={this.props.client} filterBy={last24h}/>}
+              render={() => <ZetteliList client={this.props.client} filterBy={last2days}/>}
             />
             <Route
               exact={true}
