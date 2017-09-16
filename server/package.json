@@ -8,10 +8,12 @@
     "apollo-server-express": "^1.1.2",
     "body-parser": "^1.18.1",
     "express": "^4.15.4",
+    "graphql": "^0.11.3",
     "graphql-tools": "^1.2.2"
   },
   "scripts": {
-    "build": "tsc",
-    "start": "yarn run build && node build/dist/index.js"
+    "compile": "tsc",
+    "serve": "node build/dist/index.js",
+    "start": "nodemon -e ts --exec \"yarn run compile && yarn run serve\""
   }
 }
