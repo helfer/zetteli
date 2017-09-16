@@ -13,6 +13,7 @@
   },
   "scripts": {
     "compile": "tsc",
+    "lint": "tslint src/**/*.ts*",
     "serve": "node build/dist/index.js",
     "start": "nodemon -e ts --exec \"yarn run compile && yarn run serve\""
   }
