@@ -9,11 +9,14 @@
     "body-parser": "^1.18.1",
     "express": "^4.15.4",
     "graphql": "^0.11.3",
-    "graphql-tools": "^1.2.2"
+    "graphql-tools": "^1.2.2",
+    "knex": "^0.13.0",
+    "sqlite3": "^3.1.11"
   },
   "scripts": {
     "compile": "tsc",
     "lint": "tslint src/**/*.ts*",
+    "migrate": "knex migrate:latest",
     "serve": "node build/dist/index.js",
     "start": "nodemon -e ts --exec \"yarn run compile && yarn run serve\""
   }
