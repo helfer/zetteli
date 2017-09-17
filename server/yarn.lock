@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@types/bluebird@*":
+  version "3.5.11"
+  resolved "https://registry.yarnpkg.com/@types/bluebird/-/bluebird-3.5.11.tgz#60482b3cddce9111dee3cafd08ab54fffee4b119"
+
 "@types/body-parser@^1.16.5":
   version "1.16.5"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.16.5.tgz#d2b7daefab84e0afa9d3fae0935bc7355b6320af"
@@ -25,6 +29,13 @@
 "@types/graphql@^0.9.0":
   version "0.9.4"
   resolved "https://registry.yarnpkg.com/@types/graphql/-/graphql-0.9.4.tgz#cdeb6bcbef9b6c584374b81aa7f48ecf3da404fa"
+
+"@types/knex@^0.0.61":
+  version "0.0.61"
+  resolved "https://registry.yarnpkg.com/@types/knex/-/knex-0.0.61.tgz#3825ec6fe0886237dbce02d1398ae8dfdc19f4b3"
+  dependencies:
+    "@types/bluebird" "*"
+    "@types/node" "*"
 
 "@types/mime@*":
   version "0.0.29"

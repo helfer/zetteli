@@ -1,8 +1,22 @@
 import { makeExecutableSchema } from 'graphql-tools';
 import Zetteli, { ZetteliType } from './models/Zetteli';
-import InMemoryZetteliConnector from './connectors/InMemoryZetteliConnector';
+// import InMemoryZetteliConnector from './connectors/InMemoryZetteliConnector';
+import SQLZetteliConnector from './connectors/SQLZetteliConnector';
 
-import TestData from './test/TestData';
+// TODO(helfer): get this working, you shouldn't duplicate...
+// import knexConfig from './config/knexfile';
+const knexConfig = {
+    development: {
+      client: 'sqlite3',
+      connection: {
+        filename: './dev.sqlite3',
+      },
+      useNullAsDefault: true,
+      debug: true,
+    }
+};
+
+// import TestData from './test/TestData';
 
 const typeDefs = `
 
@@ -32,7 +46,7 @@ type Mutation {
 
 `;
 
-const zetteli = new Zetteli(new InMemoryZetteliConnector(TestData.zettelis));
+const zetteli = new Zetteli(new SQLZetteliConnector(knexConfig.development));
 const resolvers = {
     Query: {
         zettelis(){ return zetteli.getAll() },
