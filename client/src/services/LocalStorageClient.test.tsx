@@ -1,8 +1,8 @@
-import ZetteliClient from './ZetteliClient';
+import LocalStorageClient from './LocalStorageClient';
 import { ZetteliType } from '../components/Zetteli';
 
-describe('ZetteliClient', () => {
-    let client: ZetteliClient;
+describe('LocalStorageClient', () => {
+    let client: LocalStorageClient;
     let store: Storage;
     let storage: Map<string, string>;
 
@@ -17,7 +17,7 @@ describe('ZetteliClient', () => {
             key: i => '', // not implemented
         };
 
-        client = new ZetteliClient(store, 1);
+        client = new LocalStorageClient(store, 1);
     });
 
     it('can add a Zetteli and read it back', () => {

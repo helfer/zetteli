@@ -4,11 +4,11 @@ import App, { last2days } from './App';
 import * as enzyme from 'enzyme';
 import moment from 'moment';
 
-import ZetteliClient from './services/ZetteliClient';
+import LocalStorageClient from './services/LocalStorageClient';
 import { ZetteliType } from './components/Zetteli';
 
 describe('App', () => {
-  let client: ZetteliClient;
+  let client: LocalStorageClient;
   let zli: ZetteliType;
   let zli2: ZetteliType;
   let store: Storage;
@@ -25,7 +25,7 @@ describe('App', () => {
           key: i => '', // not implemented
       };
 
-      client = new ZetteliClient(store);
+      client = new LocalStorageClient(store);
 
       zli = {
         id: '1',

@@ -5,17 +5,17 @@ import FileSaver from 'file-saver';
 import ZetteliList from './ZetteliList';
 import { Props as ZetteliProps, ZetteliType } from './Zetteli';
 import FullscreenableZetteli from './FullscreenableZetteli';
-import ZetteliClient from '../services/ZetteliClient';
+import LocalStorageClient from '../services/LocalStorageClient';
 
 describe('ZetteliList', () => {
-    let client: ZetteliClient;
+    let client: LocalStorageClient;
     let store: Storage;
     let storage: Map<string, string>;
     let zli: ZetteliType;
     let zli2: ZetteliType;
 
     beforeEach(() => {
-        // TODO(helfer): Make a proper mock of ZetteliClient
+        // TODO(helfer): Make a proper mock of LocalStorageClient
         storage = new Map();
         store = {
             getItem: key => storage.get(key) || null,
@@ -26,7 +26,7 @@ describe('ZetteliList', () => {
             key: i => '', // not implemented
         };
 
-        client = new ZetteliClient(store);
+        client = new LocalStorageClient(store);
         zli = {
             id: '1',
             body: 'hello',
@@ -50,7 +50,7 @@ describe('ZetteliList', () => {
     it('renders the list of zettelis with correct props', () => {
         const zetteliList = enzyme.shallow(<ZetteliList client={client} />);
         // NOTE(helfer): It would be better to not be aware of state, but I can't
-        // figure out how to successfuly let the ZetteliClient promise update the state.
+        // figure out how to successfuly let the LocalStorageClient promise update the state.
         zetteliList.setState({ zettelis: [zli, zli2], loading: false });
         zetteliList.update();
         // TODO(helfer): Fix the type declaration of the Fullscreenable HOC soyou don't need to coerce type

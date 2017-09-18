@@ -5,12 +5,12 @@ import moment from 'moment';
 
 // import Zetteli from './Zetteli';
 import FullscreenableZetteli from './FullscreenableZetteli';
-import ZetteliClient from '../services/ZetteliClient';
+import LocalStorageClient from '../services/LocalStorageClient';
 import { ZetteliType } from './Zetteli';
 import preventDefault from '../utils/preventDefault';
 
 export interface Props {
-    client: ZetteliClient;
+    client: LocalStorageClient;
     // TODO(helfer): Is this the best way of controlling which Zettelis to show?
     // TODO(helfer): Make this a dumb component and build a ZetteliListContainer
     // to do all the data loading.

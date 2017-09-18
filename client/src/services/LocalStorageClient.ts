@@ -12,7 +12,7 @@ interface SerializedZetteli {
     datetime: string;
 }
 
-export default class ZetteliClient {
+export default class LocalStorageClient {
     // XXX reading from and writing to local storage
     // will only work in one tab at a time, because
     // writes are not synced and overwrite current contents.

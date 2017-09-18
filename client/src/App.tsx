@@ -10,10 +10,10 @@ import './App.css';
 import Navbar from './components/Navbar';
 import ZetteliList from './components/ZetteliList';
 import { ZetteliType } from './components/Zetteli';
-import ZetteliClient from './services/ZetteliClient';
+import LocalStorageClient from './services/LocalStorageClient';
 
 export interface Props {
-  client: ZetteliClient;
+  client: LocalStorageClient;
 }
 
 // TODO(helfer): This is definitely in the wrong place
