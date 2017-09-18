@@ -13,7 +13,7 @@ const PORT = 3010;
 const app = express();
 
 const corsOptions = {
-    origin: 'http://localhost:3000',
+    origin: 'http://localhost:3020',
     optionsSuccessStatus: 200 // for IE11 & Co. 
   }
 app.use(cors(corsOptions));
