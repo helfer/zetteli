@@ -3,22 +3,31 @@ import {
     createApolloFetch,
     ApolloFetch
 } from 'apollo-fetch';
-
-// import uuid from 'uuid';
+import uuid from 'uuid';
 
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType } from '../components/Zetteli';
 
+// TODO(helfer): Put these queries in a different file
 const getAllZettelisQuery = gql`
-query getAllZettelis {
+  query getAllZettelis {
     zettelis {
       id
       datetime
       tags
       body
     }
-  }
-`;
+  }`;
+
+const createZetteliMutation = gql`
+  mutation create($id: String!, $tags : [String!]!, $datetime: DateTime!, $body: String!) {
+    createZetteli(z: {
+      id: $id,
+      body: $body,
+      tags: $tags,
+      datetime: $datetime,
+    })
+  }`;
 
 // TODO(helfer): how do I keep this in sync with ZetteliType?
 // TODO(helfer): This is a common type with LocalStorageClient move it to separate file
@@ -36,8 +45,20 @@ export default class GraphQLClient implements ZetteliClient {
         this.client = createApolloFetch({ uri });
     }
 
-    createNewZetteli(): Promise<boolean> {
-        return Promise.resolve(false);
+    createNewZetteli(): Promise<string> {
+        const operation = {
+            query: createZetteliMutation,
+            variables: {
+                id: uuid.v4(),
+                tags: ['log', 'zetteli'],
+                body: '',
+                datetime: new Date(),
+            },
+        };
+        // TODO(helfer): Better error handling
+        return this.client(operation)
+          .then(res => res.data.createZetteli)
+          .catch(e => console.log(e));
     }
 
     addZetteli(zli: ZetteliType): Promise<boolean> {

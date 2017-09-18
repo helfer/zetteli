@@ -9,7 +9,7 @@ import GraphQLClient from './services/GraphQLClient';
 const URI = 'http://localhost:3010/graphql';
 
 // Uncomment this for debugging
-// window['Client'] = new GraphQLClient({ uri: URI });
+window['Client'] = new GraphQLClient({ uri: URI });
 
 ReactDOM.render(
     <App client={new GraphQLClient({ uri: URI })}/>,

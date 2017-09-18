@@ -25,7 +25,7 @@ export default class LocalStorageClient implements ZetteliClient {
         this.pullFromStore();
     }
 
-    createNewZetteli(): Promise<boolean> {
+    createNewZetteli(): Promise<string> {
         const newZetteli = {
             tags: ['log', 'personal'],
             datetime: new Date(),
@@ -34,7 +34,7 @@ export default class LocalStorageClient implements ZetteliClient {
         };
         this.zettelis = [ ...this.zettelis, newZetteli ];
         this.writeToStore();
-        return Promise.resolve(true);
+        return Promise.resolve(newZetteli.id);
     }
 
     addZetteli(zli: ZetteliType): Promise<boolean> {
