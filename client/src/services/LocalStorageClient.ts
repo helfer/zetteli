@@ -1,5 +1,6 @@
 import uuid from 'uuid';
 
+import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType } from '../components/Zetteli';
 
 const LOCAL_STORAGE_KEY = 'Zetteli.zettelis';
@@ -12,7 +13,7 @@ interface SerializedZetteli {
     datetime: string;
 }
 
-export default class LocalStorageClient {
+export default class LocalStorageClient implements ZetteliClient {
     // XXX reading from and writing to local storage
     // will only work in one tab at a time, because
     // writes are not synced and overwrite current contents.
