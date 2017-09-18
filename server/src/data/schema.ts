@@ -1,4 +1,8 @@
 import { makeExecutableSchema } from 'graphql-tools';
+import {
+    GraphQLDateTime as DateTime,
+} from 'graphql-iso-date';
+
 import Zetteli, { ZetteliType } from './models/Zetteli';
 // import InMemoryZetteliConnector from './connectors/InMemoryZetteliConnector';
 import SQLZetteliConnector from './connectors/SQLZetteliConnector';
@@ -20,16 +24,18 @@ const knexConfig = {
 
 const typeDefs = `
 
+scalar DateTime
+
 type Zetteli {
     id: String!
-    datetime: String!
+    datetime: DateTime!
     tags: [String!]!
     body: String!
 }
 
 input ZetteliInput {
     id: String!
-    datetime: String!
+    datetime: DateTime!
     tags: [String!]!
     body: String!   
 }
@@ -51,6 +57,7 @@ const resolvers = {
     Query: {
         zettelis(){ return zetteli.getAll() },
     },
+    DateTime: DateTime,
     Mutation: {
         createZetteli(root: {}, args: { z: ZetteliType}) {
             return zetteli.create(args.z);

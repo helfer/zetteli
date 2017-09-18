@@ -11,18 +11,18 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
         this.db =  knex(dbConfig);
     }
 
-    // TODO(helfer): Get the types right here. Add them to the schema
     static serialize(zli: any) {
         return {
             ...zli,
-            datetime: new Date(parseInt(zli.datetime)),
             tags: zli.tags.join(' '),
         };
     }
 
     static parse(zli: any) {
+        // NOTE(helfer): If performance becomes an issue we could copy instead of mutating
         return {
             ...zli,
+            datetime: new Date(zli.datetime),
             tags: (zli.tags as string).split(' '),
         };
     }
@@ -46,7 +46,7 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
     }
 
     create(zli: ZetteliType) {
-        return this.db('zettelis').debug()
+        return this.db('zettelis')
             .insert(SQLZetteliConnector.serialize(zli))
             .then( ids => 
                 ids[0]

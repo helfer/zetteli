@@ -8,17 +8,17 @@ exports.seed = function(knex, Promise) {
         {
           id: '1',
           tags: 't1 t2',
-          datetime: new Date(1500000005000),
+          datetime: new Date('2011-01-11T09:53:11.123'),
           body: 'Zetteli 1',
         }, {
             id: '2',
             tags: 't2 t3',
-            datetime: new Date(1500000505000),
+            datetime: new Date('2012-02-12T09:53:22.234'),
             body: 'Zetteli 2',
         }, {
             id: '3',
             tags: 't3 t4',
-            datetime: new Date(1500050005000),
+            datetime: new Date('2012-03-13T09:53:33.345'),
             body: 'Zetteli 3',
         }
       ]);
