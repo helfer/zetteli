@@ -29,6 +29,15 @@ it('calls onUpdate when Return key is pressed', () => {
   expect(updateTags).toHaveBeenCalledWith(['t2', 't1']);
 });
 
+it('filters out empty tags', () => {
+  const tags = ['t1'];
+  const updateTags = jest.fn();
+  const tagList = enzyme.shallow(<EditableTagList tags={tags} updateTags={updateTags}/>);
+  tagList.simulate('click');
+  tagList.find('input').simulate('keyUp', { keyCode: 13, currentTarget: { value: '  t2  t3' } });
+  expect(updateTags).toHaveBeenCalledWith(['t2', 't3']);
+});
+
 // Trying to make sure all branches are covered here.
 it('does not call onUpdate when a key other than Return is pressed', () => {
   const tags = ['t1'];
