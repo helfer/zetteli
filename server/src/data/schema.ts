@@ -16,7 +16,6 @@ const knexConfig = {
         filename: './dev.sqlite3',
       },
       useNullAsDefault: true,
-      debug: true,
     }
 };
 
