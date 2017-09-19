@@ -34,9 +34,9 @@ type Zetteli {
 
 input ZetteliInput {
     id: String!
-    datetime: DateTime!
-    tags: [String!]!
-    body: String!   
+    datetime: DateTime
+    tags: [String!]
+    body: String
 }
 
 type Query {

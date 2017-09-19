@@ -21,6 +21,7 @@ export default class InMemoryZetteliConnector implements Connector<ZetteliType> 
         return zli.id;
     }
 
+    // TODO(helfer): Use a ZetteliInputType, which may not have all the fields
     update(zli: ZetteliType) {
         let updated = false;
         this.zettelis = this.zettelis.map( z => {

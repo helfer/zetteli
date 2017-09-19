@@ -14,7 +14,7 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
     static serialize(zli: any) {
         return {
             ...zli,
-            tags: zli.tags.join(' '),
+            tags: zli.tags ? zli.tags.join(' ') : undefined,
         };
     }
 

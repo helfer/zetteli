@@ -34,6 +34,11 @@ const deleteZetteliMutation = gql`
     deleteZetteli(id: $id)
   }`;
 
+const updateZetteliMutation = gql`
+  mutation update($z: ZetteliInput){
+    updateZetteli(z: $z)
+  }`;
+
 // TODO(helfer): how do I keep this in sync with ZetteliType?
 // TODO(helfer): This is a common type with LocalStorageClient move it to separate file
 interface SerializedZetteli {
@@ -62,10 +67,10 @@ export default class GraphQLClient implements ZetteliClient {
         };
         // TODO(helfer): Better error handling
         return this.client(operation)
-          .then(res => res.data.createZetteli)
-          .catch(e => console.log(e));
+          .then(res => res.data.createZetteli);
     }
 
+    // TODO(helfer): What is this function? Do we need it?
     addZetteli(zli: ZetteliType): Promise<boolean> {
         return Promise.resolve(false);
     }
@@ -76,12 +81,18 @@ export default class GraphQLClient implements ZetteliClient {
             variables: { id },
         };
         return this.client(operation)
-          .then(res => res.data.deleteZetteli)
-          .catch(e => console.log(e));
+          .then(res => res.data.deleteZetteli);
     }
 
     updateZetteli(id: string, data: ZetteliType): Promise<boolean> {
-        return Promise.resolve(false);
+        const operation = {
+            query: updateZetteliMutation,
+            variables: { z: data },
+        };
+
+        // TODO(helfer): Find a good way of surfacing GraphQL errors
+        return this.client(operation)
+          .then(res => res.data.updateZetteli);
     }
 
     getZetteli(id: string): Promise<ZetteliType | undefined> {
