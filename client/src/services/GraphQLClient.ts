@@ -1,9 +1,11 @@
 import gql from 'graphql-tag';
 import { 
     createApolloFetch,
-    ApolloFetch
+    ApolloFetch,
+    GraphQLRequest,
 } from 'apollo-fetch';
 import uuid from 'uuid';
+import debounce from 'debounce';
 
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType } from '../components/Zetteli';
@@ -49,12 +51,14 @@ interface SerializedZetteli {
 }
 
 export default class GraphQLClient implements ZetteliClient {
-    private client: ApolloFetch
+    private client: ApolloFetch;
     private localShadow: ZetteliType[];
     private shadowLoading: boolean;
     private shadowReady: boolean;
     private shadowPromise: Promise<ZetteliType[]>;
     private incompleteOps: number;
+
+    private debouncedRequest: Function;
 
     constructor({ uri }: { uri: string }) {
         this.client = createApolloFetch({ uri });
@@ -62,6 +66,25 @@ export default class GraphQLClient implements ZetteliClient {
         this.shadowLoading = false;
         this.shadowReady = false;
         this.incompleteOps = 0;
+
+        this.debouncedRequest = debounce(this.request, 500);
+    }
+
+    request(operation: GraphQLRequest) {
+        // TODO(helfer): Find a good way of surfacing GraphQL errors
+        this.incompleteOps++;
+        console.log('update started. remaining: ', this.incompleteOps);
+        this.client(operation)
+          .then(res => res.data.updateZetteli)
+          .then( success => {
+              // TODO(helfer): This assumes there are no errors!
+              this.incompleteOps--;
+              if (success) {
+                  console.log('update succeeded. remaining:', this.incompleteOps);
+              } else {
+                  console.log('update failed');
+              }
+          });
     }
 
     createNewZetteli(): Promise<string> {
@@ -116,26 +139,14 @@ export default class GraphQLClient implements ZetteliClient {
                 return { ...zli, ...data };
             }
             return zli;
-        })
+        });
 
         const operation = {
             query: updateZetteliMutation,
             variables: { z: data },
         };
 
-        // TODO(helfer): Find a good way of surfacing GraphQL errors
-        this.incompleteOps++;
-        this.client(operation)
-          .then(res => res.data.updateZetteli)
-          .then( success => {
-              // TODO(helfer): This assumes there are no errors!
-              this.incompleteOps--;
-              if (success) {
-                  console.log('update succeeded. remaining:', this.incompleteOps);
-              } else {
-                  console.log('update failed');
-              }
-          });
+        this.debouncedRequest(operation); 
 
         return Promise.resolve(true);
     }
