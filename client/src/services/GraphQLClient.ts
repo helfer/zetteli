@@ -73,17 +73,17 @@ export default class GraphQLClient implements ZetteliClient {
     request(operation: GraphQLRequest) {
         // TODO(helfer): Find a good way of surfacing GraphQL errors
         this.incompleteOps++;
-        console.log('update started. remaining: ', this.incompleteOps);
+        // console.log('update started. remaining: ', this.incompleteOps);
         this.client(operation)
           .then(res => res.data.updateZetteli)
           .then( success => {
               // TODO(helfer): This assumes there are no errors!
               this.incompleteOps--;
-              if (success) {
-                  console.log('update succeeded. remaining:', this.incompleteOps);
-              } else {
-                  console.log('update failed');
-              }
+              // if (success) {
+              //     console.log('update succeeded. remaining:', this.incompleteOps);
+              // } else {   
+              //     console.log('update failed');
+              // }
           });
     }
 
