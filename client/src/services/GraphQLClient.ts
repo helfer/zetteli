@@ -35,7 +35,7 @@ const deleteZetteliMutation = gql`
   }`;
 
 const updateZetteliMutation = gql`
-  mutation update($z: ZetteliInput){
+  mutation update($z: ZetteliInput!){
     updateZetteli(z: $z)
   }`;
 
@@ -58,6 +58,7 @@ export default class GraphQLClient implements ZetteliClient {
     createNewZetteli(): Promise<string> {
         const operation = {
             query: createZetteliMutation,
+            // TODO(helfer): Should these be decided here?
             variables: {
                 id: uuid.v4(),
                 tags: ['log', 'zetteli'],

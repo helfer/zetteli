@@ -44,9 +44,9 @@ type Query {
 }
 
 type Mutation {
-    createZetteli(z: ZetteliInput): String
-    updateZetteli(z: ZetteliInput): Boolean
-    deleteZetteli(id: String): Boolean
+    createZetteli(z: ZetteliInput!): String
+    updateZetteli(z: ZetteliInput!): Boolean
+    deleteZetteli(id: String!): Boolean
 }
 
 `;
