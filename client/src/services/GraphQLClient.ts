@@ -29,6 +29,11 @@ const createZetteliMutation = gql`
     })
   }`;
 
+const deleteZetteliMutation = gql`
+  mutation del($id: String!) {
+    deleteZetteli(id: $id)
+  }`;
+
 // TODO(helfer): how do I keep this in sync with ZetteliType?
 // TODO(helfer): This is a common type with LocalStorageClient move it to separate file
 interface SerializedZetteli {
@@ -66,7 +71,13 @@ export default class GraphQLClient implements ZetteliClient {
     }
 
     deleteZetteli(id: string): Promise<boolean> {
-        return Promise.resolve(false);
+        const operation = {
+            query: deleteZetteliMutation,
+            variables: { id },
+        };
+        return this.client(operation)
+          .then(res => res.data.deleteZetteli)
+          .catch(e => console.log(e));
     }
 
     updateZetteli(id: string, data: ZetteliType): Promise<boolean> {
