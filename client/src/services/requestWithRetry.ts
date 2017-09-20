@@ -20,25 +20,15 @@ export default function requestWithRetry(
         setTimeout(
             () => {
                 fetch(operation)
-                .then(res => {
-                    // TODO(helfer): This whole block is unnecessary
-                    console.log('success!');
-                    resolve(res)
-                })
                 .catch( err => {
                     // TODO(helfer): reject if it's not a network error
-                    console.log(err);
-                    console.log('retrying with delay', Math.min(Math.max(delay, MIN_DELAY) * 2, MAX_DELAY));
                     return requestWithRetry(
                         operation,
                         fetch,
                         Math.min(Math.max(delay, MIN_DELAY) * 2, MAX_DELAY),
                     );
                 })
-                .then(res => {
-                    console.log('done');
-                    resolve(res);
-                });
+                .then(resolve);
             }, 
             delay
         );
