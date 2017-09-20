@@ -3,8 +3,8 @@ import {
     ApolloFetch,
 } from 'apollo-fetch';
 
-const MIN_DELAY = 100;
-const MAX_DELAY = 3000;
+const MIN_DELAY = 200;
+const MAX_DELAY = 20000;
 
 export interface RequestWithContext extends GraphQLRequest {
     context?: {};

@@ -12,6 +12,8 @@ import { ZetteliType } from '../components/Zetteli';
 import requestWithRetry from './requestWithRetry';
 import queuedInvocation from './queuedInvocation';
 
+const UPDATE_DEBOUNCE_MS = 500;
+
 // TODO(helfer): Put these queries in a different file
 const getAllZettelisQuery = gql`
   query getAllZettelis {
@@ -74,7 +76,7 @@ export default class GraphQLClient implements ZetteliClient {
                 const id = op.variables && (op.variables as any).z.id;
                 return id;
             }),
-            200
+            UPDATE_DEBOUNCE_MS,
         );
     }
 
