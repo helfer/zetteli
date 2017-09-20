@@ -9,6 +9,8 @@ import debounce from 'debounce';
 
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType } from '../components/Zetteli';
+import requestWithRetry from './requestWithRetry';
+import queuedInvocation from './queuedInvocation';
 
 // TODO(helfer): Put these queries in a different file
 const getAllZettelisQuery = gql`
@@ -67,14 +69,20 @@ export default class GraphQLClient implements ZetteliClient {
         this.shadowReady = false;
         this.incompleteOps = 0;
 
-        this.debouncedRequest = debounce(this.request, 500);
+        this.debouncedRequest = debounce(
+            queuedInvocation(this.request, (op: GraphQLRequest) => {
+                const id = op.variables && (op.variables as any).z.id;
+                return id;
+            }),
+            200
+        );
     }
 
-    request(operation: GraphQLRequest) {
+    request = (operation: GraphQLRequest) => {
         // TODO(helfer): Find a good way of surfacing GraphQL errors
         this.incompleteOps++;
         // console.log('update started. remaining: ', this.incompleteOps);
-        this.client(operation)
+        return requestWithRetry(operation, this.client)
           .then(res => res.data.updateZetteli)
           .then( success => {
               // TODO(helfer): This assumes there are no errors!

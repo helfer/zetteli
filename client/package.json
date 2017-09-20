@@ -5,6 +5,7 @@
   "dependencies": {
     "@types/debounce": "^1.0.0",
     "@types/file-saver": "^0.0.1",
+    "@types/graphql": "^0.11.4",
     "@types/jest": "^20.0.8",
     "@types/mousetrap": "^1.5.34",
     "@types/node": "^8.0.26",
