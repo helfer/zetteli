@@ -12,7 +12,8 @@ import { ZetteliType } from '../components/Zetteli';
 import requestWithRetry from './requestWithRetry';
 import queuedInvocation from './queuedInvocation';
 
-const UPDATE_DEBOUNCE_MS = 500;
+const UPDATE_DEBOUNCE_MS = 400;
+const BROADCAST_DEBOUNCE_MS = 2000; // TODO(helfer): There should be a delay on optimistic.
 
 // TODO(helfer): Put these queries in a different file
 const getAllZettelisQuery = gql`
@@ -63,6 +64,9 @@ export default class GraphQLClient implements ZetteliClient {
     private incompleteOps: number;
 
     private debouncedRequest: Function;
+    private debouncedBroadcast: Function;
+
+    private subscribers: Function[];
 
     constructor({ uri }: { uri: string }) {
         this.client = createApolloFetch({ uri });
@@ -70,6 +74,8 @@ export default class GraphQLClient implements ZetteliClient {
         this.shadowLoading = false;
         this.shadowReady = false;
         this.incompleteOps = 0;
+        
+        this.subscribers = [];
 
         this.debouncedRequest = debounce(
             queuedInvocation(this.request, (op: GraphQLRequest) => {
@@ -78,6 +84,23 @@ export default class GraphQLClient implements ZetteliClient {
             }),
             UPDATE_DEBOUNCE_MS,
         );
+
+        this.debouncedBroadcast = debounce(
+            this.broadcastUpdate,
+            BROADCAST_DEBOUNCE_MS,
+        );
+    }
+
+    subscribe = (func: () => void) => {
+        this.subscribers.push(func);
+    }
+
+    unsubscribe = (func: () => void) => {
+        this.subscribers = this.subscribers.filter( f => f !== func);
+    }
+
+    broadcastUpdate = () => {
+        this.subscribers.forEach(subscriber => subscriber());
     }
 
     getShadowIndexById = (id: string) => {
@@ -93,6 +116,8 @@ export default class GraphQLClient implements ZetteliClient {
                 const count = this.localShadow[shadowIndex].optimisticCount || 0;
                 this.localShadow[shadowIndex].optimisticCount = count + 1;
             }
+            // TODO(helfer): Think about where you need to put these.
+            this.debouncedBroadcast();
         }
 
         // console.log('update started. remaining: ', this.incompleteOps);
@@ -107,12 +132,14 @@ export default class GraphQLClient implements ZetteliClient {
                         const count = this.localShadow[shadowIndex].optimisticCount || 1;
                         this.localShadow[shadowIndex].optimisticCount = count - 1;
                     }
+                    this.debouncedBroadcast();
                 }
               // if (success) {
               //     console.log('update succeeded. remaining:', this.incompleteOps);
               // } else {   
               //     console.log('update failed');
               // }
+              return success;
           });
     }
 
@@ -175,6 +202,7 @@ export default class GraphQLClient implements ZetteliClient {
             variables: { z: data },
         };
 
+        // TODO(helfer): Figure out why this returns undefined.
         this.debouncedRequest(operation); 
 
         return Promise.resolve(true);

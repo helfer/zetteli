@@ -71,7 +71,7 @@ export default class Zetteli extends React.PureComponent<Props, never> {
         return (
           <div className="ui centered fluid" style={zetteliStyle}>
             <div>
-              { this.props.isOptimistic ? (<i className="warning sign icon"></i>) : null }
+              { false ? (<i className="warning sign icon"></i>) : null }
               <EditableDateTime datetime={this.props.datetime} /> 
               <span style={{ float: 'right' }}>
                 <i className="window maximize icon" onClick={this.props.toggleFullscreen}/>
@@ -87,6 +87,19 @@ export default class Zetteli extends React.PureComponent<Props, never> {
               onChange={this.updateText}
               ref={this.editableTextRef}
             />
+            <span style={{
+                float: 'right',
+                position: 'relative',
+                bottom: '10px',
+                right: '-8px',
+                opacity: this.props.isOptimistic ? 0.4 : 0,
+                WebkitTransition : 'opacity 800ms ease',
+                MozTransition : 'opacity 800ms ease',
+                OTransition : 'opacity 800ms ease',
+                transition : 'opacity 800ms ease',
+            }} data-tooltip="Some changes are not saved yet">
+                <i className="warning sign icon"></i>
+            </span>
           </div>
         );
     }
@@ -113,6 +126,19 @@ export default class Zetteli extends React.PureComponent<Props, never> {
                     onChange={this.updateText}
                     ref={this.editableTextRef}
                 />
+                <span style={{
+                    float: 'right',
+                    position: 'relative',
+                    bottom: '10px',
+                    right: '10px',
+                    opacity: this.props.isOptimistic ? 0.4 : 0,
+                    WebkitTransition : 'opacity 800ms ease',
+                    MozTransition : 'opacity 800ms ease',
+                    OTransition : 'opacity 800ms ease',
+                    transition : 'opacity 800ms ease',
+                }} data-tooltip="Some changes are not saved yet">
+                    <i className="warning sign icon"></i>
+                </span>
             </div>
           </div>
         );

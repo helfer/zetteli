@@ -26,7 +26,7 @@ export default class ZetteliList extends React.Component<Props, object> {
 
     mousetrap: MousetrapInstance;
 
-    refetchZettelis() {
+    refetchZettelis = () => {
         // TODO: Because this will only work if the call doesn't take too long.
         return this.props.client.getAllZettelis().then( zettelis => {
             this.setState({ zettelis });
@@ -39,8 +39,8 @@ export default class ZetteliList extends React.Component<Props, object> {
     }
 
     updateZetteli = (modifiedZetteli: ZetteliType) => {
-        this.props.client.updateZetteli(modifiedZetteli.id, modifiedZetteli)
-        .then(() => this.refetchZettelis());
+        this.props.client.updateZetteli(modifiedZetteli.id, modifiedZetteli);
+        // NOTE(helfer): Not refreshing here because the client will notify subscribers
     }
 
     deleteZetteli = (id: string) => {
@@ -73,6 +73,7 @@ ${z.body}
         this.refetchZettelis().then( () => {
             this.setState({ loading: false });
         });
+        this.props.client.subscribe(this.refetchZettelis);
     }
 
     componentDidMount() {
@@ -90,6 +91,7 @@ ${z.body}
     componentWillUnmount() {
         this.mousetrap.unbind('command+u');
         this.mousetrap.unbind(['ctrl+s', 'meta+s']);
+        this.props.client.unsubscribe(this.refetchZettelis);
     }
 
     componente() {

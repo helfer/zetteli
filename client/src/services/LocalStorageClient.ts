@@ -25,6 +25,9 @@ export default class LocalStorageClient implements ZetteliClient {
         this.pullFromStore();
     }
 
+    subscribe: () => {};
+    unsubscribe: () => {};
+
     createNewZetteli(): Promise<string> {
         const newZetteli = {
             tags: ['log', 'personal'],
