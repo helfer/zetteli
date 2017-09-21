@@ -80,15 +80,34 @@ export default class GraphQLClient implements ZetteliClient {
         );
     }
 
+    getShadowIndexById = (id: string) => {
+        return this.localShadow.findIndex(z => z.id === id);
+    };
+
     request = (operation: GraphQLRequest) => {
         // TODO(helfer): Find a good way of surfacing GraphQL errors
-        this.incompleteOps++;
+        // TODO(helfer): This is too hacky
+        if ((operation.variables as any).z) {
+            const shadowIndex = this.getShadowIndexById((operation.variables as any).z.id)
+            if (shadowIndex >= 0) {
+                const count = this.localShadow[shadowIndex].optimisticCount || 0;
+                this.localShadow[shadowIndex].optimisticCount = count + 1;
+            }
+        }
+
         // console.log('update started. remaining: ', this.incompleteOps);
         return requestWithRetry(operation, this.client)
           .then(res => res.data.updateZetteli)
           .then( success => {
               // TODO(helfer): This assumes there are no errors!
-              this.incompleteOps--;
+              // TODO(helfer): This is too hacky
+                if ((operation.variables as any).z) {
+                    const shadowIndex = this.getShadowIndexById((operation.variables as any).z.id)
+                    if (shadowIndex >= 0) {
+                        const count = this.localShadow[shadowIndex].optimisticCount || 1;
+                        this.localShadow[shadowIndex].optimisticCount = count - 1;
+                    }
+                }
               // if (success) {
               //     console.log('update succeeded. remaining:', this.incompleteOps);
               // } else {   

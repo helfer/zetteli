@@ -9,6 +9,8 @@ export interface Props {
     body: string;
     tags: string[];
     datetime: Date;
+    isOptimistic: boolean;
+
     onUpdate: (arg: {id: string, tags?: string[], body?: string}) => void;
     onDelete: (id: string) => void;
 
@@ -21,6 +23,7 @@ export interface ZetteliType {
     body: string;
     tags: string[];
     datetime: Date;
+    optimisticCount?: number;
 }
 
 const zetteliStyle = { 
@@ -68,10 +71,11 @@ export default class Zetteli extends React.PureComponent<Props, never> {
         return (
           <div className="ui centered fluid" style={zetteliStyle}>
             <div>
+              { this.props.isOptimistic ? (<i className="warning sign icon"></i>) : null }
+              <EditableDateTime datetime={this.props.datetime} /> 
               <span style={{ float: 'right' }}>
                 <i className="window maximize icon" onClick={this.props.toggleFullscreen}/>
               </span>
-              <EditableDateTime datetime={this.props.datetime} /> 
               <span style={{ float: 'right' }}>
                 <i className="trash icon" onClick={this.onDelete} />
               </span>

@@ -117,6 +117,7 @@ ${z.body}
                    body={zli.body}
                    key={zli.id}
                    id={zli.id}
+                   isOptimistic={Boolean(zli.optimisticCount)}
                    onUpdate={this.updateZetteli}
                    onDelete={this.deleteZetteli}
                  />

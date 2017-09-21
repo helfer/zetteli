@@ -14,6 +14,7 @@ describe('Zetteli', () => {
         datetime: new Date(0),
         tags: ['a'],
         body: 'Something',
+        isOptimistic: false,
     };
     afterEach(() => {
         jest.clearAllMocks();
