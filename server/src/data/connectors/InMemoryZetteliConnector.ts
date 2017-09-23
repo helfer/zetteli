@@ -16,7 +16,7 @@ export default class InMemoryZetteliConnector implements Connector<ZetteliType> 
         return this.zettelis;
     }
 
-    create(zli: ZetteliType) {
+    create(sid: string, zli: ZetteliType) {
         this.zettelis.push(zli);
         return zli.id;
     }

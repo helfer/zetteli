@@ -6,9 +6,9 @@ export interface Connector<T>{
     get(id: ID): PromiseLike<T | undefined> | T | undefined;
     // getMany(id: string[] | number[]): T[];
     // TODO(helfer): Is getAll a good idea?
-    getAll(): PromiseLike<T[]> | T[];
+    getAll(sid: string): PromiseLike<T[]> | T[];
 
-    create(obj: T): PromiseLike<ID | undefined> | ID | undefined;
+    create(sid: string, obj: T): PromiseLike<ID | undefined> | ID | undefined;
     // createMany(objs: T[]): ID[];
     
     update(obj: T): PromiseLike<boolean> | boolean;

@@ -37,17 +37,18 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
             });
     }
 
-    getAll() {
+    getAll(sid: string) {
         return this.db('zettelis')
             .select('*')
+            .where({ sid })
             .then(rows => 
                 rows.map(SQLZetteliConnector.parse)
             );
     }
 
-    create(zli: ZetteliType) {
+    create(sid: string, zli: ZetteliType) {
         return this.db('zettelis')
-            .insert(SQLZetteliConnector.serialize(zli))
+            .insert(SQLZetteliConnector.serialize({ ...zli, sid }))
             .then( ids => 
                 ids[0]
             );

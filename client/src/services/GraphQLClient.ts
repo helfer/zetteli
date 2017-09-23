@@ -17,23 +17,28 @@ const BROADCAST_DEBOUNCE_MS = 2000; // TODO(helfer): There should be a delay on 
 
 // TODO(helfer): Put these queries in a different file
 const getAllZettelisQuery = gql`
-  query getAllZettelis {
-    zettelis {
-      id
-      datetime
-      tags
-      body
+  query getAllZettelis($sid: String!) {
+    stack(id: $sid) {
+        zettelis {
+        id
+        datetime
+        tags
+        body
+        }
     }
   }`;
 
 const createZetteliMutation = gql`
-  mutation create($id: String!, $tags : [String!]!, $datetime: DateTime!, $body: String!) {
-    createZetteli(z: {
-      id: $id,
-      body: $body,
-      tags: $tags,
-      datetime: $datetime,
-    })
+  mutation create($sid: String!, $id: String!, $tags : [String!]!, $datetime: DateTime!, $body: String!) {
+    createZetteli(
+      sid: $sid,
+      z: {
+        id: $id,
+        body: $body,
+        tags: $tags,
+        datetime: $datetime,
+      }
+    )
   }`;
 
 const deleteZetteliMutation = gql`
@@ -56,6 +61,7 @@ interface SerializedZetteli {
 }
 
 export default class GraphQLClient implements ZetteliClient {
+    private sid: string; // The stack ID (collection of zettelis)
     private client: ApolloFetch;
     private localShadow: ZetteliType[];
     private shadowLoading: boolean;
@@ -68,7 +74,8 @@ export default class GraphQLClient implements ZetteliClient {
 
     private subscribers: Function[];
 
-    constructor({ uri }: { uri: string }) {
+    constructor({ sid, uri }: { sid: string, uri: string }) {
+        this.sid = sid;
         this.client = createApolloFetch({ uri });
         this.localShadow = [];
         this.shadowLoading = false;
@@ -148,6 +155,7 @@ export default class GraphQLClient implements ZetteliClient {
             query: createZetteliMutation,
             // TODO(helfer): Should these be decided here?
             variables: {
+                sid: this.sid,
                 id: uuid.v4(),
                 tags: ['log', 'zetteli'],
                 body: '',
@@ -224,10 +232,13 @@ export default class GraphQLClient implements ZetteliClient {
 
         const operation = {
             query: getAllZettelisQuery,
+            variables: {
+                sid: this.sid,
+            },
         };
 
         this.shadowPromise = this.client(operation)
-            .then( res => res.data.zettelis.map(this.parseZetteli))
+            .then( res => res.data.stack.zettelis.map(this.parseZetteli))
             .then( zettelis => {
                 this.localShadow = zettelis;
                 this.shadowReady = true;

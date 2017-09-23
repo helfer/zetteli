@@ -32,6 +32,12 @@ type Zetteli {
     body: String!
 }
 
+type Stack {
+    id: String!
+    name: String
+    zettelis: [Zetteli]
+}
+
 input ZetteliInput {
     id: String!
     datetime: DateTime
@@ -40,11 +46,11 @@ input ZetteliInput {
 }
 
 type Query {
-    zettelis: [Zetteli]
+    stack(id: String): Stack
 }
 
 type Mutation {
-    createZetteli(z: ZetteliInput!): String
+    createZetteli(sid: String!, z: ZetteliInput!): String
     updateZetteli(z: ZetteliInput!): Boolean
     deleteZetteli(id: String!): Boolean
 }
@@ -54,12 +60,16 @@ type Mutation {
 const zetteli = new Zetteli(new SQLZetteliConnector(knexConfig.development));
 const resolvers = {
     Query: {
-        zettelis(){ return zetteli.getAll() },
+        stack(root: {}, args: { id: string }){ 
+            return {
+                zettelis: zetteli.getAll(args.id),
+            }
+        },
     },
     DateTime: DateTime,
     Mutation: {
-        createZetteli(root: {}, args: { z: ZetteliType}) {
-            return zetteli.create(args.z);
+        createZetteli(root: {}, args: { sid: string, z: ZetteliType}) {
+            return zetteli.create(args.sid, args.z);
         },
         updateZetteli(root: {}, args: { z: ZetteliType}) {
             return zetteli.update(args.z);

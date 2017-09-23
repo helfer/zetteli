@@ -13,7 +13,7 @@ import { ZetteliType } from './components/Zetteli';
 import { ZetteliClient } from './services/ZetteliClient';
 
 export interface Props {
-  client: ZetteliClient;
+  client: (sid: string) => ZetteliClient;
 }
 
 // TODO(helfer): This is definitely in the wrong place
@@ -48,12 +48,17 @@ class App extends React.Component<Props, {}> {
             <Route 
               exact={true}
               path="/"
-              render={() => <ZetteliList client={this.props.client} filterBy={last2days}/>}
+              render={() => <div className="contentContainer">Hi, are you lost?</div>}
             />
             <Route
               exact={true}
-              path="/archive"
-              render={() => <ZetteliList client={this.props.client} filterBy={this.searchFilter}/>}
+              path="/s/:sid"
+              render={({match}) => <ZetteliList client={this.props.client(match.params.sid)} filterBy={last2days} />}
+            />
+            <Route
+              exact={true}
+              path="/s/:sid/archive"
+              render={({match}) => <ZetteliList client={this.props.client(match.params.sid)} filterBy={this.searchFilter}/>}
             />
             <Route
               exact={true}

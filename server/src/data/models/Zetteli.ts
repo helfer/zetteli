@@ -1,4 +1,5 @@
 import { Connector, ID } from '../connectors/ConnectorInterface';
+import { isValidStackId } from '../../utils/random';
 
 export interface ZetteliType {
     id: string;
@@ -14,12 +15,15 @@ export default class Zetteli {
         return this.connector.get(id);
     }
 
-    getAll() {
-        return this.connector.getAll();
+    getAll(sid: string) {
+        return this.connector.getAll(sid);
     }
 
-    create(zli: ZetteliType) {
-        return this.connector.create(zli);
+    create(sid: string, zli: ZetteliType) {
+        if (!isValidStackId(sid)) {
+            throw new Error(`Invalid stack id: ${sid}`);
+        }
+        return this.connector.create(sid, zli);
     }
 
     update(zli: ZetteliType) {

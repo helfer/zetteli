@@ -45,18 +45,18 @@ describe('App', () => {
 
   it('renders without crashing', () => {
     const div = document.createElement('div');
-    ReactDOM.render(<App client={client}/>, div);
+    ReactDOM.render(<App client={() => client}/>, div);
   });
 
   it('updates state if onSearchChange is called', () => {
-    const app = enzyme.shallow(<App client={client} />);
+    const app = enzyme.shallow(<App client={() => client} />);
     (app.instance() as App).onSearchChange('abc');
     app.update();
     expect(app.state().search).toBe('abc');
   });
 
   it('applies searchFilter if search length is >= 3', () => {
-    const app = enzyme.shallow(<App client={client} />);
+    const app = enzyme.shallow(<App client={() => client} />);
     app.setState({ search: 'bye'});
     app.update();
     expect((app.instance() as App).searchFilter(zli)).toBe(false);
@@ -77,7 +77,7 @@ describe('App', () => {
   });
 
   it('does not apply searchFilter if search length is < 3', () => {
-    const app = enzyme.shallow(<App client={client} />);
+    const app = enzyme.shallow(<App client={() => client} />);
     app.setState({ search: 'by'});
     app.update();
     expect((app.instance() as App).searchFilter(zli)).toBe(true);

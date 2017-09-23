@@ -12,6 +12,6 @@ const URI = 'http://localhost:3010/graphql';
 // window['Client'] = new GraphQLClient({ uri: URI });
 
 ReactDOM.render(
-    <App client={new GraphQLClient({ uri: URI })}/>,
+    <App client={(sid: string) => new GraphQLClient({ sid, uri: URI })}/>,
     document.getElementById('root') as HTMLElement,
 );
