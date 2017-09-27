@@ -197,8 +197,7 @@ export default class GraphQLClient implements ZetteliClient {
     }
 
     updateZetteli(id: string, data: ZetteliType): Promise<boolean> {
-
-        this.localShadow.map( zli => {
+        this.localShadow = this.localShadow.map( zli => {
             if (zli.id === data.id) {
                 return { ...zli, ...data };
             }
