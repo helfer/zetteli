@@ -14,7 +14,3 @@ export function isValidStackId(str: string) {
     }
     return true;
 }
-
-console.log('test', isValidStackId('afefd'));
-console.log('test', isValidStackId('aaaaaaaaaaaaaaaa'));
-console.log('test', isValidStackId('aaaaaaaaaaaaaaa&'));
