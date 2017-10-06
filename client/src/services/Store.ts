@@ -14,16 +14,21 @@ export default class Store<T> {
         this.subscribers = [];
     }
 
-    public dispatch(action: (state: T) => T, isOptimistic = false): RollbackHandle | void {
+    public dispatch(action: (state: T) => T, isOptimistic = false): RollbackHandle {
+        let rollback: () => void;
         if (isOptimistic) {
             this.optimisticActions.push(action);
-            return () => this.rollback(action);
+            rollback = () => this.rollback(action);
         } else {
             this.state = action(this.state);
+            rollback = () => { throw new Error('non-optimistic actions cannot be rolled back'); }
         }
-        this.notify(true);
+        this.notify(isOptimistic);
+        return rollback;
     }
 
+    // TODO(helfer): is it confusing that for actions the default is optimistic=false, but for
+    // subscribers the default is optimistic = true?
     public subscribe(subscriber: (state: T) => void, includeOptimisticUpdates = true) {
         const subscriberEntry = { subscriber, includeOptimisticUpdates };
         this.subscribers.push(subscriberEntry);
@@ -55,7 +60,7 @@ export default class Store<T> {
     }
 
     private rollback(action: (state: T) => T): void {
-        this.optimisticActions.filter(a => a !== action);
+        this.optimisticActions = this.optimisticActions.filter(a => a !== action);
         this.notify(true)
     }
 }
