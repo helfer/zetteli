@@ -30,15 +30,18 @@ export default class Store<T> {
         return () => this.subscribers.filter(s => s !== subscriberEntry);
     }
 
-    public getState(): T {
+    public getState(isOptimistic = false): T {
+        if (isOptimistic) {
+            return this.optimisticActions.reduce(
+                (state, action) => action(state),
+                this.state,
+            );
+        }
         return this.state;
     }
 
     private notify(isOptimisticAction = false): void {
-        const optimisticState = this.optimisticActions.reduce(
-            (state, action) => action(state),
-            this.state,
-        );
+        const optimisticState = this.getState(true);
         this.subscribers.forEach(s => {
             if (isOptimisticAction && !s.includeOptimisticUpdates) {
                 return;
