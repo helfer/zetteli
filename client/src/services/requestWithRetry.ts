@@ -21,7 +21,7 @@ export default function requestWithRetry(
             () => {
                 fetch(operation)
                 .catch( err => {
-                    // TODO(helfer): reject if it's not a network error
+                    // TODO(helfer): reject if it's not a network error?
                     return requestWithRetry(
                         operation,
                         fetch,
