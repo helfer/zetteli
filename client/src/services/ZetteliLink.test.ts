@@ -1,9 +1,9 @@
 import ZetteliLink from './ZetteliLink';
-import { execute, Operation } from 'apollo-link';
+import { execute, GraphQLRequest } from 'apollo-link';
 import gql from 'graphql-tag';
 
 describe('ZetteliLink', () => {
-    let link: ZetteliLink;
+    let link;
 
     beforeEach(() => {
         jest.useFakeTimers();
@@ -12,7 +12,7 @@ describe('ZetteliLink', () => {
 
     describe('basics', () => {
         it('can make a test request that returns data', (done) => {
-            const op: Operation = {
+            const op: GraphQLRequest = {
                 query: gql`{ hello }`,
                 context: {
                     optimisticResponse: {

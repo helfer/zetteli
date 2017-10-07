@@ -1,4 +1,12 @@
-import { ApolloLink, Observable, Operation, NextLink } from 'apollo-link';
+import {
+    ApolloLink,
+    Observable,
+    Operation,
+    NextLink,
+    makePromise,
+    execute,
+    GraphQLRequest,
+} from 'apollo-link';
 import { HttpLink } from 'apollo-link-http';
 
 class OptimisticLink extends ApolloLink {
@@ -35,7 +43,7 @@ class LogLink extends ApolloLink {
   }
 }
 */
-
+/*
 class TestLink extends ApolloLink {
     request (operation: Operation) {
       return new Observable(observer => {
@@ -46,7 +54,8 @@ class TestLink extends ApolloLink {
         }, 0);
       });
     }
-  }
+}
+*/
   
 
 // const logLink = new LogLink();
@@ -54,4 +63,7 @@ const optimisticLink = new OptimisticLink();
 const httpLink = new HttpLink({ uri: 'http://localhost:3010/graphql' });
 // const testLink = new TestLink();
 
-export default optimisticLink.concat(httpLink);
+const link = optimisticLink.concat(httpLink);
+export default link;
+
+export const simpleRequest = (op: GraphQLRequest) => makePromise(execute(link, op));

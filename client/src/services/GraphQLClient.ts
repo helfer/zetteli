@@ -7,6 +7,8 @@ import {
 import uuid from 'uuid';
 import debounce from 'debounce';
 
+import { simpleRequest } from './ZetteliLink';
+
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType } from '../components/Zetteli';
 import requestWithRetry from './requestWithRetry';
@@ -236,8 +238,8 @@ export default class GraphQLClient implements ZetteliClient {
             },
         };
 
-        this.shadowPromise = this.client(operation)
-            .then( res => res.data.stack.zettelis.map(this.parseZetteli))
+        this.shadowPromise = simpleRequest(operation)
+            .then( (res: any) => res.data.stack.zettelis.map(this.parseZetteli))
             .then( zettelis => {
                 this.localShadow = zettelis;
                 this.shadowReady = true;
