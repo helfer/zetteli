@@ -5,6 +5,7 @@ describe('Store', () => {
     let store: Store<typeof state>;
 
     beforeEach(() => {
+        jest.useFakeTimers()
     });
 
     describe('normal actions', () => {
@@ -36,10 +37,12 @@ describe('Store', () => {
             store.subscribe(subscriber);
             store.subscribe(optimisticSubscriber, true);
             store.dispatch(action);
+            jest.runAllTimers();
             expect(subscriber).toHaveBeenCalled();
             expect(optimisticSubscriber).toHaveBeenCalled();
 
             store.dispatch(action);
+            jest.runAllTimers();
             expect(subscriber).toHaveBeenCalledTimes(2);
             expect(optimisticSubscriber).toHaveBeenCalledTimes(2);
         });
@@ -74,13 +77,14 @@ describe('Store', () => {
 
         it('are applied to state optimistically', () => {
             store.dispatch(optimisticAction, true);
-            expect(store.getState(true).objects[0]).toBe(obj2);
+            expect(store.getOptimisticState().objects[0]).toBe(obj2);
         });
 
         it('do not notify non-optimistic subscribers', () => {
             const subscriber = jest.fn();
             store.subscribe(subscriber, false);
             store.dispatch(optimisticAction, true);
+            jest.runAllTimers();
             expect(subscriber).not.toHaveBeenCalled();
         });
 
@@ -88,23 +92,26 @@ describe('Store', () => {
             const subscriber = jest.fn();
             store.subscribe(subscriber);
             store.dispatch(optimisticAction, true);
+            jest.runAllTimers();
             expect(subscriber).toHaveBeenCalled();
-            expect(subscriber.mock.calls[0][0].objects[0]).toBe(obj2);
+            expect(store.getOptimisticState().objects[0]).toBe(obj2);
         });
 
         it('can be rolled back', () => {
             const rollback = store.dispatch(optimisticAction, true);
-            expect(store.getState(true).objects.length).toBe(1);
+            expect(store.getOptimisticState().objects.length).toBe(1);
             rollback();
-            expect(store.getState(true)).toBe(state);
+            expect(store.getOptimisticState()).toBe(state);
         });
 
         it('rollback notifies optimistic subscribers', () => {
             const subscriber = jest.fn();
             store.subscribe(subscriber);
             const rollback = store.dispatch(optimisticAction, true);
+            jest.runAllTimers();
             expect(subscriber).toHaveBeenCalled();
             rollback();
+            jest.runAllTimers();
             expect(subscriber).toHaveBeenCalledTimes(2);
         });
 

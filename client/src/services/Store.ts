@@ -4,7 +4,7 @@ export default class Store<T> {
     private state: T;
     private optimisticActions: ((state: T) => T)[];
     private subscribers: { 
-        subscriber: (state: T) => void,
+        subscriber: () => void,
         includeOptimisticUpdates: boolean,
     }[];
 
@@ -29,33 +29,31 @@ export default class Store<T> {
 
     // TODO(helfer): is it confusing that for actions the default is optimistic=false, but for
     // subscribers the default is optimistic = true?
-    public subscribe(subscriber: (state: T) => void, includeOptimisticUpdates = true) {
+    public subscribe(subscriber: () => void, includeOptimisticUpdates = true) {
         const subscriberEntry = { subscriber, includeOptimisticUpdates };
         this.subscribers.push(subscriberEntry);
         return () => this.subscribers.filter(s => s !== subscriberEntry);
     }
 
-    public getState(isOptimistic = false): T {
-        if (isOptimistic) {
-            return this.optimisticActions.reduce(
-                (state, action) => action(state),
-                this.state,
-            );
-        }
+    public getState(): T {
         return this.state;
     }
 
+    public getOptimisticState(): T {
+        return this.optimisticActions.reduce(
+            (state, action) => action(state),
+            this.state,
+        );
+    }
+
     private notify(isOptimisticAction = false): void {
-        const optimisticState = this.getState(true);
         this.subscribers.forEach(s => {
             if (isOptimisticAction && !s.includeOptimisticUpdates) {
                 return;
             }
-            if (s.includeOptimisticUpdates) {
-                s.subscriber(optimisticState);
-            } else {
-                s.subscriber(this.state);
-            }
+            // NOTE(helfer): We call setTimeout here so that errors thrown
+            // from subscribers don't have to be caught by the store.
+            setTimeout(() => s.subscriber(), 0);
         })
     }
 
