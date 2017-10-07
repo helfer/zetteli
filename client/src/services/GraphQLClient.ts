@@ -1,14 +1,18 @@
 import gql from 'graphql-tag';
-import { 
-    createApolloFetch,
-    ApolloFetch,
+import {
+    ApolloLink,
     GraphQLRequest,
-} from 'apollo-fetch';
+    makePromise,
+    execute,
+} from 'apollo-link';
+import {
+    ExecutionResult,
+} from 'graphql';
+import { HttpLink } from 'apollo-link-http';
 import uuid from 'uuid';
 import debounce from 'debounce';
 
-import { simpleRequest } from './ZetteliLink';
-
+import OptimisticLink from './OptimisticLink';
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType } from '../components/Zetteli';
 import requestWithRetry from './requestWithRetry';
@@ -64,7 +68,6 @@ interface SerializedZetteli {
 
 export default class GraphQLClient implements ZetteliClient {
     private sid: string; // The stack ID (collection of zettelis)
-    private client: ApolloFetch;
     private localShadow: ZetteliType[];
     private shadowLoading: boolean;
     private shadowReady: boolean;
@@ -76,9 +79,10 @@ export default class GraphQLClient implements ZetteliClient {
 
     private subscribers: Function[];
 
+    private simpleRequest: (op: GraphQLRequest) => Promise<ExecutionResult>;
+
     constructor({ sid, uri }: { sid: string, uri: string }) {
         this.sid = sid;
-        this.client = createApolloFetch({ uri });
         this.localShadow = [];
         this.shadowLoading = false;
         this.shadowReady = false;
@@ -98,6 +102,13 @@ export default class GraphQLClient implements ZetteliClient {
             this.broadcastUpdate,
             BROADCAST_DEBOUNCE_MS,
         );
+
+        const link = ApolloLink.from([
+            new OptimisticLink(),
+            new HttpLink({ uri }),
+        ]);
+
+        this.simpleRequest = (op: GraphQLRequest) => makePromise(execute(link, op));
     }
 
     subscribe = (func: () => void) => {
@@ -114,13 +125,13 @@ export default class GraphQLClient implements ZetteliClient {
 
     getShadowIndexById = (id: string) => {
         return this.localShadow.findIndex(z => z.id === id);
-    };
+    }
 
     request = (operation: GraphQLRequest) => {
         // TODO(helfer): Find a good way of surfacing GraphQL errors
         // TODO(helfer): This is too hacky
         if ((operation.variables as any).z) {
-            const shadowIndex = this.getShadowIndexById((operation.variables as any).z.id)
+            const shadowIndex = this.getShadowIndexById((operation.variables as any).z.id);
             if (shadowIndex >= 0) {
                 const count = this.localShadow[shadowIndex].optimisticCount || 0;
                 this.localShadow[shadowIndex].optimisticCount = count + 1;
@@ -130,26 +141,26 @@ export default class GraphQLClient implements ZetteliClient {
         }
 
         // console.log('update started. remaining: ', this.incompleteOps);
-        return requestWithRetry(operation, this.client)
-          .then(res => res.data.updateZetteli)
-          .then( success => {
-              // TODO(helfer): This assumes there are no errors!
-              // TODO(helfer): This is too hacky
+        return requestWithRetry(operation, this.simpleRequest)
+            .then(res => res.data.updateZetteli)
+            .then( success => {
+                // TODO(helfer): This assumes there are no errors!
+                // TODO(helfer): This is too hacky
                 if ((operation.variables as any).z) {
-                    const shadowIndex = this.getShadowIndexById((operation.variables as any).z.id)
+                    const shadowIndex = this.getShadowIndexById((operation.variables as any).z.id);
                     if (shadowIndex >= 0) {
                         const count = this.localShadow[shadowIndex].optimisticCount || 1;
                         this.localShadow[shadowIndex].optimisticCount = count - 1;
                     }
                     this.debouncedBroadcast();
                 }
-              // if (success) {
-              //     console.log('update succeeded. remaining:', this.incompleteOps);
-              // } else {   
-              //     console.log('update failed');
-              // }
-              return success;
-          });
+                // if (success) {
+                //     console.log('update succeeded. remaining:', this.incompleteOps);
+                // } else {   
+                //     console.log('update failed');
+                // }
+                return success;
+            });
     }
 
     createNewZetteli(): Promise<string> {
@@ -169,8 +180,8 @@ export default class GraphQLClient implements ZetteliClient {
         this.localShadow = [ ...this.localShadow, operation.variables ];
 
         // TODO(helfer): Better error handling
-        this.client(operation)
-          .then(res => res.data.createZetteli);
+        this.simpleRequest(operation)
+          .then((res: any) => res.data.createZetteli);
 
         // Yep, never fails
         return Promise.resolve(operation.variables.id);
@@ -191,8 +202,8 @@ export default class GraphQLClient implements ZetteliClient {
         // Technically we could return here already.
         this.localShadow = this.localShadow.filter(zli => zli.id !== id);
 
-        this.client(operation)
-          .then(res => res.data.deleteZetteli);
+        this.simpleRequest(operation)
+          .then((res: any) => res.data.deleteZetteli);
 
         // Yep, never fails ...
         return Promise.resolve(true);
@@ -238,7 +249,7 @@ export default class GraphQLClient implements ZetteliClient {
             },
         };
 
-        this.shadowPromise = simpleRequest(operation)
+        this.shadowPromise = this.simpleRequest(operation)
             .then( (res: any) => res.data.stack.zettelis.map(this.parseZetteli))
             .then( zettelis => {
                 this.localShadow = zettelis;

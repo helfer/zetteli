@@ -1,7 +1,7 @@
 import {
     GraphQLRequest,
-    ApolloFetch,
-} from 'apollo-fetch';
+    FetchResult,
+} from 'apollo-link';
 
 const MIN_DELAY = 200;
 const MAX_DELAY = 20000;
@@ -12,7 +12,7 @@ export interface RequestWithContext extends GraphQLRequest {
 
 export default function requestWithRetry(
     operation: RequestWithContext,
-    fetch: ApolloFetch,
+    fetch: (op: GraphQLRequest) => Promise<FetchResult>,
     delay: number = 0,
 ): Promise<any> {
     // If the request fails, schedule it for a retry with exponential backoff
