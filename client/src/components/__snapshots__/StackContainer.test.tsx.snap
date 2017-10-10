@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ZetteliList downloadZettelis saves zettelis to file 1`] = `
+exports[`StackContainer downloadZettelis saves zettelis to file 1`] = `
 Object {
   "content": Array [
     "

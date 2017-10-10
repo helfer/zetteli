@@ -14,15 +14,20 @@ export interface Props {
     filterBy: (z: ZetteliType) => boolean;
 }
 
-export default class StackContainer extends React.Component<Props, object> {
+export interface State {
+    loading: boolean;
+    zettelis: ZetteliType[];
+}
+
+export default class StackContainer extends React.Component<Props, State> {
     static defaultProps = {
         filterBy: () => true,
     };
-    
+
     state = {
         loading: true,
-        zettelis: [] as ZetteliType[],
-    };
+        zettelis: [],
+    }
 
     mousetrap: MousetrapInstance;
 

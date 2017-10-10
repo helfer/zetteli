@@ -47,8 +47,9 @@ describe('StackContainer', () => {
         const stack = enzyme.shallow(<StackContainer client={client} />);
         expect(stack.text()).toContain('Loading');
     });
-    it('renders the list of zettelis with correct props', () => {
-        const stack = enzyme.shallow(<StackContainer client={client} />);
+    
+    it('renders the list of zettelis wih correct props', () => {
+        const stack = enzyme.mount(<StackContainer client={client} />);
         // NOTE(helfer): It would be better to not be aware of state, but I can't
         // figure out how to successfuly let the LocalStorageClient promise update the state.
         stack.setState({ zettelis: [zli, zli2], loading: false });
@@ -59,6 +60,7 @@ describe('StackContainer', () => {
         expect((stack.find(FullscreenableZetteli).at(1).props() as ZetteliProps).id).toBe('2');
         expect((stack.find(FullscreenableZetteli).at(1).props() as ZetteliProps).onDelete).toBeDefined();
     });
+    
     // listens to cmd+u and creates a new Zetteli if it's pressed
     // TODO(helfer): that test is actually a bit tricky. Let's keep that for later
     it('listens to command+u and adds a new zetteli if called', () => {
@@ -103,6 +105,7 @@ describe('StackContainer', () => {
         (stack.instance() as StackContainer).deleteZetteli('2');
         expect(client.deleteZetteli).toHaveBeenCalledWith('2');
     });
+    
     // createNewZetteli calls client.create
     it('can create a zetteli', () => {
         client.createNewZetteli = jest.fn(() => Promise.resolve());
@@ -117,6 +120,7 @@ describe('StackContainer', () => {
         (stack.instance() as StackContainer).updateZetteli({ ...zli2, id: zli.id });
         expect(client.updateZetteli).toHaveBeenCalledWith(zli.id, { ...zli2, id: zli.id });
     });
+
     // refetch calls getAllZettelis
     it('can refetch zettelis', () => {
         client.getAllZettelis = jest.fn(() => Promise.resolve([]));
@@ -124,4 +128,5 @@ describe('StackContainer', () => {
         (stack.instance() as StackContainer).refetchZettelis();
         expect(client.getAllZettelis).toHaveBeenCalled();
     });
+    
 });
