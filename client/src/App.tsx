@@ -8,7 +8,7 @@ import {
 import './App.css';
 
 import Navbar from './components/Navbar';
-import Stack from './components/Stack';
+import StackContainer from './components/StackContainer';
 import { ZetteliType } from './components/Zetteli';
 import { ZetteliClient } from './services/ZetteliClient';
 
@@ -53,12 +53,12 @@ class App extends React.Component<Props, {}> {
             <Route
               exact={true}
               path="/s/:sid"
-              render={({match}) => <Stack client={this.props.client(match.params.sid)} filterBy={last2days} />}
+              render={({match}) => <StackContainer client={this.props.client(match.params.sid)} filterBy={last2days} />}
             />
             <Route
               exact={true}
               path="/s/:sid/archive"
-              render={({match}) => <Stack client={this.props.client(match.params.sid)} filterBy={this.searchFilter}/>}
+              render={({match}) => <StackContainer client={this.props.client(match.params.sid)} filterBy={this.searchFilter}/>}
             />
             <Route
               exact={true}
