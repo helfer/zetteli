@@ -12,13 +12,13 @@ import preventDefault from '../utils/preventDefault';
 export interface Props {
     client: ZetteliClient;
     // TODO(helfer): Is this the best way of controlling which Zettelis to show?
-    // TODO(helfer): Make this a dumb component and build a ZetteliListContainer
+    // TODO(helfer): Make this a dumb component and build a StackContainer
     // to do all the data loading.
     filterBy?: (z: ZetteliType) => boolean;
     // last?: number;
 }
 
-export default class ZetteliList extends React.Component<Props, object> {
+export default class Stack extends React.Component<Props, object> {
     state = {
         loading: true,
         zettelis: [] as ZetteliType[],

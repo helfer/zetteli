@@ -123,6 +123,5 @@ describe('Store', () => {
             rollback();
             expect(subscriber).not.toHaveBeenCalled();
         });
-        });
     });
 });
