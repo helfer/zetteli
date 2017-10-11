@@ -10,11 +10,7 @@ import './App.css';
 import Navbar from './components/Navbar';
 import StackContainer from './components/StackContainer';
 import { ZetteliType } from './components/Zetteli';
-import { ZetteliClient } from './services/ZetteliClient';
-
-export interface Props {
-  client: (sid: string) => ZetteliClient;
-}
+import GraphQLClient from './services/GraphQLClient';
 
 // TODO(helfer): This is definitely in the wrong place
 // const today = (z: ZetteliType) => {
@@ -24,7 +20,10 @@ export const last2days = (z: ZetteliType) => {
   return moment(z.datetime).isAfter(moment().subtract(1, 'd').startOf('day'));
 };
 
-class App extends React.Component<Props, {}> {
+// TODO(helfer): Pull this out into a config file
+const URI = 'http://localhost:3010/graphql';
+
+class App extends React.Component<{}, { search: string }> {
   state = {
     search: '',
   };
@@ -55,7 +54,7 @@ class App extends React.Component<Props, {}> {
               path="/s/:sid"
               render={({match}) =>
                 <StackContainer
-                  client={this.props.client(match.params.sid)}
+                  client={new GraphQLClient({ sid: match.params.sid, uri: URI })}
                   filterBy={last2days}
                 />}
             />
@@ -64,7 +63,7 @@ class App extends React.Component<Props, {}> {
               path="/s/:sid/archive"
               render={({match}) =>
                 <StackContainer 
-                  client={this.props.client(match.params.sid)}
+                  client={new GraphQLClient({ sid: match.params.sid, uri: URI })}
                   filterBy={this.searchFilter}
                 />}
             />
