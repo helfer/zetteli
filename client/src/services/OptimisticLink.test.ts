@@ -40,7 +40,7 @@ interface ObservableValue {
 const assertObservableSequence = (
     observable: Observable<ExecutionResult>,
     sequence: ObservableValue[],
-    initializer = () => undefined,
+    initializer: Function = () => undefined,
 ): Promise<boolean | Error> => {
     let index = 0;
     if (sequence.length === 0) {

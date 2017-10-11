@@ -168,7 +168,7 @@ export default class GraphQLClient implements ZetteliClient {
 
         // console.log('update started. remaining: ', this.incompleteOps);
         return requestWithRetry(operation, this.simpleRequest)
-            .then(res => res.data.updateZetteli)
+            .then(res => res.data && res.data.updateZetteli)
             .then( success => {
                 // TODO(helfer): This assumes there are no errors!
                 // TODO(helfer): This is too hacky

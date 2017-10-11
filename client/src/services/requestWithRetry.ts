@@ -3,6 +3,10 @@ import {
     FetchResult,
 } from 'apollo-link';
 
+import {
+    ExecutionResult,
+} from 'graphql';
+
 const MIN_DELAY = 200;
 const MAX_DELAY = 20000;
 
@@ -14,7 +18,7 @@ export default function requestWithRetry(
     operation: RequestWithContext,
     fetch: (op: GraphQLRequest) => Promise<FetchResult>,
     delay: number = 0,
-): Promise<any> {
+): Promise<ExecutionResult> {
     // If the request fails, schedule it for a retry with exponential backoff
     return new Promise( (resolve, reject) => {
         setTimeout(
@@ -29,7 +33,7 @@ export default function requestWithRetry(
                     );
                 })
                 .then(resolve);
-            }, 
+            },
             delay
         );
     });

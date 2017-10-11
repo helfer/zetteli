@@ -11,7 +11,7 @@ import Stack from './Stack';
 export interface Props {
     client: ZetteliClient;
     // TODO(helfer): Is this the best way of controlling which Zettelis to show?
-    filterBy: (z: ZetteliType) => boolean;
+    filterBy?: (z: ZetteliType) => boolean;
 }
 
 export interface State {
@@ -20,10 +20,6 @@ export interface State {
 }
 
 export default class StackContainer extends React.Component<Props, State> {
-    static defaultProps = {
-        filterBy: () => true,
-    };
-
     state = {
         loading: true,
         zettelis: [],
@@ -107,7 +103,10 @@ ${z.body}
                 </div>
             );
         }
-        let filteredZettelis = this.state.zettelis.filter(this.props.filterBy);
+        let filteredZettelis = this.state.zettelis;
+        if (this.props.filterBy) {
+            filteredZettelis = filteredZettelis.filter(this.props.filterBy);
+        }
         return (
           <Stack
             zettelis={filteredZettelis}
