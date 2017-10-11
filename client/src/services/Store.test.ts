@@ -8,9 +8,19 @@ describe('Store', () => {
         jest.useFakeTimers();
     });
 
+    interface BaseObject {
+        body: string;
+        tags: string[];
+        optimistic?: boolean;
+    }
+
+    interface BaseState {
+        objects: BaseObject[];
+    }
+
     describe('normal actions', () => {
-        let action: (state: any) => any;
-        let obj: object;
+        let action: (state: BaseState) => BaseState;
+        let obj: BaseObject;
         beforeEach(() => {
             state = { objects: [] };
             store = new Store(state);
@@ -49,10 +59,10 @@ describe('Store', () => {
     });
 
     describe('optimistic actions', () => {
-        let action: (state: any) => any;
-        let optimisticAction: (state: any) => any;
-        let obj: object;
-        let obj2: object;
+        let action: (state: BaseState) => BaseState;
+        let optimisticAction: (state: BaseState) => BaseState;
+        let obj: BaseObject;
+        let obj2: BaseObject;
         beforeEach(() => {
             state = { objects: [] };
             store = new Store(state);
@@ -61,6 +71,8 @@ describe('Store', () => {
                 tags: ['a', 'b'],
             };
             obj2 = {
+                body: 'Hi',
+                tags: [],
                 optimistic: true,
             };
             action = (prevState) => ({
