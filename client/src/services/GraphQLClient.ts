@@ -34,6 +34,14 @@ const getAllZettelisQuery = gql`
     }
   }`;
 
+interface GetAllZettelisResult {
+    data: {
+        stack: {
+            zettelis: SerializedZetteli[],
+        }
+    };
+}
+
 const createZetteliMutation = gql`
   mutation create($sid: String!, $id: String!, $tags : [String!]!, $datetime: DateTime!, $body: String!) {
     createZetteli(
@@ -47,15 +55,32 @@ const createZetteliMutation = gql`
     )
   }`;
 
+interface CreateZetteliResult {
+    data: {
+        createZetteli: number;
+    };
+}
+
 const deleteZetteliMutation = gql`
   mutation del($id: String!) {
     deleteZetteli(id: $id)
   }`;
 
+interface DeleteZetteliResult {
+    data: {
+        deleteZetteli: boolean;
+    };
+}
+
 const updateZetteliMutation = gql`
   mutation update($z: ZetteliInput!){
     updateZetteli(z: $z)
   }`;
+
+// TODO(helfer): Generate these typings from the query
+interface UpdateZetteliVariables {
+    z: ZetteliType;
+}
 
 // TODO(helfer): how do I keep this in sync with ZetteliType?
 // TODO(helfer): This is a common type with LocalStorageClient move it to separate file
@@ -92,7 +117,7 @@ export default class GraphQLClient implements ZetteliClient {
 
         this.debouncedRequest = debounce(
             queuedInvocation(this.request, (op: GraphQLRequest) => {
-                const id = op.variables && (op.variables as any).z.id;
+                const id = op.variables && (op.variables as UpdateZetteliVariables).z.id;
                 return id;
             }),
             UPDATE_DEBOUNCE_MS,
@@ -130,8 +155,9 @@ export default class GraphQLClient implements ZetteliClient {
     request = (operation: GraphQLRequest) => {
         // TODO(helfer): Find a good way of surfacing GraphQL errors
         // TODO(helfer): This is too hacky
-        if ((operation.variables as any).z) {
-            const shadowIndex = this.getShadowIndexById((operation.variables as any).z.id);
+        if ((operation.variables as UpdateZetteliVariables).z) {
+            const shadowIndex =
+                this.getShadowIndexById((operation.variables as UpdateZetteliVariables).z.id);
             if (shadowIndex >= 0) {
                 const count = this.localShadow[shadowIndex].optimisticCount || 0;
                 this.localShadow[shadowIndex].optimisticCount = count + 1;
@@ -146,8 +172,9 @@ export default class GraphQLClient implements ZetteliClient {
             .then( success => {
                 // TODO(helfer): This assumes there are no errors!
                 // TODO(helfer): This is too hacky
-                if ((operation.variables as any).z) {
-                    const shadowIndex = this.getShadowIndexById((operation.variables as any).z.id);
+                if ((operation.variables as UpdateZetteliVariables).z) {
+                    const shadowIndex = 
+                        this.getShadowIndexById((operation.variables as UpdateZetteliVariables).z.id);
                     if (shadowIndex >= 0) {
                         const count = this.localShadow[shadowIndex].optimisticCount || 1;
                         this.localShadow[shadowIndex].optimisticCount = count - 1;
@@ -181,7 +208,7 @@ export default class GraphQLClient implements ZetteliClient {
 
         // TODO(helfer): Better error handling
         this.simpleRequest(operation)
-          .then((res: any) => res.data.createZetteli);
+          .then((res: CreateZetteliResult) => res.data.createZetteli);
 
         // Yep, never fails
         return Promise.resolve(operation.variables.id);
@@ -203,7 +230,7 @@ export default class GraphQLClient implements ZetteliClient {
         this.localShadow = this.localShadow.filter(zli => zli.id !== id);
 
         this.simpleRequest(operation)
-          .then((res: any) => res.data.deleteZetteli);
+          .then((res: DeleteZetteliResult) => res.data.deleteZetteli);
 
         // Yep, never fails ...
         return Promise.resolve(true);
@@ -250,7 +277,7 @@ export default class GraphQLClient implements ZetteliClient {
         };
 
         this.shadowPromise = this.simpleRequest(operation)
-            .then( (res: any) => res.data.stack.zettelis.map(this.parseZetteli))
+            .then( (res: GetAllZettelisResult) => res.data.stack.zettelis.map(this.parseZetteli))
             .then( zettelis => {
                 this.localShadow = zettelis;
                 this.shadowReady = true;
