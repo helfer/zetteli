@@ -4,14 +4,21 @@ import FileSaver from 'file-saver';
 import moment from 'moment';
 
 import { ZetteliClient } from '../services/ZetteliClient';
+import GraphQLClient from '../services/GraphQLClient';
+// import LocalStorageClient from '../services/LocalStorageClient';
 import { ZetteliType } from './Zetteli';
 import preventDefault from '../utils/preventDefault';
 import Stack from './Stack';
 
+// TODO(helfer): Pull this out into a config file
+const URI = 'http://localhost:3010/graphql';
+
 export interface Props {
-    client: ZetteliClient;
+    // client: ZetteliClient;
+    stackId: string;
     // TODO(helfer): Is this the best way of controlling which Zettelis to show?
     filterBy?: (z: ZetteliType) => boolean;
+    client?: ZetteliClient;
 }
 
 export interface State {
@@ -25,27 +32,40 @@ export default class StackContainer extends React.Component<Props, State> {
         zettelis: [],
     };
 
-    mousetrap: MousetrapInstance;
+    // Public for tests
+    public mousetrap: MousetrapInstance;
+
+    private client: ZetteliClient;
+
+    constructor(props: Props) {
+        super(props);
+
+        if (props.client) {
+            this.client = props.client; // new LocalStorageClient(window.localStorage);            
+        } else {
+            this.client = new GraphQLClient({ sid: this.props.stackId, uri: URI });
+        }
+    }
 
     refetchZettelis = () => {
         // TODO: Because this will only work if the call doesn't take too long.
-        return this.props.client.getAllZettelis().then( zettelis => {
+        return this.client.getAllZettelis().then( zettelis => {
             this.setState({ zettelis });
         });
     }
 
     createNewZetteli = () => {
-        this.props.client.createNewZetteli()
+        this.client.createNewZetteli()
         .then(() => this.refetchZettelis());
     }
 
     updateZetteli = (modifiedZetteli: ZetteliType) => {
-        this.props.client.updateZetteli(modifiedZetteli.id, modifiedZetteli);
+        this.client.updateZetteli(modifiedZetteli.id, modifiedZetteli);
         // NOTE(helfer): Not refreshing here because the client will notify subscribers
     }
 
     deleteZetteli = (id: string) => {
-        this.props.client.deleteZetteli(id)
+        this.client.deleteZetteli(id)
         .then(() => this.refetchZettelis());
     }
 
@@ -74,7 +94,7 @@ ${z.body}
         this.refetchZettelis().then( () => {
             this.setState({ loading: false });
         });
-        this.props.client.subscribe(this.refetchZettelis);
+        this.client.subscribe(this.refetchZettelis);
     }
 
     componentDidMount() {
@@ -92,7 +112,7 @@ ${z.body}
     componentWillUnmount() {
         this.mousetrap.unbind('command+u');
         this.mousetrap.unbind(['ctrl+s', 'meta+s']);
-        this.props.client.unsubscribe(this.refetchZettelis);
+        this.client.unsubscribe(this.refetchZettelis);
     }
 
     render() {

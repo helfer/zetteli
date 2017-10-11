@@ -44,12 +44,12 @@ describe('StackContainer', () => {
     });
 
     it('renders loading state while waiting', () => {
-        const stack = enzyme.shallow(<StackContainer client={client} />);
+        const stack = enzyme.shallow(<StackContainer stackId={'1'} client={client} />);
         expect(stack.text()).toContain('Loading');
     });
     
     it('renders the list of zettelis wih correct props', () => {
-        const stack = enzyme.mount(<StackContainer client={client} />);
+        const stack = enzyme.mount(<StackContainer stackId={'1'} client={client} />);
         // NOTE(helfer): It would be better to not be aware of state, but I can't
         // figure out how to successfuly let the LocalStorageClient promise update the state.
         stack.setState({ zettelis: [zli, zli2], loading: false });
@@ -66,7 +66,7 @@ describe('StackContainer', () => {
     it('listens to command+u and adds a new zetteli if called', () => {
         client.createNewZetteli = jest.fn(() => Promise.resolve([]));
         // NOTE(helfer): Have to mount here to get lifecycle events
-        const stack = enzyme.mount(<StackContainer client={client} />);
+        const stack = enzyme.mount(<StackContainer stackId={'1'} client={client} />);
         (stack.instance() as StackContainer).mousetrap.trigger('command+u');
         expect(client.createNewZetteli).toHaveBeenCalled();
         stack.unmount();
@@ -79,7 +79,7 @@ describe('StackContainer', () => {
         // TODO(helfer): Find out why global.Blob is not defined
         // tslint:disable-next-line no-any
         (global as any).Blob = (content: string, options: {}) => ({content, options}); 
-        const stack = enzyme.shallow(<StackContainer client={client} />);
+        const stack = enzyme.shallow(<StackContainer stackId={'1'} client={client} />);
         stack.setState({ zettelis: [zli, zli2], loading: false });
         stack.update();
         (stack.instance() as StackContainer).downloadZettelis();
@@ -87,7 +87,7 @@ describe('StackContainer', () => {
     });
 
     it('Ctrl+s calls downloadZettelis', () => {
-        const stack = enzyme.mount(<StackContainer client={client} />);
+        const stack = enzyme.mount(<StackContainer stackId={'1'} client={client} />);
         const mockDownload = jest.fn();
         (stack.instance() as StackContainer).downloadZettelis = mockDownload;
         stack.setState({ zettelis: [zli, zli2], loading: false });
@@ -100,7 +100,7 @@ describe('StackContainer', () => {
     // deleteZetteli calls client.delete
     it('can delete a zetteli', () => {
         client.deleteZetteli = jest.fn(() => Promise.resolve());
-        const stack = enzyme.shallow(<StackContainer client={client} />);
+        const stack = enzyme.shallow(<StackContainer stackId={'1'} client={client} />);
         // TODO(helfer): Why can't I just call the prop that was passed?
         (stack.instance() as StackContainer).deleteZetteli('2');
         expect(client.deleteZetteli).toHaveBeenCalledWith('2');
@@ -109,14 +109,14 @@ describe('StackContainer', () => {
     // createNewZetteli calls client.create
     it('can create a zetteli', () => {
         client.createNewZetteli = jest.fn(() => Promise.resolve());
-        const stack = enzyme.shallow(<StackContainer client={client} />);
+        const stack = enzyme.shallow(<StackContainer stackId={'1'} client={client} />);
         (stack.instance() as StackContainer).createNewZetteli();
         expect(client.createNewZetteli).toHaveBeenCalled();
     });
     // updateZetteli calls client.update
     it('can update a zetteli', () => {
         client.updateZetteli = jest.fn(() => Promise.resolve());
-        const stack = enzyme.shallow(<StackContainer client={client} />);
+        const stack = enzyme.shallow(<StackContainer stackId={'1'} client={client} />);
         (stack.instance() as StackContainer).updateZetteli({ ...zli2, id: zli.id });
         expect(client.updateZetteli).toHaveBeenCalledWith(zli.id, { ...zli2, id: zli.id });
     });
@@ -124,7 +124,7 @@ describe('StackContainer', () => {
     // refetch calls getAllZettelis
     it('can refetch zettelis', () => {
         client.getAllZettelis = jest.fn(() => Promise.resolve([]));
-        const stack = enzyme.shallow(<StackContainer client={client} />);
+        const stack = enzyme.shallow(<StackContainer stackId={'1'} client={client} />);
         (stack.instance() as StackContainer).refetchZettelis();
         expect(client.getAllZettelis).toHaveBeenCalled();
     });
