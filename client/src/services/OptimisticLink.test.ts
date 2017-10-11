@@ -32,15 +32,15 @@ class TestLink extends ApolloLink {
     }
 }
 
-type ObservableValue = {
-    value?: ExecutionResult | Error,
-    type: 'next' | 'error' | 'complete',
+interface ObservableValue {
+    value?: ExecutionResult | Error;
+    type: 'next' | 'error' | 'complete';
 }
 
 const assertObservableSequence = (
     observable: Observable<ExecutionResult>,
     sequence: ObservableValue[],
-    initializer = () => {},
+    initializer = () => undefined,
 ): Promise<boolean | Error> => {
     let index = 0;
     if (sequence.length === 0) {
@@ -72,7 +72,7 @@ const assertObservableSequence = (
         initializer();
     });
 
-}
+};
 
 describe('OptimisticLink', () => {
     let link: ApolloLink;
@@ -106,7 +106,7 @@ describe('OptimisticLink', () => {
     it('forwards the operation', () => {
         return new Promise((resolve, reject) => {
             execute(link, op).subscribe({
-                next: (data) => {},
+                next: (data) => undefined,
                 error: (error) => reject(error),
                 complete: () => {
                     expect(testLink.operations.length).toBe(1);

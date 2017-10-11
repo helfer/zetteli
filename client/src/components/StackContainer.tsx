@@ -27,7 +27,7 @@ export default class StackContainer extends React.Component<Props, State> {
     state = {
         loading: true,
         zettelis: [],
-    }
+    };
 
     mousetrap: MousetrapInstance;
 

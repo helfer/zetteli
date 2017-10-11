@@ -53,12 +53,20 @@ class App extends React.Component<Props, {}> {
             <Route
               exact={true}
               path="/s/:sid"
-              render={({match}) => <StackContainer client={this.props.client(match.params.sid)} filterBy={last2days} />}
+              render={({match}) =>
+                <StackContainer
+                  client={this.props.client(match.params.sid)}
+                  filterBy={last2days}
+                />}
             />
             <Route
               exact={true}
               path="/s/:sid/archive"
-              render={({match}) => <StackContainer client={this.props.client(match.params.sid)} filterBy={this.searchFilter}/>}
+              render={({match}) =>
+                <StackContainer 
+                  client={this.props.client(match.params.sid)}
+                  filterBy={this.searchFilter}
+                />}
             />
             <Route
               exact={true}

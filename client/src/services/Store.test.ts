@@ -5,7 +5,7 @@ describe('Store', () => {
     let store: Store<typeof state>;
 
     beforeEach(() => {
-        jest.useFakeTimers()
+        jest.useFakeTimers();
     });
 
     describe('normal actions', () => {
@@ -18,8 +18,8 @@ describe('Store', () => {
                 body: 'Hello',
                 tags: ['a', 'b'],
             };
-            action = (state) => ({
-               objects: [...state.objects, obj],
+            action = (prevState) => ({
+               objects: [...prevState.objects, obj],
             });
         });
 
@@ -63,12 +63,12 @@ describe('Store', () => {
             obj2 = {
                 optimistic: true,
             };
-            action = (state) => ({
-               objects: [...state.objects, obj],
+            action = (prevState) => ({
+               objects: [...prevState.objects, obj],
             });
-            optimisticAction = (state) => ({
-                objects: [...state.objects, obj2],
-            })
+            optimisticAction = (prevState) => ({
+                objects: [...prevState.objects, obj2],
+            });
         });
         it('are not applied to state directly', () => {
             store.dispatch(optimisticAction, true);

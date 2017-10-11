@@ -14,14 +14,14 @@ export default class Store<T> {
         this.subscribers = [];
     }
 
-    public dispatch(action: (state: T) => T, isOptimistic = false): RollbackHandle {
+    public dispatch(action: (state: T) => T, isOptimistic: boolean = false): RollbackHandle {
         let rollback: () => void;
         if (isOptimistic) {
             this.optimisticActions.push(action);
             rollback = () => this.rollback(action);
         } else {
             this.state = action(this.state);
-            rollback = () => { throw new Error('non-optimistic actions cannot be rolled back'); }
+            rollback = () => { throw new Error('non-optimistic actions cannot be rolled back'); };
         }
         this.notify(isOptimistic);
         return rollback;
@@ -29,7 +29,7 @@ export default class Store<T> {
 
     // TODO(helfer): is it confusing that for actions the default is optimistic=false, but for
     // subscribers the default is optimistic = true?
-    public subscribe(subscriber: () => void, includeOptimisticUpdates = true) {
+    public subscribe(subscriber: () => void, includeOptimisticUpdates: boolean = true) {
         const subscriberEntry = { subscriber, includeOptimisticUpdates };
         this.subscribers.push(subscriberEntry);
         return () => this.subscribers.filter(s => s !== subscriberEntry);
@@ -46,7 +46,7 @@ export default class Store<T> {
         );
     }
 
-    private notify(isOptimisticAction = false): void {
+    private notify(isOptimisticAction: boolean = false): void {
         this.subscribers.forEach(s => {
             if (isOptimisticAction && !s.includeOptimisticUpdates) {
                 return;
@@ -54,11 +54,11 @@ export default class Store<T> {
             // NOTE(helfer): We call setTimeout here so that errors thrown
             // from subscribers don't have to be caught by the store.
             setTimeout(() => s.subscriber(), 0);
-        })
+        });
     }
 
     private rollback(action: (state: T) => T): void {
         this.optimisticActions = this.optimisticActions.filter(a => a !== action);
-        this.notify(true)
+        this.notify(true);
     }
 }
