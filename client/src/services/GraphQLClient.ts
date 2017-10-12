@@ -27,6 +27,14 @@ import {
 import requestWithRetry from './requestWithRetry';
 import queuedInvocation from './queuedInvocation';
 
+import Store from './Store';
+
+interface BaseState {
+    loading: boolean;
+    ready: boolean;
+    zettelis: ZetteliType[];
+}
+
 const UPDATE_DEBOUNCE_MS = 400;
 const BROADCAST_DEBOUNCE_MS = 2000; // TODO(helfer): There should be a delay on optimistic.
 
@@ -35,10 +43,11 @@ const BROADCAST_DEBOUNCE_MS = 2000; // TODO(helfer): There should be a delay on 
 
 export default class GraphQLClient implements ZetteliClient {
     private sid: string; // The stack ID (collection of zettelis)
+    private store: Store<BaseState>;
     private localShadow: ZetteliType[];
-    private shadowLoading: boolean;
-    private shadowReady: boolean;
-    private shadowPromise: Promise<ZetteliType[]>;
+    // private shadowLoading: boolean;
+    // private shadowReady: boolean;
+    // private shadowPromise: Promise<ZetteliType[]>;
     private incompleteOps: number;
 
     private debouncedRequest: Function;
@@ -50,9 +59,14 @@ export default class GraphQLClient implements ZetteliClient {
 
     constructor({ sid, uri }: { sid: string, uri: string }) {
         this.sid = sid;
+        this.store = new Store({
+            loading: false,
+            ready: false,
+            zettelis: [],
+        });
         this.localShadow = [];
-        this.shadowLoading = false;
-        this.shadowReady = false;
+        // this.shadowLoading = false;
+        // this.shadowReady = false;
         this.incompleteOps = 0;
         
         this.subscribers = [];
@@ -202,14 +216,28 @@ export default class GraphQLClient implements ZetteliClient {
     }
 
     getAllZettelis(): Promise<ZetteliType[]> {
-        if (this.shadowReady) {
+        if (this.store.getState().ready) {
+            return Promise.resolve(this.store.getOptimisticState().zettelis);
+        }
+        /* if (this.shadowReady) {
             return Promise.resolve(this.localShadow);
-        }
+        } */
 
-        if (this.shadowLoading) {
-            return this.shadowPromise;
+        if (this.store.getState().loading) {
+            return new Promise((resolve) => {
+                const unsubscribe = this.store.subscribe(() => {
+                    if (this.store.getOptimisticState().ready === true) {
+                        unsubscribe();
+                        resolve(this.store.getOptimisticState().zettelis);
+                    }
+                });
+            });
         }
-        this.shadowLoading = true;
+        /* if (this.shadowLoading) {
+            return this.shadowPromise;
+        } */
+        this.store.dispatch(state => ({ ...state, loading: true }));
+        // this.shadowLoading = true;
 
         const operation = {
             query: getAllZettelisQuery,
@@ -218,16 +246,28 @@ export default class GraphQLClient implements ZetteliClient {
             },
         };
 
-        this.shadowPromise = this.simpleRequest(operation)
+        this.simpleRequest(operation)
             .then( (res: GetAllZettelisResult) => res.data.stack.zettelis.map(this.parseZetteli))
             .then( zettelis => {
-                this.localShadow = zettelis;
+                this.store.dispatch(state => ({
+                    ready: true,
+                    loading: false,
+                    zettelis,
+                }));
+                /* this.localShadow = zettelis;
                 this.shadowReady = true;
                 this.shadowLoading = false;
-                return zettelis;
+                return zettelis; */
             });
-
-        return this.shadowPromise;
+        return new Promise((resolve) => {
+            const unsubscribe = this.store.subscribe(() => {
+                if (this.store.getOptimisticState().ready === true) {
+                    unsubscribe();
+                    resolve(this.store.getOptimisticState().zettelis);
+                }
+            });
+        });
+        // return this.shadowPromise;
     }
 
     // TODO(helfer): Shared with LocalStorage client
