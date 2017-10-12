@@ -1,10 +1,11 @@
 import * as React from 'react';
 import * as enzyme from 'enzyme';
+import moment from 'moment';
 import FileSaver from 'file-saver';
+// import { MemoryRouter } from 'react-router';
 
-import StackContainer from './StackContainer';
-import { Props as ZetteliProps, ZetteliType } from './Zetteli';
-import FullscreenableZetteli from './FullscreenableZetteli';
+import StackContainer, { last2days } from './StackContainer';
+import { ZetteliType } from './Zetteli';
 import LocalStorageClient from '../services/LocalStorageClient';
 
 describe('StackContainer', () => {
@@ -44,21 +45,10 @@ describe('StackContainer', () => {
     });
 
     it('renders loading state while waiting', () => {
-        const stack = enzyme.shallow(<StackContainer stackId={'1'} client={client} />);
+        const stack = enzyme.shallow(
+            <StackContainer stackId={'1'} client={client} />
+        );
         expect(stack.text()).toContain('Loading');
-    });
-    
-    it('renders the list of zettelis wih correct props', () => {
-        const stack = enzyme.mount(<StackContainer stackId={'1'} client={client} />);
-        // NOTE(helfer): It would be better to not be aware of state, but I can't
-        // figure out how to successfuly let the LocalStorageClient promise update the state.
-        stack.setState({ zettelis: [zli, zli2], loading: false });
-        stack.update();
-        // TODO(helfer): Fix the type declaration of the Fullscreenable HOC soyou don't need to coerce type
-        expect((stack.find(FullscreenableZetteli).at(0).props() as ZetteliProps).id).toBe('1');
-        expect((stack.find(FullscreenableZetteli).at(0).props() as ZetteliProps).onUpdate).toBeDefined();
-        expect((stack.find(FullscreenableZetteli).at(1).props() as ZetteliProps).id).toBe('2');
-        expect((stack.find(FullscreenableZetteli).at(1).props() as ZetteliProps).onDelete).toBeDefined();
     });
     
     // listens to cmd+u and creates a new Zetteli if it's pressed
@@ -90,8 +80,9 @@ describe('StackContainer', () => {
         const stack = enzyme.mount(<StackContainer stackId={'1'} client={client} />);
         const mockDownload = jest.fn();
         (stack.instance() as StackContainer).downloadZettelis = mockDownload;
-        stack.setState({ zettelis: [zli, zli2], loading: false });
-        stack.update();
+        // TODO(helfer): We're keeping loading=true here so the Router doesn't render,
+        // but we should really figure out how to test stuff with a Router...
+        stack.setState({ zettelis: [zli, zli2], loading: true });
         (stack.instance() as StackContainer).mousetrap.trigger('ctrl+s');
         stack.unmount();
         expect(mockDownload).toHaveBeenCalled();
@@ -128,5 +119,18 @@ describe('StackContainer', () => {
         (stack.instance() as StackContainer).refetchZettelis();
         expect(client.getAllZettelis).toHaveBeenCalled();
     });
+
+    it('last2days filter works correctly', () => {
+        // It should include all zettelis from today and yesterday,
+        // so at least 24 hours and at most 48 hours.
+        zli.datetime = new Date();
+        expect(last2days(zli)).toBe(true);
+    
+        zli.datetime = moment().subtract(1, 'day').toDate();
+        expect(last2days(zli)).toBe(true);
+    
+        zli.datetime = moment().subtract(2, 'days').toDate();
+        expect(last2days(zli)).toBe(false);
+      });
     
 });

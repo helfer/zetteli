@@ -2,6 +2,7 @@ import * as React from 'react';
 import Mousetrap from 'mousetrap';
 import FileSaver from 'file-saver';
 import moment from 'moment';
+import { Route } from 'react-router';
 
 import { ZetteliClient } from '../services/ZetteliClient';
 import GraphQLClient from '../services/GraphQLClient';
@@ -12,6 +13,13 @@ import Stack from './Stack';
 
 // TODO(helfer): Pull this out into a config file
 const URI = 'http://localhost:3010/graphql';
+
+// const today = (z: ZetteliType) => {
+//   return moment().isSame(moment(z.datetime), 'd');
+// }
+export const last2days = (z: ZetteliType) => {
+    return moment(z.datetime).isAfter(moment().subtract(1, 'd').startOf('day'));
+};
 
 export interface Props {
     // client: ZetteliClient;
@@ -115,6 +123,23 @@ ${z.body}
         this.client.unsubscribe(this.refetchZettelis);
     }
 
+    renderArchiveStack = () => {
+        return this.renderStack(this.state.zettelis);
+    }
+
+    renderTodayStack = () => {
+        return this.renderStack(this.state.zettelis.filter(last2days));
+    }
+
+    renderStack = (filteredZettelis: ZetteliType[]) => (
+        <Stack
+            zettelis={filteredZettelis}
+            onUpdate={this.updateZetteli}
+            onDelete={this.deleteZetteli}
+            onCreate={this.createNewZetteli}
+        />
+    )
+
     render() {
         if (this.state.loading) {
             return (
@@ -123,17 +148,19 @@ ${z.body}
                 </div>
             );
         }
-        let filteredZettelis = this.state.zettelis;
-        if (this.props.filterBy) {
-            filteredZettelis = filteredZettelis.filter(this.props.filterBy);
-        }
         return (
-          <Stack
-            zettelis={filteredZettelis}
-            onUpdate={this.updateZetteli}
-            onDelete={this.deleteZetteli}
-            onCreate={this.createNewZetteli}
-          />
+            <div>
+                <Route
+                    exact={true}
+                    path="/s/:sid/archive"
+                    render={this.renderArchiveStack}
+                />
+                <Route
+                    exact={true}
+                    path="/s/:sid/"
+                    render={this.renderTodayStack}
+                />
+            </div>
         );
     }
 }

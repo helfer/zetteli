@@ -1,8 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App, { last2days } from './App';
+import App from './App';
 import * as enzyme from 'enzyme';
-import moment from 'moment';
 
 import LocalStorageClient from './services/LocalStorageClient';
 import { ZetteliType } from './components/Zetteli';
@@ -62,19 +61,6 @@ describe('App', () => {
     app.update();
     expect((app.instance() as App).searchFilter(zli)).toBe(false);
     expect((app.instance() as App).searchFilter(zli2)).toBe(true);
-  });
-
-  it('last2days filter works correctly', () => {
-    // It should include all zettelis from today and yesterday,
-    // so at least 24 hours and at most 48 hours.
-    zli.datetime = new Date();
-    expect(last2days(zli)).toBe(true);
-
-    zli.datetime = moment().subtract(1, 'day').toDate();
-    expect(last2days(zli)).toBe(true);
-
-    zli.datetime = moment().subtract(2, 'days').toDate();
-    expect(last2days(zli)).toBe(false);
   });
 
   it('does not apply searchFilter if search length is < 3', () => {
