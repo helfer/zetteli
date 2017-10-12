@@ -1,4 +1,3 @@
-import gql from 'graphql-tag';
 import {
     ApolloLink,
     GraphQLRequest,
@@ -14,82 +13,25 @@ import debounce from 'debounce';
 
 import OptimisticLink from './OptimisticLink';
 import { ZetteliClient } from './ZetteliClient';
-import { ZetteliType } from '../components/Zetteli';
+import { ZetteliType, SerializedZetteli } from '../components/Zetteli';
+import {
+    UpdateZetteliVariables,
+    updateZetteliMutation,
+    createZetteliMutation,
+    CreateZetteliResult,
+    deleteZetteliMutation,
+    DeleteZetteliResult,
+    getAllZettelisQuery,
+    GetAllZettelisResult,
+} from '../queries/queries';
 import requestWithRetry from './requestWithRetry';
 import queuedInvocation from './queuedInvocation';
 
 const UPDATE_DEBOUNCE_MS = 400;
 const BROADCAST_DEBOUNCE_MS = 2000; // TODO(helfer): There should be a delay on optimistic.
 
-// TODO(helfer): Put these queries in a different file
-const getAllZettelisQuery = gql`
-  query getAllZettelis($sid: String!) {
-    stack(id: $sid) {
-        zettelis {
-        id
-        datetime
-        tags
-        body
-        }
-    }
-  }`;
-
-interface GetAllZettelisResult {
-    data: {
-        stack: {
-            zettelis: SerializedZetteli[],
-        }
-    };
-}
-
-const createZetteliMutation = gql`
-  mutation create($sid: String!, $id: String!, $tags : [String!]!, $datetime: DateTime!, $body: String!) {
-    createZetteli(
-      sid: $sid,
-      z: {
-        id: $id,
-        body: $body,
-        tags: $tags,
-        datetime: $datetime,
-      }
-    )
-  }`;
-
-interface CreateZetteliResult {
-    data: {
-        createZetteli: number;
-    };
-}
-
-const deleteZetteliMutation = gql`
-  mutation del($id: String!) {
-    deleteZetteli(id: $id)
-  }`;
-
-interface DeleteZetteliResult {
-    data: {
-        deleteZetteli: boolean;
-    };
-}
-
-const updateZetteliMutation = gql`
-  mutation update($z: ZetteliInput!){
-    updateZetteli(z: $z)
-  }`;
-
-// TODO(helfer): Generate these typings from the query
-interface UpdateZetteliVariables {
-    z: ZetteliType;
-}
-
 // TODO(helfer): how do I keep this in sync with ZetteliType?
 // TODO(helfer): This is a common type with LocalStorageClient move it to separate file
-interface SerializedZetteli {
-    id: string;
-    body: string;
-    tags: string[];
-    datetime: string;
-}
 
 export default class GraphQLClient implements ZetteliClient {
     private sid: string; // The stack ID (collection of zettelis)

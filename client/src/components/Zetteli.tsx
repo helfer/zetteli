@@ -26,6 +26,13 @@ export interface ZetteliType {
     optimisticCount?: number;
 }
 
+export interface SerializedZetteli {
+    id: string;
+    body: string;
+    tags: string[];
+    datetime: string;
+}
+
 const zetteliStyle = { 
     backgroundColor: 'white', 
     marginBottom: '12px',
