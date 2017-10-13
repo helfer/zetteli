@@ -48,7 +48,7 @@ export function makeCreateZetteliAction(zli: ZetteliType, result: CreateZetteliR
             ...state,
             zettelis: [ ...state.zettelis, { ...zli, id: result.data.createZetteli }],
         };
-    }
+    };
 }
 
 export const deleteZetteliMutation = gql`
@@ -60,6 +60,18 @@ export interface DeleteZetteliResult {
   data: {
       deleteZetteli: boolean;
   };
+}
+
+export function makeDeleteZetteliAction(id: string, result: DeleteZetteliResult) {
+    if (!result.data.deleteZetteli) {
+        return (state: BaseState) => state;
+    }
+    return (state: BaseState) => {
+        return {
+            ...state,
+            zettelis: state.zettelis.filter(z => z.id !== id),
+        };
+    };
 }
 
 export const updateZetteliMutation = gql`

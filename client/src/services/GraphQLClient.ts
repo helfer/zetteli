@@ -22,6 +22,7 @@ import {
     CreateZetteliResult,
     deleteZetteliMutation,
     DeleteZetteliResult,
+    makeDeleteZetteliAction,
     getAllZettelisQuery,
     GetAllZettelisResult,
 } from '../queries/queries';
@@ -64,7 +65,7 @@ export default class GraphQLClient implements ZetteliClient {
         // NOTE(helfer): We don't need to unsubscribe if the store lives
         // within the client, and we shouldn't subscribe from within the
         // client if the store lives outside.
-        this.store.subscribe(this.broadcastUpdate)
+        this.store.subscribe(this.broadcastUpdate);
         this.incompleteOps = 0;
         
         this.subscribers = [];
@@ -148,12 +149,10 @@ export default class GraphQLClient implements ZetteliClient {
         };
         const operation = {
             query: createZetteliMutation,
-            // TODO(helfer): Should these be decided here?
             variables: { ...zli },
         };
 
         // Add it to the shadow copy
-        // this.localShadow = [ ...this.localShadow, operation.variables ];
         const optimisticResponse = {
             data: {
                 createZetteli: zli.id,
@@ -168,14 +167,14 @@ export default class GraphQLClient implements ZetteliClient {
               rollback();
               const action = makeCreateZetteliAction(zli, res);
               this.store.dispatch(action);
-              return res.data.createZetteli
+              return res.data.createZetteli;
           });
 
         // Yep, never fails
         return Promise.resolve(zli.id);
     }
 
-    // TODO(helfer): What is this function? Do we need it?
+    // This function is not used yet. We'll need it for importing
     addZetteli(zli: ZetteliType): Promise<boolean> {
         return Promise.resolve(false);
     }
@@ -189,9 +188,19 @@ export default class GraphQLClient implements ZetteliClient {
         // Remove it from the shadow copy
         // Technically we could return here already.
         // this.localShadow = this.localShadow.filter(zli => zli.id !== id);
-
+        const optimisticResponse: DeleteZetteliResult = {
+            data: {
+                deleteZetteli: true,
+            }
+        };
+        const optimisticAction = makeDeleteZetteliAction(id, optimisticResponse);
+        const rollback = this.store.dispatch(optimisticAction, true);
         this.simpleRequest(operation)
-          .then((res: DeleteZetteliResult) => res.data.deleteZetteli);
+          .then((res: DeleteZetteliResult) => {
+              rollback();
+              this.store.dispatch(makeDeleteZetteliAction(id, res));
+              return res.data.deleteZetteli;
+          });
 
         // Yep, never fails ...
         return Promise.resolve(true);

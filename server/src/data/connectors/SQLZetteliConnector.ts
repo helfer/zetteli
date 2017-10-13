@@ -49,9 +49,7 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
     create(sid: string, zli: ZetteliType) {
         return this.db('zettelis')
             .insert(SQLZetteliConnector.serialize({ ...zli, sid }))
-            .then( ids => 
-                ids[0]
-            );
+            .then( ids => zli.id );
     }
 
     update(zli: ZetteliType) {
