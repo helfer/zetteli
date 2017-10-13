@@ -1,5 +1,6 @@
 import gql from 'graphql-tag';
 import { SerializedZetteli, ZetteliType } from '../components/Zetteli';
+import { BaseState } from '../services/GraphQLClient';
 // TODO(helfer): Generate the typings in this file from the queries
 
 export const getAllZettelisQuery = gql`
@@ -37,8 +38,17 @@ mutation create($sid: String!, $id: String!, $tags : [String!]!, $datetime: Date
 
 export interface CreateZetteliResult {
   data: {
-      createZetteli: number;
+      createZetteli: string;
   };
+}
+
+export function makeCreateZetteliAction(zli: ZetteliType, result: CreateZetteliResult) {
+    return (state: BaseState) => {
+        return {
+            ...state,
+            zettelis: [ ...state.zettelis, { ...zli, id: result.data.createZetteli }],
+        };
+    }
 }
 
 export const deleteZetteliMutation = gql`
