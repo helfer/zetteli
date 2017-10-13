@@ -9,7 +9,7 @@ import {
 } from 'graphql';
 import { HttpLink } from 'apollo-link-http';
 import uuid from 'uuid';
-import debounce from 'debounce';
+import debounce from 'debounce-promise';
 
 import OptimisticLink from './OptimisticLink';
 import { ZetteliClient } from './ZetteliClient';
@@ -17,6 +17,8 @@ import { ZetteliType, SerializedZetteli } from '../components/Zetteli';
 import {
     UpdateZetteliVariables,
     updateZetteliMutation,
+    UpdateZetteliResult,
+    makeUpdateZetteliAction,
     createZetteliMutation,
     makeCreateZetteliAction,
     CreateZetteliResult,
@@ -38,10 +40,6 @@ export interface BaseState {
 }
 
 const UPDATE_DEBOUNCE_MS = 400;
-const BROADCAST_DEBOUNCE_MS = 2000; // TODO(helfer): There should be a delay on optimistic.
-
-// TODO(helfer): how do I keep this in sync with ZetteliType?
-// TODO(helfer): This is a common type with LocalStorageClient move it to separate file
 
 export default class GraphQLClient implements ZetteliClient {
     private sid: string; // The stack ID (collection of zettelis)
@@ -49,7 +47,6 @@ export default class GraphQLClient implements ZetteliClient {
     private incompleteOps: number;
 
     private debouncedRequest: Function;
-    private debouncedBroadcast: Function;
 
     private subscribers: Function[];
 
@@ -70,17 +67,13 @@ export default class GraphQLClient implements ZetteliClient {
         
         this.subscribers = [];
 
+        const makeRequest = (op: GraphQLRequest) => requestWithRetry(op, this.simpleRequest);
         this.debouncedRequest = debounce(
-            queuedInvocation(this.request, (op: GraphQLRequest) => {
+            queuedInvocation(makeRequest, (op: GraphQLRequest) => {
                 const id = op.variables && (op.variables as UpdateZetteliVariables).z.id;
                 return id;
             }),
             UPDATE_DEBOUNCE_MS,
-        );
-
-        this.debouncedBroadcast = debounce(
-            this.broadcastUpdate,
-            BROADCAST_DEBOUNCE_MS,
         );
 
         const link = ApolloLink.from([
@@ -101,42 +94,6 @@ export default class GraphQLClient implements ZetteliClient {
 
     broadcastUpdate = () => {
         this.subscribers.forEach(subscriber => subscriber());
-    }
-
-    getShadowIndexById = (id: string) => {
-        return this.store.getOptimisticState().zettelis.findIndex(z => z.id === id);
-    }
-
-    request = (operation: GraphQLRequest) => {
-        // TODO(helfer): Find a good way of surfacing GraphQL errors
-        // TODO(helfer): This is too hacky
-        if ((operation.variables as UpdateZetteliVariables).z) {
-            const i =
-                this.getShadowIndexById((operation.variables as UpdateZetteliVariables).z.id);
-            if (i >= 0) {
-                const count = this.store.getOptimisticState().zettelis[i].optimisticCount || 0;
-                this.store.getOptimisticState().zettelis[i].optimisticCount = count + 1;
-            }
-            // TODO(helfer): Think about where you need to put these.
-            this.debouncedBroadcast();
-        }
-
-        return requestWithRetry(operation, this.simpleRequest)
-            .then(res => res.data && res.data.updateZetteli)
-            .then( success => {
-                // TODO(helfer): This assumes there are no errors!
-                // TODO(helfer): This is too hacky
-                if ((operation.variables as UpdateZetteliVariables).z) {
-                    const i = 
-                        this.getShadowIndexById((operation.variables as UpdateZetteliVariables).z.id);
-                    if (i >= 0) {
-                        const count = this.store.getOptimisticState().zettelis[i].optimisticCount || 1;
-                        this.store.getOptimisticState().zettelis[i].optimisticCount = count - 1;
-                    }
-                    this.debouncedBroadcast();
-                }
-                return success;
-            });
     }
 
     createNewZetteli(): Promise<string> {
@@ -207,20 +164,23 @@ export default class GraphQLClient implements ZetteliClient {
     }
 
     updateZetteli(id: string, data: ZetteliType): Promise<boolean> {
-        /*this.localShadow = this.localShadow.map( zli => {
-            if (zli.id === data.id) {
-                return { ...zli, ...data };
-            }
-            return zli;
-        });*/
-
         const operation = {
             query: updateZetteliMutation,
             variables: { z: data },
         };
 
-        // TODO(helfer): Figure out why this returns undefined.
-        this.debouncedRequest(operation); 
+        const optimisticResponse: UpdateZetteliResult = {
+            data : {
+                updateZetteli: true,
+            }
+        };
+        const optimisticAction = makeUpdateZetteliAction(data, optimisticResponse);
+        const rollback = this.store.dispatch(optimisticAction, true);
+
+        this.debouncedRequest(operation).then((res: UpdateZetteliResult) => {
+            rollback();
+            this.store.dispatch(makeUpdateZetteliAction(data, res));
+        }); 
 
         return Promise.resolve(true);
     }

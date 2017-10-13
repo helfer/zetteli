@@ -63,10 +63,10 @@ export interface DeleteZetteliResult {
 }
 
 export function makeDeleteZetteliAction(id: string, result: DeleteZetteliResult) {
-    if (!result.data.deleteZetteli) {
-        return (state: BaseState) => state;
-    }
     return (state: BaseState) => {
+        if (!result.data.deleteZetteli) {
+            return state;
+        }
         return {
             ...state,
             zettelis: state.zettelis.filter(z => z.id !== id),
@@ -81,4 +81,27 @@ mutation update($z: ZetteliInput!){
 
 export interface UpdateZetteliVariables {
   z: ZetteliType;
+}
+
+export interface UpdateZetteliResult {
+    data: {
+        updateZetteli: boolean,
+    };
+}
+
+export function makeUpdateZetteliAction(zli: ZetteliType, result: UpdateZetteliResult) {
+    return (state: BaseState) => {
+        if (!result.data.updateZetteli) {
+            return state;
+        }
+        return {
+            ...state,
+            zettelis: state.zettelis.map(z => {
+                if (z.id === zli.id) {
+                    return { ...z, ...zli };
+                }
+                return z;
+            }),
+        };
+    };
 }
