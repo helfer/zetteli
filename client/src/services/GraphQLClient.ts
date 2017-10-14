@@ -13,11 +13,12 @@ import {
     RetryLink,
 } from 'apollo-link-retry';
 import uuid from 'uuid';
-import debounce from 'debounce-promise';
+// import debounce from 'debounce-promise';
 
 import OptimisticLink from './OptimisticLink';
 import SerializingLink from './SerializingLink';
 import OfflineLink from './OfflineLink';
+import DebounceLink from './DebounceLink';
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType, SerializedZetteli } from '../components/Zetteli';
 import {
@@ -71,11 +72,17 @@ export default class GraphQLClient implements ZetteliClient {
         
         this.subscribers = [];
 
-        const makeRequest = (op: GraphQLRequest) => this.simpleRequest(op);
-        this.debouncedRequest = debounce(makeRequest, UPDATE_DEBOUNCE_MS);
+        const makeRequest = (op: GraphQLRequest) => this.simpleRequest({
+            ...op,
+            context: {
+                debounce: true,
+            },
+        });
+        this.debouncedRequest = makeRequest;
 
         const link = ApolloLink.from([
             new OptimisticLink(),
+            new DebounceLink(UPDATE_DEBOUNCE_MS),
             new SerializingLink(),
             new RetryLink({
                 // TODO(helfer): What's up with the types here?
