@@ -110,25 +110,33 @@ export default class GraphQLClient implements ZetteliClient {
         const operation = {
             query: createZetteliMutation,
             variables: { ...zli },
+            context: {
+                optimisticResponse: {
+                    data: {
+                        createZetteli: zli.id,
+                    },
+                    context: {
+                        isOptimistic: true,
+                    },
+                },
+            },
         };
 
-        // Add it to the shadow copy
-        const optimisticResponse = {
-            data: {
-                createZetteli: zli.id,
-            }
-        };
-        const optimisticAction = makeCreateZetteliAction(zli, optimisticResponse);
-        const rollback = this.store.dispatch(optimisticAction, true);
-
-        // TODO(helfer): Better error handling
-        this.simpleRequest(operation)
-          .then((res: CreateZetteliResult) => {
-              rollback();
-              const action = makeCreateZetteliAction(zli, res);
-              this.store.dispatch(action);
-              return res.data.createZetteli;
-          });
+        let rollback: () => void;
+        this.observableRequest(operation)
+            .map((res: CreateZetteliResult) => {
+                if (rollback) { rollback(); }
+                rollback = this.store.dispatch(
+                    makeCreateZetteliAction(zli, res),
+                    res.context && res.context.isOptimistic,
+                );
+            })
+            .subscribe({
+                error(e: Error) {
+                    if (rollback) { rollback(); }
+                    throw e;
+                },
+            });
 
         // Yep, never fails
         return Promise.resolve(zli.id);

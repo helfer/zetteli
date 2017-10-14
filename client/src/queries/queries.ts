@@ -40,6 +40,9 @@ export interface CreateZetteliResult {
   data: {
       createZetteli: string;
   };
+  context: {
+      isOptimistic: boolean;
+  };
 }
 
 export function makeCreateZetteliAction(zli: ZetteliType, result: CreateZetteliResult) {
