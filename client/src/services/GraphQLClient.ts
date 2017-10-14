@@ -9,6 +9,9 @@ import {
     ExecutionResult,
 } from 'graphql';
 import { HttpLink } from 'apollo-link-http';
+import {
+    RetryLink,
+} from 'apollo-link-retry';
 import uuid from 'uuid';
 import debounce from 'debounce-promise';
 
@@ -80,6 +83,20 @@ export default class GraphQLClient implements ZetteliClient {
 
         const link = ApolloLink.from([
             new OptimisticLink(),
+            // new QueueingLink / SerializerLink (must be before retry!)
+            new RetryLink({
+                // TODO(helfer): What's up with the types here?
+                // TODO(helfer): Reduce this number to 10 or so when you
+                // put in the offline link.
+                max: () => Number.POSITIVE_INFINITY,
+                delay: () => 500,
+                interval: (delay, count) => {
+                    console.log('new delay', delay, count, Math.min(delay * 2 ** count, 30000));
+                    return Math.min(delay * 2 ** count, 30000)
+                },
+            }),
+            // new OfflineBufferingLink <- must not reorder operations! Must come right before
+            // the http link.
             new HttpLink({ uri }),
         ]);
 
