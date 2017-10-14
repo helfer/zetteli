@@ -17,6 +17,7 @@ import debounce from 'debounce-promise';
 
 import OptimisticLink from './OptimisticLink';
 import SerializingLink from './SerializingLink';
+import OfflineLink from './OfflineLink';
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType, SerializedZetteli } from '../components/Zetteli';
 import {
@@ -92,7 +93,7 @@ export default class GraphQLClient implements ZetteliClient {
                 delay: () => 500,
                 interval: (delay, count) => Math.min(delay * 2 ** count, 10000),
             }),
-            // new OfflineBufferingLink <- must not reorder operations! Must come right before
+            new OfflineLink(),
             // the http link.
             new HttpLink({ uri }),
         ]);
