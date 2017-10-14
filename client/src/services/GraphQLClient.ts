@@ -16,6 +16,7 @@ import uuid from 'uuid';
 import debounce from 'debounce-promise';
 
 import OptimisticLink from './OptimisticLink';
+import SerializingLink from './SerializingLink';
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType, SerializedZetteli } from '../components/Zetteli';
 import {
@@ -82,14 +83,14 @@ export default class GraphQLClient implements ZetteliClient {
 
         const link = ApolloLink.from([
             new OptimisticLink(),
-            // new QueueingLink / SerializerLink (must be before retry!)
+            new SerializingLink(),
             new RetryLink({
                 // TODO(helfer): What's up with the types here?
                 // TODO(helfer): Reduce this number to 10 or so when you
                 // put in the offline link.
                 max: () => Number.POSITIVE_INFINITY,
                 delay: () => 500,
-                interval: (delay, count) => Math.min(delay * 2 ** count, 30000),
+                interval: (delay, count) => Math.min(delay * 2 ** count, 10000),
             }),
             // new OfflineBufferingLink <- must not reorder operations! Must come right before
             // the http link.
@@ -124,6 +125,7 @@ export default class GraphQLClient implements ZetteliClient {
             query: createZetteliMutation,
             variables: { ...zli },
             context: {
+                serializationKey: zli.id,
                 optimisticResponse: {
                     data: {
                         createZetteli: zli.id,
@@ -165,6 +167,7 @@ export default class GraphQLClient implements ZetteliClient {
             query: deleteZetteliMutation,
             variables: { id },
             context: {
+                serializationKey: id,
                 optimisticResponse: {
                     data: {
                         deleteZetteli: true,
