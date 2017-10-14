@@ -21,7 +21,6 @@ import OfflineLink from './OfflineLink';
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType, SerializedZetteli } from '../components/Zetteli';
 import {
-    UpdateZetteliVariables,
     updateZetteliMutation,
     UpdateZetteliResult,
     makeUpdateZetteliAction,
@@ -34,7 +33,6 @@ import {
     getAllZettelisQuery,
     GetAllZettelisResult,
 } from '../queries/queries';
-import queuedInvocation from './queuedInvocation';
 
 import Store from './Store';
 
@@ -74,13 +72,7 @@ export default class GraphQLClient implements ZetteliClient {
         this.subscribers = [];
 
         const makeRequest = (op: GraphQLRequest) => this.simpleRequest(op);
-        this.debouncedRequest = debounce(
-            queuedInvocation(makeRequest, (op: GraphQLRequest) => {
-                const id = op.variables && (op.variables as UpdateZetteliVariables).z.id;
-                return id;
-            }),
-            UPDATE_DEBOUNCE_MS,
-        );
+        this.debouncedRequest = debounce(makeRequest, UPDATE_DEBOUNCE_MS);
 
         const link = ApolloLink.from([
             new OptimisticLink(),
