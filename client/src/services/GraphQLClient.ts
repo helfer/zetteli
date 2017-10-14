@@ -1,5 +1,6 @@
 import {
     ApolloLink,
+    Observable,
     GraphQLRequest,
     makePromise,
     execute,
@@ -51,6 +52,7 @@ export default class GraphQLClient implements ZetteliClient {
     private subscribers: Function[];
 
     private simpleRequest: (op: GraphQLRequest) => Promise<ExecutionResult>;
+    private observableRequest: (op: GraphQLRequest) => Observable<ExecutionResult>;
 
     constructor({ sid, uri }: { sid: string, uri: string }) {
         this.sid = sid;
@@ -82,6 +84,7 @@ export default class GraphQLClient implements ZetteliClient {
         ]);
 
         this.simpleRequest = (op: GraphQLRequest) => makePromise(execute(link, op));
+        this.observableRequest = (op: GraphQLRequest) => execute(link, op);
     }
 
     subscribe = (func: () => void) => {
@@ -140,23 +143,31 @@ export default class GraphQLClient implements ZetteliClient {
         const operation = {
             query: deleteZetteliMutation,
             variables: { id },
+            context: {
+                optimisticResponse: {
+                    data: {
+                        deleteZetteli: true,
+                    },
+                    context: {
+                        isOptimistic: true,
+                    }
+                },
+            },
         };
 
-        // Remove it from the shadow copy
-        // Technically we could return here already.
-        // this.localShadow = this.localShadow.filter(zli => zli.id !== id);
-        const optimisticResponse: DeleteZetteliResult = {
-            data: {
-                deleteZetteli: true,
-            }
-        };
-        const optimisticAction = makeDeleteZetteliAction(id, optimisticResponse);
-        const rollback = this.store.dispatch(optimisticAction, true);
-        this.simpleRequest(operation)
-          .then((res: DeleteZetteliResult) => {
-              rollback();
-              this.store.dispatch(makeDeleteZetteliAction(id, res));
-              return res.data.deleteZetteli;
+        let rollback: () => void;
+        this.observableRequest(operation)
+          .map((res: DeleteZetteliResult) => {
+              if (rollback) { rollback(); }
+              rollback = this.store.dispatch(
+                makeDeleteZetteliAction(id, res),
+                res.context && res.context.isOptimistic
+              );
+          }).subscribe({
+              error(e: Error) {
+                  if (rollback) { rollback(); }
+                  throw e;
+              },
           });
 
         // Yep, never fails ...
@@ -172,7 +183,7 @@ export default class GraphQLClient implements ZetteliClient {
         const optimisticResponse: UpdateZetteliResult = {
             data : {
                 updateZetteli: true,
-            }
+            },
         };
         const optimisticAction = makeUpdateZetteliAction(data, optimisticResponse);
         const rollback = this.store.dispatch(optimisticAction, true);

@@ -60,6 +60,9 @@ export interface DeleteZetteliResult {
   data: {
       deleteZetteli: boolean;
   };
+  context: {
+      isOptimistic: boolean;
+  };
 }
 
 export function makeDeleteZetteliAction(id: string, result: DeleteZetteliResult) {
