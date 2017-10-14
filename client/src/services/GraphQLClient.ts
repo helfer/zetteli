@@ -32,7 +32,6 @@ import {
     getAllZettelisQuery,
     GetAllZettelisResult,
 } from '../queries/queries';
-import requestWithRetry from './requestWithRetry';
 import queuedInvocation from './queuedInvocation';
 
 import Store from './Store';
@@ -72,7 +71,7 @@ export default class GraphQLClient implements ZetteliClient {
         
         this.subscribers = [];
 
-        const makeRequest = (op: GraphQLRequest) => requestWithRetry(op, this.simpleRequest);
+        const makeRequest = (op: GraphQLRequest) => this.simpleRequest(op);
         this.debouncedRequest = debounce(
             queuedInvocation(makeRequest, (op: GraphQLRequest) => {
                 const id = op.variables && (op.variables as UpdateZetteliVariables).z.id;
@@ -90,10 +89,7 @@ export default class GraphQLClient implements ZetteliClient {
                 // put in the offline link.
                 max: () => Number.POSITIVE_INFINITY,
                 delay: () => 500,
-                interval: (delay, count) => {
-                    console.log('new delay', delay, count, Math.min(delay * 2 ** count, 30000));
-                    return Math.min(delay * 2 ** count, 30000)
-                },
+                interval: (delay, count) => Math.min(delay * 2 ** count, 30000),
             }),
             // new OfflineBufferingLink <- must not reorder operations! Must come right before
             // the http link.

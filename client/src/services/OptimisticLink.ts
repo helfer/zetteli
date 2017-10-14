@@ -16,8 +16,7 @@ export default class OptimisticLink extends ApolloLink {
                 setTimeout(() => observer.next(operation.getContext().optimisticResponse), 0);
             }
 
-            const observable = forward(operation);
-            const subscription = observable.subscribe({
+            const subscription = forward(operation).subscribe({
                 next: observer.next.bind(observer),
                 error: observer.error.bind(observer),
                 complete: observer.complete.bind(observer),
