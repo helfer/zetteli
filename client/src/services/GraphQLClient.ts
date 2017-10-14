@@ -194,18 +194,6 @@ export default class GraphQLClient implements ZetteliClient {
             return Promise.resolve(this.store.getOptimisticState().zettelis);
         }
 
-        if (this.store.getState().loading) {
-            return new Promise((resolve) => {
-                const unsubscribe = this.store.subscribe(() => {
-                    if (this.store.getOptimisticState().ready === true) {
-                        unsubscribe();
-                        resolve(this.store.getOptimisticState().zettelis);
-                    }
-                });
-            });
-        }
-        this.store.dispatch(state => ({ ...state, loading: true }));
-
         const operation = {
             query: getAllZettelisQuery,
             variables: {
@@ -214,7 +202,8 @@ export default class GraphQLClient implements ZetteliClient {
         };
 
         this.simpleRequest(operation)
-            .then( (res: GetAllZettelisResult) => res.data.stack.zettelis.map(this.parseZetteli))
+            .then( (res: GetAllZettelisResult) => 
+                res.data.stack.zettelis.map(this.parseZetteli))
             .then( zettelis => {
                 this.store.dispatch(state => ({
                     ready: true,
