@@ -49,8 +49,6 @@ export default class GraphQLClient implements ZetteliClient {
     private store: Store<BaseState>;
     private incompleteOps: number;
 
-    private debouncedRequest: Function;
-
     private subscribers: Function[];
 
     private simpleRequest: (op: GraphQLRequest) => Promise<ExecutionResult>;
@@ -70,14 +68,6 @@ export default class GraphQLClient implements ZetteliClient {
         this.incompleteOps = 0;
         
         this.subscribers = [];
-
-        const makeRequest = (op: GraphQLRequest) => this.simpleRequest({
-            ...op,
-            context: {
-                debounce: true,
-            },
-        });
-        this.debouncedRequest = makeRequest;
 
         const link = ApolloLink.from([
             new OptimisticLink(),
@@ -201,6 +191,9 @@ export default class GraphQLClient implements ZetteliClient {
         const operation = {
             query: updateZetteliMutation,
             variables: { z: data },
+            context: {
+                debounce: true,
+            }
         };
 
         const optimisticResponse: UpdateZetteliResult = {
@@ -211,7 +204,7 @@ export default class GraphQLClient implements ZetteliClient {
         const optimisticAction = makeUpdateZetteliAction(data, optimisticResponse);
         const rollback = this.store.dispatch(optimisticAction, true);
 
-        this.debouncedRequest(operation).then((res: UpdateZetteliResult) => {
+        this.simpleRequest(operation).then((res: UpdateZetteliResult) => {
             rollback();
             this.store.dispatch(makeUpdateZetteliAction(data, res));
         }); 
