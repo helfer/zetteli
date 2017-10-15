@@ -66,7 +66,7 @@ export interface DeleteZetteliResult {
   context: {
       isOptimistic: boolean;
   };
-};
+}
 
 export function makeDeleteZetteliAction(id: string, result: DeleteZetteliResult) {
     return (state: BaseState) => {
@@ -95,7 +95,7 @@ export interface UpdateZetteliResult {
     };
     context: {
         isOptimistic: boolean,
-    }
+    };
 }
 
 export function makeUpdateZetteliAction(zli: ZetteliType, result: UpdateZetteliResult) {

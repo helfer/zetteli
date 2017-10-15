@@ -1,13 +1,9 @@
 import {
     ApolloLink,
-    Observable,
     GraphQLRequest,
     makePromise,
     execute,
 } from 'apollo-link';
-import {
-    ExecutionResult,
-} from 'graphql';
 import { HttpLink } from 'apollo-link-http';
 import {
     RetryLink,
@@ -45,14 +41,13 @@ export interface BaseState {
 const UPDATE_DEBOUNCE_MS = 400;
 
 export default class GraphQLClient implements ZetteliClient {
+    // TODO(helfer): Rename to stackId.
     private sid: string; // The stack ID (collection of zettelis)
     private store: Store<BaseState>;
-    private incompleteOps: number;
 
     private subscribers: Function[];
 
-    private simpleRequest: (op: GraphQLRequest) => Promise<ExecutionResult>;
-    private observableRequest: (op: GraphQLRequest) => Observable<ExecutionResult>;
+    private link: ApolloLink;
 
     constructor({ sid, uri }: { sid: string, uri: string }) {
         this.sid = sid;
@@ -65,11 +60,10 @@ export default class GraphQLClient implements ZetteliClient {
         // within the client, and we shouldn't subscribe from within the
         // client if the store lives outside.
         this.store.subscribe(this.broadcastUpdate);
-        this.incompleteOps = 0;
         
         this.subscribers = [];
 
-        const link = ApolloLink.from([
+        this.link = ApolloLink.from([
             new OptimisticLink(),
             // As long as we don't have separate debounce per zetteli, we have
             // to keep the deboune up here. If we were able to debounce per zetteli,
@@ -88,8 +82,6 @@ export default class GraphQLClient implements ZetteliClient {
             new HttpLink({ uri }),
         ]);
 
-        this.simpleRequest = (op: GraphQLRequest) => makePromise(execute(link, op));
-        this.observableRequest = (op: GraphQLRequest) => execute(link, op);
     }
 
     subscribe = (func: () => void) => {
@@ -240,16 +232,14 @@ export default class GraphQLClient implements ZetteliClient {
             },
         };
 
-        this.simpleRequest(operation)
+        makePromise(this.observableRequest(operation))
             .then( (res: GetAllZettelisResult) => 
-                res.data.stack.zettelis.map(this.parseZetteli))
-            .then( zettelis => {
                 this.store.dispatch(state => ({
                     ready: true,
                     loading: false,
-                    zettelis,
-                }));
-            });
+                    zettelis: res.data.stack.zettelis.map(this.parseZetteli),
+                }))
+            );
         return new Promise((resolve) => {
             const unsubscribe = this.store.subscribe(() => {
                 if (this.store.getOptimisticState().ready === true) {
@@ -258,6 +248,10 @@ export default class GraphQLClient implements ZetteliClient {
                 }
             });
         });
+    }
+
+    private observableRequest(op: GraphQLRequest) {
+        return execute(this.link, op);
     }
 
     // TODO(helfer): Shared with LocalStorage client
