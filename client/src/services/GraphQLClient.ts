@@ -193,21 +193,31 @@ export default class GraphQLClient implements ZetteliClient {
             variables: { z: data },
             context: {
                 debounce: true,
+                serializationKey: id,
+                optimisticResponse: {
+                    data : {
+                        updateZetteli: true,
+                    },
+                    context: {
+                        isOptimistic: true,
+                    }
+                }
             }
         };
 
-        const optimisticResponse: UpdateZetteliResult = {
-            data : {
-                updateZetteli: true,
+        let rollback: () => void;
+        this.observableRequest(operation).map((res: UpdateZetteliResult) => {
+            if (rollback) { rollback(); }
+            rollback = this.store.dispatch(
+              makeUpdateZetteliAction(data, res),
+              res.context && res.context.isOptimistic
+            );
+        }).subscribe({
+            error(e: Error) {
+                if (rollback) { rollback(); }
+                throw e;
             },
-        };
-        const optimisticAction = makeUpdateZetteliAction(data, optimisticResponse);
-        const rollback = this.store.dispatch(optimisticAction, true);
-
-        this.simpleRequest(operation).then((res: UpdateZetteliResult) => {
-            rollback();
-            this.store.dispatch(makeUpdateZetteliAction(data, res));
-        }); 
+        });
 
         return Promise.resolve(true);
     }

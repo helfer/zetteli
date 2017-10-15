@@ -93,6 +93,9 @@ export interface UpdateZetteliResult {
     data: {
         updateZetteli: boolean,
     };
+    context: {
+        isOptimistic: boolean,
+    }
 }
 
 export function makeUpdateZetteliAction(zli: ZetteliType, result: UpdateZetteliResult) {
