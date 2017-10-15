@@ -186,7 +186,7 @@ export default class GraphQLClient implements ZetteliClient {
             query: updateZetteliMutation,
             variables: { z: data },
             context: {
-                debounce: true,
+                debounceKey: id,
                 serializationKey: id,
                 optimisticResponse: {
                     data : {
