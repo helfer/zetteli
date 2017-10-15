@@ -71,6 +71,9 @@ export default class GraphQLClient implements ZetteliClient {
 
         const link = ApolloLink.from([
             new OptimisticLink(),
+            // As long as we don't have separate debounce per zetteli, we have
+            // to keep the deboune up here. If we were able to debounce per zetteli,
+            // we could move it closer to the network.
             new DebounceLink(UPDATE_DEBOUNCE_MS),
             new SerializingLink(),
             new RetryLink({
@@ -82,7 +85,6 @@ export default class GraphQLClient implements ZetteliClient {
                 interval: (delay, count) => Math.min(delay * 2 ** count, 10000),
             }),
             new OfflineLink(),
-            // the http link.
             new HttpLink({ uri }),
         ]);
 
