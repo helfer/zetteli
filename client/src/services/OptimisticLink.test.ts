@@ -5,7 +5,6 @@ import {
     ApolloLink,
     Operation,
     Observable,
-    Subscription,
 } from 'apollo-link';
 import {
     ExecutionResult,
@@ -39,10 +38,14 @@ export interface ObservableValue {
     type: 'next' | 'error' | 'complete';
 }
 
+export interface Unsubscribable {
+    unsubscribe: () => void;
+}
+
 export const assertObservableSequence = (
     observable: Observable<ExecutionResult>,
     sequence: ObservableValue[],
-    initializer: (sub: Subscription) => void = () => undefined,
+    initializer: (sub: Unsubscribable) => void = () => undefined,
 ): Promise<boolean | Error> => {
     let index = 0;
     if (sequence.length === 0) {
