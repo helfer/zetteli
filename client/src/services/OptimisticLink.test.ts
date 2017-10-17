@@ -5,13 +5,14 @@ import {
     ApolloLink,
     Operation,
     Observable,
+    Subscription,
 } from 'apollo-link';
 import {
     ExecutionResult,
 } from 'graphql';
 import gql from 'graphql-tag';
 
-class TestLink extends ApolloLink {
+export class TestLink extends ApolloLink {
     public operations: Operation[];
     constructor() {
         super();
@@ -32,25 +33,29 @@ class TestLink extends ApolloLink {
     }
 }
 
-interface ObservableValue {
+export interface ObservableValue {
     value?: ExecutionResult | Error;
+    delay?: number;
     type: 'next' | 'error' | 'complete';
 }
 
-const assertObservableSequence = (
+export const assertObservableSequence = (
     observable: Observable<ExecutionResult>,
     sequence: ObservableValue[],
-    initializer: Function = () => undefined,
+    initializer: (sub: Subscription) => void = () => undefined,
 ): Promise<boolean | Error> => {
     let index = 0;
     if (sequence.length === 0) {
         throw new Error('Observable sequence must have at least one element');
     }
     return new Promise((resolve, reject) => {
-        observable.subscribe({
+        const sub = observable.subscribe({
             next: (value) => {
                 expect({ type: 'next', value }).toEqual(sequence[index]);
                 index++;
+                if (index === sequence.length) {
+                    resolve(true);
+                }
             },
             error: (value) => {
                 expect({ type: 'error', value }).toEqual(sequence[index]);
@@ -69,7 +74,7 @@ const assertObservableSequence = (
                 resolve(true);
             }
         });
-        initializer();
+        initializer(sub);
     });
 
 };

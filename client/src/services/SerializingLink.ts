@@ -14,11 +14,17 @@ interface OperationQueueEntry {
     subscription?: { unsubscribe: () => void };
 }
 
+// Serialize queries with the same context.serializationKey, meaning that
+// all previous queries must complete for the next query with the same
+// context.serializationKey to be started.
 export default class SerializingLink extends ApolloLink {
     private opQueues: { [key: string]: OperationQueueEntry[] } = {};
 
     // Remove the first element from the queue and start the next operation
     dequeue = (key: string) => {
+        if (!this.opQueues[key]) {
+            return;
+        }
         this.opQueues[key].shift();
         this.startFirstOpIfNotStarted(key);
         // console.log('dequeue', key, 'queue length', this.opQueues[key].length);
@@ -39,7 +45,7 @@ export default class SerializingLink extends ApolloLink {
     // Cancel the operation by removing it from the queue and unsubscribing if it is currently in progress.
     cancelOp = (key: string, { operation, forward, observer }: OperationQueueEntry) => {
         this.opQueues[key] = this.opQueues[key].filter(entry => {
-            if (entry.operation === operation && entry.forward !== forward && entry.observer === observer) {
+            if (entry.operation === operation && entry.forward === forward && entry.observer === observer) {
                 if (entry.subscription) {
                     entry.subscription.unsubscribe();
                 }
@@ -53,7 +59,11 @@ export default class SerializingLink extends ApolloLink {
     // Start the first operation in the queue if it hasn't been started yet 
     startFirstOpIfNotStarted = (key: string) => {
         // At this point, the queue always exists, but it may not have any elements
-        if (this.opQueues[key].length === 0) { return; }
+        // If it has no elements, we free up the memory it was using.
+        if (this.opQueues[key].length === 0) {
+            delete this.opQueues[key];
+            return;
+        }
         const { operation, forward, observer, subscription } = this.opQueues[key][0];
         if (subscription) { return; }
         this.opQueues[key][0].subscription = forward(operation).subscribe({
