@@ -141,6 +141,26 @@ describe('SerializingLink', () => {
             jest.runAllTimers();
         });
     });
+    it('forwards the operation if context.serializationKey is not defined', () => {
+        const opWithoutKey: GraphQLRequest = {
+            query: gql`{ hello }`,
+            context: {
+                testSequence,
+            },    
+        };
+        return new Promise((resolve, reject) => {
+            execute(link, opWithoutKey).subscribe({
+                next: (data) => undefined,
+                error: (error) => reject(error),
+                complete: () => {
+                    expect(testLink.operations.length).toBe(1);
+                    expect(testLink.operations[0].query).toEqual(op.query);
+                    resolve();
+                },
+            });
+            jest.runAllTimers();
+        });
+    });
     it('calls next and complete as expected', () => {
         return Promise.resolve(assertObservableSequence(
             execute(link, op),

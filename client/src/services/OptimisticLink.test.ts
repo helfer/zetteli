@@ -136,10 +136,13 @@ describe('OptimisticLink', () => {
             () => jest.runAllTimers(),
         );
     });
-    it('does nothing if context.optimisticResponse is not defined', () => {
-        op.context = { testResponse };
+    it('just forwards if context.optimisticResponse is not defined', () => {
+        const nonOptimisticOp = {
+            query: op.query,
+            context: { testResponse },
+        };
         return assertObservableSequence(
-            execute(link, op),
+            execute(link, nonOptimisticOp),
             [
                 { type: 'next', value: testResponse },
                 { type: 'complete' }
