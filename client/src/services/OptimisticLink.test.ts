@@ -136,6 +136,17 @@ describe('OptimisticLink', () => {
             () => jest.runAllTimers(),
         );
     });
+    it('does nothing if context.optimisticResponse is not defined', () => {
+        op.context = { testResponse };
+        return assertObservableSequence(
+            execute(link, op),
+            [
+                { type: 'next', value: testResponse },
+                { type: 'complete' }
+            ],
+            () => jest.runAllTimers(),
+        );
+    });
     it('passes through errors', () => {
         const testError = new Error('Hello darkness my old friend');
         const opWithError: GraphQLRequest = {

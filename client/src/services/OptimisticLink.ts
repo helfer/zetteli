@@ -7,14 +7,15 @@ import {
 
 export default class OptimisticLink extends ApolloLink {
     request(operation: Operation, forward: NextLink ) {
+        if (!operation.getContext().optimisticResponse) {
+            return forward(operation);
+        }
         return new Observable(observer => {
-            if (operation.getContext().optimisticResponse) {
-                // NOTE(helfer): If an upstream link calls next synchronously, the optimistic
-                // response will arrive after that one. We could prevent this by sending the
-                // optimistic response synchronously as well if we see next being invoked before
-                // the timeout
-                setTimeout(() => observer.next(operation.getContext().optimisticResponse), 0);
-            }
+            // NOTE(helfer): If an upstream link calls next synchronously, the optimistic
+            // response will arrive after that one. We could prevent this by sending the
+            // optimistic response synchronously as well if we see next being invoked before
+            // the timeout
+            setTimeout(() => observer.next(operation.getContext().optimisticResponse), 0);
 
             const subscription = forward(operation).subscribe({
                 next: observer.next.bind(observer),
