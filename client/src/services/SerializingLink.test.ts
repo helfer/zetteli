@@ -93,6 +93,8 @@ function toResultValue(e: ObservableEvent): ObservableEvent {
     return obj;
 }
 
+// TODO: Reduce test boilerplate code
+// TODO: Consolidate test utilities
 describe('SerializingLink', () => {
     let link: ApolloLink;
     let testLink: TestLink;
@@ -392,6 +394,8 @@ describe('SerializingLink', () => {
                 () => jest.runAllTimers(),
             )),
         ]);
-
     });
+    // TODO: Tet unsubscribing from the second op
+    // TODO?: Test subscribers without error, next or complete function?
+    // or maybe those are just wrong types?
 });
