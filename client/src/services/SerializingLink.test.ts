@@ -18,24 +18,24 @@ import {
 
 import gql from 'graphql-tag';
 
-interface NextEvent {
+export interface NextEvent {
     type: 'next';
     delay?: number;
     value: ExecutionResult;
 }
 
-interface ErrorEvent {
+export interface ErrorEvent {
     type: 'error';
     delay?: number;
     value: Error;
 }
 
-interface CompleteEvent {
+export interface CompleteEvent {
     type: 'complete';
     delay?: number;
 }
 
-type ObservableEvent = NextEvent | ErrorEvent | CompleteEvent; 
+export type ObservableEvent = NextEvent | ErrorEvent | CompleteEvent; 
 
 export class TestLink extends ApolloLink {
     public operations: Operation[];
@@ -87,7 +87,7 @@ export function merge(...observables: Observable<ExecutionResult>[]) {
     });
 }
 
-function toResultValue(e: ObservableEvent): ObservableEvent {
+export function toResultValue(e: ObservableEvent): ObservableEvent {
     const obj = { ...e };
     delete obj.delay;
     return obj;

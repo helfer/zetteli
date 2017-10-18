@@ -47,19 +47,15 @@ export default class DebounceLink extends ApolloLink {
     // Set up all necessary debounce metadata for a given debounceKey.
     // This data gets cleaned up and reset if there are no subscribers and no running timers
     setupDebounceInfo(debounceKey: string): DebounceMetadata {
-        if (!this.debounceInfo[debounceKey]) {
-            this.debounceInfo[debounceKey] = {
-                runningSubscriptions: {},
-                queuedObservers: [],
-                // NOTE(helfer): In theory we could run out of numbers for groupId, but it's not a realistic use-case.
-                // If the debouncer fired once every ms, it would take about 300,000 years to run out of safe integers.
-                currentGroupId: 0,
-                timeout: null,
-                lastRequest: undefined,
-            };
-        } else {
-            throw new Error(`Programmer error, not your fault. Debounce info already set up for: ${debounceKey}`);
-        }
+        this.debounceInfo[debounceKey] = {
+            runningSubscriptions: {},
+            queuedObservers: [],
+            // NOTE(helfer): In theory we could run out of numbers for groupId, but it's not a realistic use-case.
+            // If the debouncer fired once every ms, it would take about 300,000 years to run out of safe integers.
+            currentGroupId: 0,
+            timeout: null,
+            lastRequest: undefined,
+        };
         return this.debounceInfo[debounceKey];
     }
 
@@ -85,6 +81,10 @@ export default class DebounceLink extends ApolloLink {
         }
         delete dbi.runningSubscriptions[groupId];
 
+        if (groupId === dbi.currentGroupId) {
+            clearTimeout(dbi.timeout);
+        }
+
         const noRunningSubscriptions = Object.keys(dbi.runningSubscriptions).length === 0;
         const noQueuedObservers = dbi.queuedObservers.length === 0;
         if (noRunningSubscriptions && noQueuedObservers) {
@@ -96,7 +96,7 @@ export default class DebounceLink extends ApolloLink {
     flush(debounceKey: string) {
         const dbi = this.debounceInfo[debounceKey];
         if (dbi.queuedObservers.length === 0 || typeof dbi.lastRequest === 'undefined') {
-            // The first can happen if they all unsubscribed, the second is a type guard
+            // The first should never happen, the second is a type guard
             return;
         }
         const { operation, forward } = dbi.lastRequest;
@@ -144,6 +144,9 @@ export default class DebounceLink extends ApolloLink {
         // if this observer is in the queue that hasn't been executed yet, remove it
         if (debounceGroupId === dbi.currentGroupId) {
             dbi.queuedObservers = dbi.queuedObservers.filter( obs => obs !== observer);
+            if (dbi.queuedObservers.length === 0) {
+                this.cleanup(debounceKey, debounceGroupId);
+            }
             return;
         }
 
