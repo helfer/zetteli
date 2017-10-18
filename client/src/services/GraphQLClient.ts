@@ -12,7 +12,7 @@ import uuid from 'uuid';
 
 import OptimisticLink from './OptimisticLink';
 import SerializingLink from './SerializingLink';
-import OfflineLink from './OfflineLink';
+import OnOffLink from './OnOffLink';
 import DebounceLink from './DebounceLink';
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType, SerializedZetteli } from '../components/Zetteli';
@@ -63,6 +63,13 @@ export default class GraphQLClient implements ZetteliClient {
         
         this.subscribers = [];
 
+        const offlineLink = new OnOffLink();
+
+        // TODO(helfer): Technically I should remove the listeners when the app closes,
+        // but since I only create one it shouldn't matter in practice.
+        window.addEventListener('offline', () => offlineLink.close());
+        window.addEventListener('online', () => offlineLink.open());
+
         this.link = ApolloLink.from([
             new OptimisticLink(),
             // As long as we don't have separate debounce per zetteli, we have
@@ -78,7 +85,7 @@ export default class GraphQLClient implements ZetteliClient {
                 delay: () => 500,
                 interval: (delay, count) => Math.min(delay * 2 ** count, 10000),
             }),
-            new OfflineLink(),
+            offlineLink,
             new HttpLink({ uri }),
         ]);
 

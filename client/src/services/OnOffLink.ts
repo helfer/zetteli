@@ -14,27 +14,27 @@ interface OperationQueueEntry {
     subscription?: { unsubscribe: () => void };
 }
 
-export default class OfflineLink extends ApolloLink {
+export default class OnOffLink extends ApolloLink {
     private opQueue: OperationQueueEntry[] = [];
+    private isOpen: boolean = true;
 
     enqueue(entry: OperationQueueEntry) {
+        console.log('enqueue');
         this.opQueue.push(entry);
-        if (this.opQueue.length === 1) {
-            // NOTE(helfer): Because of this listener, the queue must be drained
-            // in order for the link to be garbage collected. Since that's quite
-            // obscure, a memory leak is likely, but assuming that most people
-            // don't create thousands of links it probably doesn't matter in
-            // practice. If they care enough, they'll have to read the docs.
-            window.addEventListener('online', this.drainQueue);
-        }
     }
 
-    drainQueue = () => {
-        window.removeEventListener('online', this.drainQueue);
+    open = () => {
+        console.log('open');
+        this.isOpen = true;
         this.opQueue.forEach(({ operation, forward, observer }) => {
             forward(operation).subscribe(observer);
         });
         this.opQueue = [];
+    }
+
+    close = () => {
+        console.log('close');
+        this.isOpen = false;
     }
 
     cancelOperation = (entry: OperationQueueEntry) => {
@@ -42,7 +42,7 @@ export default class OfflineLink extends ApolloLink {
     }
 
     request(operation: Operation, forward: NextLink ) {
-        if (navigator.onLine) {
+        if (this.isOpen) {
             return forward(operation);
         }
         return new Observable(observer => {

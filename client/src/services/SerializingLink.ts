@@ -44,6 +44,9 @@ export default class SerializingLink extends ApolloLink {
 
     // Cancel the operation by removing it from the queue and unsubscribing if it is currently in progress.
     cancelOp = (key: string, { operation, forward, observer }: OperationQueueEntry) => {
+        if (!this.opQueues[key]) {
+            return;
+        }
         this.opQueues[key] = this.opQueues[key].filter(entry => {
             if (entry.operation === operation && entry.forward === forward && entry.observer === observer) {
                 if (entry.subscription) {
