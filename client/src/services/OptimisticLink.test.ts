@@ -126,17 +126,15 @@ describe('OptimisticLink', () => {
         });
     });
     it('returns the optimistic response before the real response', () => {
-        return new Promise((resolve, reject) => {
-            resolve(assertObservableSequence(
-                execute(link, op),
-                [
-                    { type: 'next', value: optimisticResponse },
-                    { type: 'next', value: testResponse },
-                    { type: 'complete' }
-                ],
-                () => jest.runAllTimers(),
-            ));
-        });
+        return assertObservableSequence(
+            execute(link, op),
+            [
+                { type: 'next', value: optimisticResponse },
+                { type: 'next', value: testResponse },
+                { type: 'complete' }
+            ],
+            () => jest.runAllTimers(),
+        );
     });
     it('passes through errors', () => {
         const testError = new Error('Hello darkness my old friend');
@@ -147,15 +145,13 @@ describe('OptimisticLink', () => {
                 testError,
             },
         };
-        return new Promise((resolve, reject) => {
-            resolve(assertObservableSequence(
-                execute(link, opWithError),
-                [
-                    { type: 'next', value: optimisticResponse },
-                    { type: 'error', value: testError },
-                ],
-                () => jest.runAllTimers(),
-            ));
-        });
+        return assertObservableSequence(
+            execute(link, opWithError),
+            [
+                { type: 'next', value: optimisticResponse },
+                { type: 'error', value: testError },
+            ],
+            () => jest.runAllTimers(),
+        );
     });
 });

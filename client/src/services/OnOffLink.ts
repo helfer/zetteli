@@ -19,12 +19,10 @@ export default class OnOffLink extends ApolloLink {
     private isOpen: boolean = true;
 
     enqueue(entry: OperationQueueEntry) {
-        console.log('enqueue');
         this.opQueue.push(entry);
     }
 
     open = () => {
-        console.log('open');
         this.isOpen = true;
         this.opQueue.forEach(({ operation, forward, observer }) => {
             forward(operation).subscribe(observer);
@@ -33,7 +31,6 @@ export default class OnOffLink extends ApolloLink {
     }
 
     close = () => {
-        console.log('close');
         this.isOpen = false;
     }
 
