@@ -91,6 +91,7 @@ const resolvers = {
                 stack.get(args.id),
                 zetteli.getAll(args.id),
             ]).then(([stack, zettelis]) => {
+                if(!stack){ return null; }
                 return {
                     ...stack,
                     zettelis,
