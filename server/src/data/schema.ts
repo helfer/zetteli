@@ -68,6 +68,7 @@ input StackSettingsInput {
 
 type Query {
     stack(id: String): Stack
+    stacks: [Stack]
 }
 
 type Mutation {
@@ -97,6 +98,11 @@ const resolvers = {
                     zettelis,
                 };
             });
+        },
+        stacks(){
+            // TODO(helfer): Remove empty argument that's just here because
+            // the connector interface was made for zettelis where getAll takes an sid.
+            return stack.getAll('');
         },
     },
     DateTime: DateTime,

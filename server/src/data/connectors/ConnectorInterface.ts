@@ -2,6 +2,7 @@ export type ID = string | number;
 
 // TODO(helfer): Change return types to always be promises
 
+// TODO(helfer): update this so it isn't just zetteli specific.
 export interface Connector<T>{
     get(id: ID): PromiseLike<T | undefined> | T | undefined;
     // getMany(id: string[] | number[]): T[];

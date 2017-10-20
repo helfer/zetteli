@@ -8,7 +8,16 @@ import './App.css';
 
 import Navbar from './components/Navbar';
 import StackContainer from './components/StackContainer';
+import StackList from './components/StackList';
 import { ZetteliType } from './components/Zetteli';
+
+const stacks = [{
+  id: 'a',
+  name: 'a',
+}, {
+  id: 'b',
+  name: 'stackB',
+}];
 
 class App extends React.Component<{}, { search: string }> {
   state = {
@@ -34,7 +43,7 @@ class App extends React.Component<{}, { search: string }> {
             <Route 
               exact={true}
               path="/"
-              render={() => <div className="contentContainer">Hi, are you lost?</div>}
+              render={() => <div className="contentContainer"><StackList stacks={stacks} /></div>}
             />
             <Route
               path="/s/:sid"

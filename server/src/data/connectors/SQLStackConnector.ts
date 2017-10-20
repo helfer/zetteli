@@ -43,7 +43,6 @@ export default class SQLStackConnector implements Connector<StackType> {
     getAll(sid: string) {
         return this.db('stacks')
             .select('*')
-            .where({ sid })
             .then(rows => 
                 rows.map(SQLStackConnector.parse)
             );
