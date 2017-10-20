@@ -59,11 +59,11 @@ input StackInput {
 }
 
 type StackSettings {
-    defaultTags: String
+    defaultTags: [String]
 }
 
 input StackSettingsInput {
-    defaultTags: String
+    defaultTags: [String]
 }
 
 type Query {

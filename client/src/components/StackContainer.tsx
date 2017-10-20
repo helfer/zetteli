@@ -31,12 +31,14 @@ export interface Props {
 
 export interface State {
     loading: boolean;
+    error: string;
     zettelis: ZetteliType[];
 }
 
 export default class StackContainer extends React.Component<Props, State> {
     state = {
         loading: true,
+        error: '',
         zettelis: [],
     };
 
@@ -57,8 +59,12 @@ export default class StackContainer extends React.Component<Props, State> {
 
     refetchZettelis = () => {
         // TODO: Because this will only work if the call doesn't take too long.
-        return this.client.getAllZettelis().then( zettelis => {
+        return this.client.getAllZettelis()
+        .then( zettelis => {
             this.setState({ zettelis });
+        })
+        .catch((error: string) => {
+            this.setState({ error });
         });
     }
 
@@ -145,6 +151,13 @@ ${z.body}
             return (
                 <div className="ui active inverted dimmer">
                     <div className="ui text loader">Loading</div>
+                </div>
+            );
+        }
+        if (this.state.error) {
+            return (
+                <div style={{ marginBottom: '20em' }} className="contentContainer">
+                    <p className="error">{this.state.error}</p>
                 </div>
             );
         }

@@ -35,6 +35,15 @@ import Store from './Store';
 export interface BaseState {
     loading: boolean;
     ready: boolean;
+    error?: string;
+    stack: {
+        id?: string;
+        name?: string;
+        public?: boolean;
+        settings?: {
+            defaultTags: string[];
+        }
+    };
     zettelis: ZetteliType[];
 }
 
@@ -54,6 +63,7 @@ export default class GraphQLClient implements ZetteliClient {
         this.store = new Store({
             loading: false,
             ready: false,
+            stack: {},
             zettelis: [],
         });
         // NOTE(helfer): We don't need to unsubscribe if the store lives
@@ -104,10 +114,11 @@ export default class GraphQLClient implements ZetteliClient {
     }
 
     createNewZetteli(): Promise<string> {
+        const settings = this.store.getOptimisticState().stack.settings;
         const zli = {
             sid: this.sid,
             id: uuid.v4(),
-            tags: ['log', 'zetteli'],
+            tags: (settings && settings.defaultTags) || [],
             body: '',
             datetime: new Date(),
         };
@@ -228,6 +239,9 @@ export default class GraphQLClient implements ZetteliClient {
     }
 
     getAllZettelis(): Promise<ZetteliType[]> {
+        if (this.store.getState().error) {
+            return Promise.reject(this.store.getState().error);
+        }
         if (this.store.getState().ready) {
             return Promise.resolve(this.store.getOptimisticState().zettelis);
         }
@@ -240,15 +254,33 @@ export default class GraphQLClient implements ZetteliClient {
         };
 
         makePromise(this.observableRequest(operation))
-            .then( (res: GetAllZettelisResult) => 
-                this.store.dispatch(state => ({
+            .then( (res: GetAllZettelisResult) => {
+                if (res.data.stack === null) {
+                    return this.store.dispatch(state => ({
+                        ...state,
+                        ready: true,
+                        loading: false,
+                        error: 'stack not found',
+                        stack: {},
+                        zettelis: [],
+                    }));
+                }
+                return this.store.dispatch(state => ({
+                    ...state,
                     ready: true,
                     loading: false,
+                    stack: {
+                        ...res.data.stack,
+                        zettelis: undefined
+                    },
                     zettelis: res.data.stack.zettelis.map(this.parseZetteli),
-                }))
-            );
-        return new Promise((resolve) => {
+                }));
+            });
+        return new Promise((resolve, reject) => {
             const unsubscribe = this.store.subscribe(() => {
+                if (this.store.getState().error) {
+                    reject(this.store.getState().error);
+                }
                 if (this.store.getOptimisticState().ready === true) {
                     unsubscribe();
                     resolve(this.store.getOptimisticState().zettelis);

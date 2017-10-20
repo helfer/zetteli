@@ -4,13 +4,19 @@ import { BaseState } from '../services/GraphQLClient';
 // TODO(helfer): Generate the typings in this file from the queries
 
 export const getAllZettelisQuery = gql`
-query getAllZettelis($sid: String!) {
+query getStack($sid: String!) {
   stack(id: $sid) {
-      zettelis {
       id
-      datetime
-      tags
-      body
+      name
+      public
+      settings {
+          defaultTags
+      }
+      zettelis {
+        id
+        datetime
+        tags
+        body
       }
   }
 }`;
@@ -18,6 +24,12 @@ query getAllZettelis($sid: String!) {
 export interface GetAllZettelisResult {
   data: {
       stack: {
+          id: string,
+          name: string,
+          public: boolean,
+          settings: {
+              defaultTags: string[],
+          },
           zettelis: SerializedZetteli[],
       }
   };
