@@ -148,6 +148,7 @@ ${z.body}
 
     render() {
         if (this.state.loading) {
+            // TODO: Replace this with a loading component
             return (
                 <div className="ui active inverted dimmer">
                     <div className="ui text loader">Loading</div>

@@ -2,6 +2,23 @@ import gql from 'graphql-tag';
 import { SerializedZetteli, ZetteliType } from '../components/Zetteli';
 import { BaseState } from '../services/GraphQLClient';
 // TODO(helfer): Generate the typings in this file from the queries
+import { StackType } from '../components/StackList';
+
+export const stackListQuery = gql`
+  query getStackList {
+      stacks {
+          id
+          name
+          createdAt
+      }
+  }
+`;
+
+export interface StackListQueryResult {
+    data: {
+        stacks: StackType[];
+    };
+}
 
 export const getAllZettelisQuery = gql`
 query getStack($sid: String!) {

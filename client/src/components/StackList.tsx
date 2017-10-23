@@ -1,8 +1,7 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 
-
-interface StackType {
+export interface StackType {
     id: string;
     name: string;
     // public: boolean;
@@ -13,18 +12,17 @@ interface Props {
     stacks: StackType[];
 }
 
-export default class StackList extends React.PureComponent<Props>{
+export default class StackList extends React.PureComponent<Props> {
     render() {
         return (
             <ul>
                 {this.props.stacks.map(s => 
-                    <li><StackListEntry stack={s} /></li>
+                    <li key={s.id}><StackListEntry stack={s} /></li>
                 )}
             </ul>
         );
     }
 }
-
 
 export function StackListEntry(props: { stack: StackType }) {
     return (
