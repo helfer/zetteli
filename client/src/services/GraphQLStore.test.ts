@@ -93,6 +93,12 @@ const state = {
             it('does not allow you to modify array elements', () => {
                 expect(() => result.data.allStacks[0] = {}).toThrow();
             });
+            it('does not allow you to delete object properties', () => {
+                expect(() => { delete result.data.allStacks[0].name }).toThrow();
+            });
+            it('does not allow you to add new object properties', () => {
+                expect(() => result.data.allStacks[0].name2 = 'NEW PROP').toThrow();
+            });
         });
 
         describe('error handling', () => {

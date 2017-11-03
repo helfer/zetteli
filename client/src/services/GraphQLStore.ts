@@ -246,10 +246,14 @@ export default class GraphQLStore {
                 if (typeof val === 'undefined') {
                     return undefined;
                 }
-                return { enumerable: true, configurable: true, value: val };
+                return { enumerable: true, configurable: true, value: get(target, prop) };
             },
             get: get,
             set: () => false,
+            preventExtensions: () => true,
+            isExtensible: () => false,
+            deleteProperty: () => false,
+            defineProperty: () => false,
         };
     }
 
