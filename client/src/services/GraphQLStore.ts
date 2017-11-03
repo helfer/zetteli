@@ -212,7 +212,7 @@ export default class GraphQLStore {
                     const getArgString = (arg: ArgumentNode) => {
                         if (arg.value.kind === 'Variable') {
                             // TODO: serialize variables correctly
-                            return `${arg.name.value}: ${JSON.stringify(variables[arg.name.value])}`;
+                            return `${arg.name.value}: ${JSON.stringify(variables[arg.value.name.value])}`;
                         } else if (arg.value.kind === 'NullValue') {
                             return `${arg.name.value}: null`
                         } else if (arg.value.kind === 'ListValue') {

@@ -100,10 +100,8 @@ const state = {
         });
 
         describe('query with arguments', () => {
-            let result: any;
-            let argResponse: any;
-            beforeEach(() => {
-                // TODO
+            it('can handle a query with inline arguments', () => {
+                // Proxy has to do indirection here, look up the right field.
                 const query = gql`
                 query {
                     stack(id: 5) {
@@ -112,8 +110,8 @@ const state = {
                     }
                 }
                 `;
-                result = store.readQuery(query);
-                argResponse = {
+                const result = store.readQuery(query);
+                const argResponse = {
                     data: {
                         stack: {
                             id: '5',
@@ -121,28 +119,31 @@ const state = {
                         },
                     },
                 };
-            });
-            it('can handle a query with inline arguments', () => {
-                // Proxy has to do indirection here, look up the right field.
                 expect(argResponse).toEqual(result);
             });
-            /*
             it('can handle a query with variable arguments', () => {
                 // TODO
-                const argQuery = gql`
-                query {
-                    stack(id: 5) {
+                const query = gql`
+                query ($stackId: Int) {
+                    stack(id: $stackId) {
                         id
                         name
-                        zettelis(last: 2) {
-                            body
-                        }
                     }
                 }
                 `;
+                const variables = { stackId: 5 };
+                const result = store.readQuery(query, variables);
+                const argResponse = {
+                    data: {
+                        stack: {
+                            id: '5',
+                            name: 'Stack 5',
+                        },
+                    },
+                };
+                expect(argResponse).toEqual(result);
                 // Proxy has to do indirection here, look up the right field.
             });
-            */
         });
 
         /*
