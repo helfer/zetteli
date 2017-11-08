@@ -161,12 +161,106 @@ import {
     FieldNode,
 } from 'graphql';
 
+// TODO:
+// Add a function to ask the store whether it contains cached data for a given query.
+// Add an option to return partial data while setting a flag.
+// Make normalization optional (can be turned on or off)
+
 export default class GraphQLStore {
     constructor(private state: any) {}
 
     public readQuery(query: DocumentNode, variables?: object): any {
         const selection = getOperationDefinitionOrThrow(query).selectionSet.selections;
         return { data: new Proxy(this.state.data, this.getHandler(selection, variables)) };
+    }
+
+    public writeQuery(query: DocumentNode, data: any, variables?: object) {
+        const selection = getOperationDefinitionOrThrow(query).selectionSet.selections;
+        this.state.data = this.writeSelectionSet(selection, data.data, this.state.data, variables);
+    }
+
+    // writes the selection set and returns the new store object at that key.
+    public writeSelectionSet(selection: SelectionNode[], data: any, root: any, variables?: any): any {
+        let newRoot = root;
+        if (typeof newRoot === 'undefined') newRoot = Object.create(null);
+        if (Array.isArray(data)) {
+            // Check and write each array value to store.
+            // TODO: this won't work on nested arrays.
+            newRoot = [];
+            data.forEach( (item, i) => {
+                newRoot[i] = this.writeSelectionSet(selection, data[i], newRoot[i], variables);
+            });
+        } else {
+            selection.forEach( selectionNode => {
+                if (selectionNode.kind === 'Field') {
+                    if(typeof data[selectionNode.name.value] === 'undefined') {
+                        throw new Error(`Missing field ${selectionNode.name.value} in result ${JSON.stringify(data)}`);
+                    }
+                    const storeName = this.getStoreKeyFromNode(selectionNode, variables);
+                    if(selectionNode.selectionSet) {
+                        const normalizedKey = this.getStoreKeyFromObject(data[selectionNode.name.value]);
+                        if (normalizedKey) {
+                            this.state.nodes[normalizedKey] = this.writeSelectionSet(
+                                selectionNode.selectionSet.selections,
+                                data[selectionNode.name.value],
+                                this.state.nodes[normalizedKey],
+                                variables,
+                            );
+                            newRoot[storeName] = this.state.nodes[normalizedKey];
+                        } else {
+                            newRoot[storeName] = this.writeSelectionSet(
+                                selectionNode.selectionSet.selections,
+                                data[selectionNode.name.value],
+                                newRoot[storeName],
+                                variables,
+                            );
+                        }
+                    } else {
+                        // scalar value
+                        newRoot[storeName] = data[selectionNode.name.value];
+                    }
+                } else if (selectionNode.kind === 'FragmentSpread') {
+                    throw new Error('fragment spread writing not implemented yet');
+                } else if (selectionNode.kind === 'InlineFragment') {
+                    throw new Error('inline fragment writing not impelmented yet')
+                }
+            });
+        }
+        return newRoot;
+    }
+
+    public getStoreKeyFromNode(node: FieldNode, variables: any): string {
+        if (node.arguments && node.arguments.length) {
+            // TODO this is slow, break it out to speed things up.
+            const getArgString = (arg: ArgumentNode) => {
+                if (arg.value.kind === 'Variable') {
+                    // TODO: serialize variables correctly
+                    return `${arg.name.value}: ${JSON.stringify(variables[arg.value.name.value])}`;
+                } else if (arg.value.kind === 'NullValue') {
+                    return `${arg.name.value}: null`
+                } else if (arg.value.kind === 'ListValue') {
+                    throw new Error('List argument serialization not implemented')
+                    // return '';
+                } else if (arg.value.kind === 'ObjectValue') {
+                    throw new Error('Object argument serialization not implemented')
+                    // return '';
+                } else if (arg.value.kind === 'StringValue') {
+                   return `${arg.name.value}: "${arg.value.value}"` 
+                }
+                return `${arg.name.value}: ${arg.value.value}`;
+            }
+            return `${node.name.value}(${node.arguments.map(getArgString)})`;
+        }
+        return node.name.value;
+    }
+
+    public getStoreKeyFromObject(obj: any): string | undefined {
+        if (obj.__id) {
+            return obj.__id;
+        } else if (obj.__typename && obj.id) {
+            return `${obj.__typename}:${obj.id}`;
+        }
+        return undefined;
     }
 
     // Node: AST is a pretty bad representation for reading stuff out of the store
@@ -206,26 +300,12 @@ export default class GraphQLStore {
                 }
             }) as FieldNode;
             if (node) {
-                let storeName = name;
-                // if node has arguments, we need to check those as well.
-                if (node.arguments && node.arguments.length) {
-                    const getArgString = (arg: ArgumentNode) => {
-                        if (arg.value.kind === 'Variable') {
-                            // TODO: serialize variables correctly
-                            return `${arg.name.value}: ${JSON.stringify(variables[arg.value.name.value])}`;
-                        } else if (arg.value.kind === 'NullValue') {
-                            return `${arg.name.value}: null`
-                        } else if (arg.value.kind === 'ListValue') {
-                            throw new Error('List argument serialization not implemented')
-                            // return '';
-                        } else if (arg.value.kind === 'ObjectValue') {
-                            throw new Error('Object argument serialization not implemented')
-                            // return '';
-                        }
-                        return `${arg.name.value}: ${arg.value.value}`;
-                    };
-                    storeName = `${name}(${node.arguments.map(getArgString)})`;
+                let storeName = this.getStoreKeyFromNode(node, variables);
+                if (typeof target[storeName] === 'undefined') {
+                    console.log('error at ', storeName);
                 }
+                // if node has arguments, we need to check those as well.
+                
                 if (node.selectionSet) {
                     if(Array.isArray(target[storeName])) {
                         return new Proxy(target[storeName], this.getArrayHandler(node.selectionSet.selections, variables));

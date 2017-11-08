@@ -1,6 +1,9 @@
 import gql from 'graphql-tag';
 import GraphQLStore from './GraphQLStore';
 
+import { InMemoryCache } from 'apollo-cache-inmemory';
+const apolloStore = new InMemoryCache();
+
 const state = {
     nodes: {
         'Stack:5': {
@@ -53,7 +56,7 @@ const state = {
             },
         };
 
-        it('doesn\'t throw any errors', () => {
+        it('doesn\'t throw', () => {
             expect(() => store.readQuery(simpleQuery)).not.toThrow();
         });
         
@@ -102,7 +105,9 @@ const state = {
         });
 
         describe('error handling', () => {
-
+            it.skip('sets a flag when only partial data is available', () => {
+                expect(false).toBe(true);
+            });
         });
 
         describe('query with arguments', () => {
@@ -127,7 +132,7 @@ const state = {
                 };
                 expect(argResponse).toEqual(result);
             });
-            it('can handle a query with variable arguments', () => {
+            it('can handle a query with variables', () => {
                 // TODO
                 const query = gql`
                 query ($stackId: Int) {
@@ -154,7 +159,27 @@ const state = {
 
         /*
         describe('query with aliases', () => {
-
+            it('can handle a query with aliases', () => {
+                // TODO
+                const simpleQuery = gql`
+                query {
+                    myStacks: allStacks {
+                        id
+                        __typename
+                        aName: name
+                    }
+                }
+                `;
+                const expectedResponse = {
+                    data: {
+                        myStacks: [{
+                            id: '5',
+                            __typename: 'Stack',
+                            aName: 'Stack 5',
+                        }],
+                    },
+                };
+            });
         });
 
         describe('query with inline fragments', () => {
@@ -165,51 +190,247 @@ const state = {
 
         });
 
+        describe('query with conditional fragments (non-union/interface type)', () => {
+
+        });
+
         describe('query with named fragments on interface and union types', () => {
 
         }); */
 
-        /* it('can handle a query with aliases', () => {
-            // TODO
-            const simpleQuery = gql`
-            query {
-                myStacks: allStacks {
-                    id
-                    __typename
-                    aName: name
-                }
-            }
-            `;
-            const expectedResponse = {
-                data: {
-                    myStacks: [{
-                        id: '5',
-                        __typename: 'Stack',
-                        aName: 'Stack 5',
-                    }],
-                },
-            };
-        }); */
-        // it('can handle a query with inline fragments', () => {
-            // Proxy has to go into the fragment here to know the full selection set.
-        // });
-        // it('can handle a query with named fragments', () => {
-            // Proxy has to go into the fragment here to know the full selection set.
-        // });
-        // it('can handle a query with conditional fragments (non-union)', () => {
-            // Proxy needs to match typename
-        // });
-        // it('can handle a query with fragments on union types', () => {
-            // Proxy needs to have schema knowledge and match typename
-        // });
-
-        // TODO: Test for nested arrays.
+        // TODO: Test for nested arrays etc.
     });
     describe('writing', () => {
-        it('', () => {});
-        it('', () => {});
-        it('', () => {});
-        it('normalizes', () => {});
+        it('Can write a simple query without arguments and read it back', () => {
+            const query = gql`
+              query {
+                someRandomKey { id }
+              }
+            `;
+            const value = {
+                data: {
+                    someRandomKey: {
+                        id: 19,
+                    },
+                },
+            };
+            store.writeQuery(query, value);
+            expect(store.readQuery(query)).toEqual(value);
+        });
+        it('Can write a query containing inline arguments', () => {
+            const query = gql`
+            query {
+              someRandomKey(key: "ABC") { id }
+            }
+          `;
+          const value = {
+              data: {
+                  someRandomKey: {
+                      id: 999,
+                  },
+              },
+          };
+          store.writeQuery(query, value);
+          expect(store.readQuery(query)).toEqual(value);
+        });
+        it('writes to the same field with different arguments don\'t affect each other', () => {
+            const query = gql`
+            query A($key: String){
+              someRandomKey(key: $key) { id }
+            }
+          `;
+          const value = {
+              data: {
+                  someRandomKey: {
+                      id: 111,
+                  },
+              },
+          };
+          const variables = { key : 'X' };
+          const value2 = {
+            data: {
+                someRandomKey: {
+                    id: 222,
+                },
+            },
+        };
+        const variables2 = { key : 'Y' }; 
+          store.writeQuery(query, value, variables);
+          store.writeQuery(query, value2, variables2);
+          expect(store.readQuery(query, variables)).toEqual(value);
+          expect(store.readQuery(query, variables2)).toEqual(value2);
+        });
+        // TODO: test the following inline and variable arguments:
+        // - null
+        // - object (including nested)
+        // - enum
+        // - array
+        // and make sure that stuff written with variables can be read
+        // with inline arguments and vice versa
+        it('Can write a query containing variables', () => {
+            const query = gql`
+            query A($key: Boolean, $str: String) {
+              someRandomKey(key: $key, str: $str) { id }
+            }
+            `;
+            const value = {
+                data: {
+                    someRandomKey: {
+                        id: 888,
+                    },
+                },
+            };
+            const variables = { key: true, str: 'A' };
+            store.writeQuery(query, value, variables);
+            // console.log(JSON.stringify(store, null, 2));
+            expect(store.readQuery(query, variables)).toEqual(value);
+        });
+        it('Can write arrays', () => {
+            const query = gql`
+            query {
+              someArray { id value }
+            }
+          `;
+            const value = {
+                data: {
+                    someArray: [
+                        {
+                            id: 19,
+                            value: 'val',
+                        },
+                        {
+                            id: 20,
+                            value: 'val2',
+                        }
+                    ],
+                },
+            };
+            store.writeQuery(query, value);
+            expect(store.readQuery(query)).toEqual(value);
+        });
+        it('Can write a loooong array', () => {
+            const N = 10000;
+            const longArray: any[] = [];
+            for(let i = 0; i < N; i++) {
+                longArray[i] = {
+                    id: i,
+                    value: `Value ${i}`,
+                    __typename: 'Boo',
+                };
+            }
+            const query = gql`
+            query {
+              longArray { __typename id value }
+            }
+          `;
+            const value = {
+                data: {
+                    longArray: longArray,
+                },
+            };
+            store.writeQuery(query, value);
+            const x = store.readQuery(query).data.longArray.map((v: any) => v.id);
+            expect(x.length).toBe(N);
+            // Doing the deep comparison is slow, so we skip it.
+            // expect(store.readQuery(query)).toEqual(value);
+        });
+        it('Can write null values', () => {
+            const query = gql`
+            query {
+              nullIdValue { id }
+            }
+            `;
+            const value = {
+                data: {
+                    nullIdValue: {
+                        id: null,
+                    },
+                },
+            };
+            store.writeQuery(query, value);
+            expect(store.readQuery(query)).toEqual(value);
+        });
+        it('Can overwrite existing values', () => {
+            const query = gql`
+            query A($key: String){
+              someRandomKey(key: $key) { id }
+            }
+            `;
+            const value = {
+                data: {
+                    someRandomKey: {
+                        id: 111,
+                    },
+                },
+            };
+            const variables = { key : 'X' };
+            const value2 = {
+                data: {
+                    someRandomKey: {
+                        id: 222,
+                    },
+                },
+            };
+            store.writeQuery(query, value, variables);
+            expect(store.readQuery(query, variables)).toEqual(value);
+            store.writeQuery(query, value2, variables);
+            expect(store.readQuery(query, variables)).toEqual(value2);
+        });
+        it('Merges new data with existing data in the store if it overlaps', () => {
+            expect(false).toBe(true);
+        });
+        it('properly normalizes when writing objects', () => {
+            const query = gql`
+            query A{
+              refA{ id __typename payload }
+            }
+            `;
+            const value = {
+                data: {
+                    refA: {
+                        id: 111,
+                        __typename: 'OBJ',
+                        payload: 'A',
+                    },
+                },
+            };
+            const query2 = gql`
+            query A{
+              refB{ id __typename payload }
+            }
+            `;
+            const value2 = {
+                data: {
+                    refB: {
+                        id: 111,
+                        __typename: 'OBJ',
+                        payload: 'B',
+                    },
+                },
+            };
+            store.writeQuery(query, value);
+            store.writeQuery(query2, value2);
+            expect(store.readQuery(query2)).toEqual(value2);
+            expect(store.readQuery(query).data.refA.payload).toEqual('B');
+        });
+        it('throws an error if a query field is missing in the data', () => {
+            const query = gql`
+            query MissingData {
+              nullIdValue { id }
+            }
+            `;
+            const value = {
+                data: {
+                    nullIdValue: {
+                        // id: null, // missing data!
+                    },
+                },
+            };
+            expect( () => store.writeQuery(query, value)).toThrow(/Missing field id/); 
+        });
+        it.skip('thows an error if a variable value marked as required is missing', () => {
+            expect(false).toBe(true);
+        })
     });
     describe('optimistic updates', () => {
 
