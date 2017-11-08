@@ -286,7 +286,13 @@ export default class GraphQLStore {
             // TODO: check this more carefully, and make it work with fragments.
             
             const keys = selection.map((node: SelectionNode) => {
-                return node.kind === 'Field' && node.name.value;
+                if (node.kind === 'Field') {
+                    if (node.alias) {
+                        return node.alias.value;
+                    }
+                    return node.name.value;
+                }
+                return false;
             }).filter(n => !!n);
             return keys;
         }
@@ -294,6 +300,9 @@ export default class GraphQLStore {
             // console.log('GET', name);
             const node = selection.find((node: SelectionNode) => {
                 if (node.kind === 'Field') {
+                    if (node.alias) {
+                        return node.alias.value === name;
+                    }
                     return node.name && node.name.value === name;
                 } else {
                     return false;
