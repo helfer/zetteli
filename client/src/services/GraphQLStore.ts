@@ -161,6 +161,8 @@ import {
     FieldNode,
 } from 'graphql';
 
+const PARENTS = Symbol('parent');
+
 // TODO:
 // Add a function to ask the store whether it contains cached data for a given query.
 // Add an option to return partial data while setting a flag.
@@ -176,19 +178,18 @@ export default class GraphQLStore {
 
     public writeQuery(query: DocumentNode, data: any, variables?: object) {
         const selection = getOperationDefinitionOrThrow(query).selectionSet.selections;
-        this.state.data = this.writeSelectionSet(selection, data.data, this.state.data, variables);
+        this.state.data = this.writeSelectionSet(selection, data.data, this.state.data, this.state.data, variables);
     }
 
     // writes the selection set and returns the new store object at that key.
-    public writeSelectionSet(selection: SelectionNode[], data: any, root: any, variables?: any): any {
-        let newRoot = root;
-        if (typeof newRoot === 'undefined') newRoot = Object.create(null);
+    public writeSelectionSet(selection: SelectionNode[], data: any, root: any, parent: object, variables?: any): any {
+        let newRoot = Object.assign(Object.create(null), root);
         if (Array.isArray(data)) {
             // Check and write each array value to store.
-            // TODO: this won't work on nested arrays.
+            // TODO: this doesn't deal with nested arrays yet.
             newRoot = [];
             data.forEach( (item, i) => {
-                newRoot[i] = this.writeSelectionSet(selection, data[i], newRoot[i], variables);
+                newRoot[i] = this.writeSelectionSet(selection, data[i], newRoot[i], newRoot, variables);
             });
         } else {
             selection.forEach( selectionNode => {
@@ -204,6 +205,7 @@ export default class GraphQLStore {
                                 selectionNode.selectionSet.selections,
                                 data[selectionNode.name.value],
                                 this.state.nodes[normalizedKey],
+                                newRoot,
                                 variables,
                             );
                             newRoot[storeName] = this.state.nodes[normalizedKey];
@@ -225,6 +227,15 @@ export default class GraphQLStore {
                     throw new Error('inline fragment writing not impelmented yet')
                 }
             });
+        }
+        newRoot[PARENTS] = [parent];
+
+        // update parents up to data field.
+        // TODO: won't work with cycles yet.
+        if (root) {
+            if (root[PARENTS]) {
+                root[PARENTS].forEach( (parent: object) => findAndUpdateChild(parent, root, newRoot));
+            }
         }
         return newRoot;
     }
@@ -376,4 +387,23 @@ function getOperationDefinitionOrThrow(query: DocumentNode): OperationDefinition
         throw new Error(`No operation definition found in query ${print(query)}`)
     }
     return ret;
+}
+
+function findAndUpdateChild(root: any, oldChild: any, newChild: any) {
+    // TODO: This is all a dirty hack! Only works in non-circular stores,
+    // modifies stuff passed in etc.
+    const key = Object.keys(root).find( key => root[key] === oldChild);
+    if (key) {
+        if(root[PARENTS]) {
+            const newRoot = { ...root, [key]: newChild };
+            newRoot[PARENTS] = root[PARENTS];
+            findAndUpdateChild(root[PARENTS], root, newRoot);
+            return newRoot
+        } else {
+            // no parent, we must be at store level, so just replace it directly
+            root[key] = newChild;
+            return root;
+        }
+    }
+    return undefined;
 }
