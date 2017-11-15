@@ -85,7 +85,6 @@ export class GraphNode {
     private newerVersion: GraphNode | undefined;
 
     public constructor(tx: TransactionInfo, data?: { [key: string]: GraphNode | GraphNode[] | SerializableValue }) {
-        console.log('creating new graph node', data);
         this.transactionId = tx.id;
         this.data = data || Object.create(null);
     }
@@ -97,7 +96,6 @@ export class GraphNode {
     // Copy parents over from old node, creating a new reference of the parent where necessary
     // Also updates the index entry
     public adoptParents(previousNode: GraphNode, tx: TransactionInfo) {
-        console.log('adopting parents', previousNode.parents.length);
         this.parents = previousNode.parents.map(parent => {
             return {
                 node: parent.node.set(parent.key, this, tx),
@@ -117,7 +115,6 @@ export class GraphNode {
             return this.newerVersion.set(key, value, tx);
         }
         // TODO: if value is an array, treat it differently.
-        console.log('setting', key, 'to', value);
         if (this.data[key] === value) {
             return this;
         }
@@ -126,7 +123,6 @@ export class GraphNode {
             this.data[key] = value;
             return this;
         }
-        console.log('cloning graph node', this.data);
         const newNode = new GraphNode(tx, { ...this.data, [key]: value });
         newNode.adoptParents(this, tx);
         this.notifySubscribers(tx);
@@ -143,7 +139,6 @@ export class GraphNode {
     }
 
     public addParent(node: GraphNode, key: string) {
-        console.log('joining parent as ', key);
         this.parents.push({ node, key });
     }
 
@@ -226,7 +221,6 @@ export default class Store {
     ): GraphNode {
         // TODO: Update / set index if node with key has been written.
         let newNode = node || this.getExistingGraphNode(data) || new GraphNode(info.txInfo);
-        console.log('new node is', newNode);
         selectionSet.selections.forEach( selection => {
             if (selection.kind === 'Field') {
                 const dataName: string = (selection.alias && selection.alias.value) || selection.name.value;
@@ -244,14 +238,13 @@ export default class Store {
                         throw new Error(`No fragment named ${selection.name.value} in query print(${info.query})`);
                     }
                 }
-                if (this.isMatchingFragment(fragment, data)) {
+                if (isMatchingFragment(fragment, data)) {
                     newNode = this.writeSelectionSet(newNode, fragment.selectionSet, data, info);
                 }
             }
         });
         const indexKey = getStoreKeyFromObject(data);
         if (indexKey) {
-            console.log('updating index key', indexKey);
             newNode.setIndexEntry(this.nodeIndex, indexKey);
             this.nodeIndex[indexKey] = newNode;
         }
@@ -290,15 +283,6 @@ export default class Store {
             childNode.addParent(parentNode, storeName);
             return parentNode;
         }
-    }
-
-    private isMatchingFragment(fragment: InlineFragmentNode | FragmentDefinitionNode, data: SerializableObject) {
-        if (typeof fragment.typeCondition === 'undefined') {
-            // No type condition means fragment always matches
-            return true;
-        }
-        // TODO: match on union and interface types
-        return data.__typename === fragment.typeCondition.name.value;
     }
 
     public observe(query: DocumentNode, context: ReadContext): Observable {
@@ -352,6 +336,15 @@ function getFragmentDefinitionMap(query: DocumentNode): FragmentMap {
     return ret;
 }
 
+function isMatchingFragment(fragment: InlineFragmentNode | FragmentDefinitionNode, data: SerializableObject) {
+    if (!fragment.typeCondition) {
+        // No type condition means fragment always matches
+        return true;
+    }
+    // TODO: match on union and interface types
+    return data.__typename === fragment.typeCondition.name.value;
+}
+
 function getStoreName(node: FieldNode, variables: SerializableObject): string {
     if (node.arguments && node.arguments.length) {
         // TODO this is slow, break it out to speed things up.
@@ -386,21 +379,41 @@ function getStoreKeyFromObject(obj: SerializableObject): string | undefined {
     return undefined;
 }
 
+function getFieldNodeFromSelectionSet(
+    selectionSet: SelectionSetNode,
+    fieldName: string,
+    data: SerializableObject,
+): FieldNode | undefined {
+    let matchingNode: FieldNode | undefined = undefined;
+    selectionSet.selections.find((node: SelectionNode) => {
+        if (node.kind === 'Field') {
+            if (node.alias && node.alias.value === fieldName) {
+                matchingNode = node;
+                return true;
+            }
+            if (node.name && node.name.value === fieldName) {
+                matchingNode = node;
+                return true;
+            }
+        } else if (node.kind === 'InlineFragment') {
+            if (isMatchingFragment(node, data)) {
+                matchingNode = getFieldNodeFromSelectionSet(node.selectionSet, fieldName, data);
+                return !!matchingNode;
+            }
+        } else if (node.kind === 'FragmentSpread') {
+            console.error('Named fragment reading not implemented yet');
+        }
+        return false;
+    });
+    return matchingNode;
+}
+
 export class ObjectHandler {
     public constructor(private selectionSet: SelectionSetNode, private variables: SerializableObject) {
     }
 
     public get(target: GraphNodeData, name: string): any {
-        const node = this.selectionSet.selections.find((node: SelectionNode) => {
-            if (node.kind === 'Field') {
-                if (node.alias) {
-                    return node.alias.value === name;
-                }
-                return node.name && node.name.value === name;
-            } else {
-                return false;
-            }
-        }) as FieldNode;
+        const node = getFieldNodeFromSelectionSet(this.selectionSet, name, target);
         if (node) {
             const storeName = getStoreName(node, this.variables);
             const value = target[storeName]
