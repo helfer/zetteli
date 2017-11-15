@@ -62,21 +62,52 @@ const state = {
         }
         `;
         const data2 = {
-            authorZ: {
+            authorZ: [{
                 id: '1',
                 __typename: 'Author',
                 name: 'Hermann Hesse',
             },
+            {
+                id: '2',
+                __typename: 'Author',
+                name: 'Bertolt Brecht',
+            }],
         };
         store.write(query, data);
-        console.log(store.nodeIndex);
         const earlyValue = store.read(query);
         store.write(query2, data2);
-        console.log(store.nodeIndex);
-        console.log('--------');
-        console.log(store.read(query));
-        console.log(store.read(query2));
-        console.log('early value', earlyValue);
+        expect(store.read(query).author).toEqual(data2.authorZ[0]);
+        expect(store.read(query2)).toEqual(data2);
+        expect(earlyValue).toEqual(data);
+    });
+
+    it('Can write a loooong array', () => {
+        const N = 10000;
+        const longArray: any[] = [];
+        for(let i = 0; i < N; i++) {
+            longArray[i] = {
+                id: i,
+                value: `Value ${i}`,
+                __typename: 'Boo',
+            };
+        }
+        const query = gql`
+        query {
+          longArray { __typename id value }
+        }
+      `;
+        const value = {
+            longArray: longArray,
+        };
+        const start = process.hrtime()[1];
+        // store.write(query, value);
+        // const x = store.read(query).longArray.map((v: any) => v.id);
+        // expect(x.length).toBe(N);
+        const K = JSON.parse(JSON.stringify(longArray));
+        // expect(K).toBe(K);
+        console.log('roxy ms', (process.hrtime()[1] - start)/1000000);
+        // Doing the deep comparison is slow, so we skip it.
+        // expect(store.readQuery(query)).toEqual(value);
     });
 
     // Read the query

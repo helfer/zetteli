@@ -27,7 +27,7 @@ type JSONScalar = object;
 type SerializableValue = SerializableObject | Number | String | JSONScalar | null;
 
 interface ReadContext {
-    query: DocumentNode;
+    // query: DocumentNode;
     variables?: SerializableObject;
     context?: SerializableObject;
     rootId?: string; // default 'QUERY', can be things like 'Stack:5', 'QUERY/allStacks'
@@ -77,11 +77,12 @@ interface GraphNodeData {
 }
 
 export class GraphNode {
-    public parents: { node: GraphNode, key: string }[] = [];
+    public readonly __type = 'GraphNode';
+    public parents: { node: GraphNode, key: string | number }[] = [];
     public indexEntry: { index: NodeIndex, key: string };
     public subscribers: Subscriber[] = [];
     private transactionId: number; // The transaction this node was written by.
-    private data: GraphNodeData;
+    protected data: GraphNodeData;
     private newerVersion: GraphNode | undefined;
 
     public constructor(tx: TransactionInfo, data?: { [key: string]: GraphNode | GraphNode[] | SerializableValue }) {
@@ -109,7 +110,7 @@ export class GraphNode {
     }
 
     // TODO: could I just use immutable here?
-    public set(key: string, value: GraphNode | GraphNode[] | SerializableValue, tx: TransactionInfo): GraphNode {
+    public set(key: string | number, value: GraphNode | SerializableValue, tx: TransactionInfo): GraphNode {
         if (this.newerVersion) {
             // Always set on the newest version
             return this.newerVersion.set(key, value, tx);
@@ -130,20 +131,27 @@ export class GraphNode {
         return newNode;
     }
 
-    public get(key: string): GraphNode | GraphNode[] | SerializableValue | undefined {
+    public get(key: string | number): GraphNode | SerializableValue | undefined {
         return this.data[key];
     }
-
     public getProxy(selectionSet: SelectionSetNode, variables: SerializableObject) {
         return new Proxy(this.data, new ObjectHandler(selectionSet, variables));
     }
 
-    public addParent(node: GraphNode, key: string) {
+    public addParent(node: GraphNode, key: string | number) {
         this.parents.push({ node, key });
     }
 
     public setIndexEntry(index: NodeIndex, key: string) {
         this.indexEntry = { index, key };
+    }
+}
+
+export class ArrayGraphNode extends GraphNode {
+    public getProxy(selectionSet: SelectionSetNode, variables: SerializableObject) {
+        // TODO: this is a hack
+        const arr = Object.keys(this.data).map(node => this.data[node]);
+        return new Proxy(arr, new ArrayHandler(selectionSet, variables));
     }
 }
 
@@ -153,6 +161,13 @@ export default class Store {
     constructor(/* private data: { QUERY: GraphNode } */) {
         this.nodeIndex = Object.create(null);
     }
+
+    public readQuery(query: DocumentNode, variables?: object) {
+        return { data: this.read(query, { variables: variables as SerializableObject }) };
+    };
+    public writeQuery(query: DocumentNode, data: any, variables?: object) {
+        return this.write(query, data.data, { variables: variables as SerializableObject });
+    };
 
     // TODO: Figure out how to type the return value here
     // Read just reads once, returns an immutable result.
@@ -265,23 +280,58 @@ export default class Store {
     ): GraphNode {
         const storeName: string = getStoreName(field, info.variables);
         if (field.selectionSet === null || typeof field.selectionSet === 'undefined' || data === null) {
-            // Scalar field or null value
+            // Scalar (maybe array) field or null value
             return node.set(storeName, data, info.txInfo);
         } else {
-            // TODO: Deal with Arrays and nested arrays.
-            const childNode = this.writeSelectionSet(
-                node[storeName],
-                field.selectionSet,
-                data as SerializableObject,
-                info,
-            );
-            const parentNode = node.set(
-                storeName,
-                childNode,
-                info.txInfo,
-            );
-            childNode.addParent(parentNode, storeName);
-            return parentNode;
+            if (Array.isArray(data)) {
+                // If it's a simple array
+                    // Create an intermediate node to represent the array
+                    const existingArrayNode = node.get(storeName);
+                    let arrayNode: ArrayGraphNode;
+                    if( existingArrayNode instanceof ArrayGraphNode) {
+                        arrayNode = existingArrayNode;
+                    } else {
+                        arrayNode = new ArrayGraphNode(info.txInfo);
+                    }
+                    // Create a child node for each element in the array.
+                    data.forEach( (arrayElement, i) => {
+                        const currentElement = arrayNode.get(i);
+                        const childNode = this.writeSelectionSet(
+                            currentElement instanceof GraphNode ? currentElement : undefined,
+                            field.selectionSet as SelectionSetNode,
+                            arrayElement,
+                            info,
+                        );
+                        arrayNode = arrayNode.set(i, childNode, info.txInfo);
+                        childNode.addParent(arrayNode, i);
+                    });
+                    // Set the field on the parent node.
+                    const parentNode = node.set(
+                        storeName,
+                        arrayNode,
+                        info.txInfo,
+                    );
+                    arrayNode.addParent(parentNode, storeName);
+                    return parentNode;
+                // If it's a nested array
+                    // Recurse in this function, create the child nodes when it's not an array
+                    // any more. Set parent on all the great* grandchildren.
+            } else {
+                const currentChild = node.get(storeName);
+                const childNode = this.writeSelectionSet(
+                    currentChild instanceof GraphNode ? currentChild : undefined,
+                    field.selectionSet,
+                    data as SerializableObject,
+                    info,
+                );
+                const parentNode = node.set(
+                    storeName,
+                    childNode,
+                    info.txInfo,
+                );
+                childNode.addParent(parentNode, storeName);
+                return parentNode; 
+            }
         }
     }
 
@@ -401,11 +451,28 @@ function getFieldNodeFromSelectionSet(
                 return !!matchingNode;
             }
         } else if (node.kind === 'FragmentSpread') {
+            // To support this, we just need to pass in the fragment map that we construct when we get
+            // the document.
             console.error('Named fragment reading not implemented yet');
         }
         return false;
     });
     return matchingNode;
+}
+
+export class ArrayHandler {
+    public constructor(private selectionSet: SelectionSetNode, private variables: SerializableObject) {
+    } 
+    
+    public get(target: Array<GraphNode>, name: string) {
+        // For length, non-existent properties etc. we just do a passthrough
+        if(typeof target[name] !== 'object') {
+            return target[name];
+        }
+        // TODO: Through the iterator it seems to be possible to directly access the underlying graphNode
+        return target[name].getProxy(this.selectionSet, this.variables);
+    }
+    public set() { return false; }
 }
 
 export class ObjectHandler {
@@ -422,9 +489,10 @@ export class ObjectHandler {
             } else if (value === null) {
                 return null;
             } else if (node.selectionSet) {
-                /* if(Array.isArray(target[storeName])) {
-                    return new Proxy(target[storeName], this.getArrayHandler(node.selectionSet.selections, variables));
-                } */
+                if(value instanceof ArrayGraphNode) {
+                    // return new Proxy(target[storeName], this.getArrayHandler(node.selectionSet.selections, variables));
+                    return (value as ArrayGraphNode).getProxy(node.selectionSet, this.variables);
+                }
                 return (value as GraphNode).getProxy(node.selectionSet, this.variables);
             }
             // It's a scalar
@@ -435,7 +503,7 @@ export class ObjectHandler {
         }
     }
 
-    public keys(): string[] {
+    public ownKeys(): string[] {
         // TODO: check this more carefully, and make it work with fragments.
        return this.selectionSet.selections.map((node: SelectionNode) => {
             if (node.kind === 'Field') {

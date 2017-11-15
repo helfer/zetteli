@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import GraphQLStore from './GraphQLStore';
+import GraphQLStore from './Roxy';
 
 const state = {
     nodes: {
@@ -7,7 +7,7 @@ const state = {
            id: '5',
            __typename: 'Stack',
            name: 'Stack 5',
-           'zettelis(last: 2)': [] as any[],
+           zettelis: [] as any[],
         },
         'Zetteli:2': {
             id: '2',
@@ -28,13 +28,44 @@ const state = {
      },
  };
 
- state.nodes['Stack:5']['zettelis(last: 2)'] = [ state.nodes['Zetteli:2'], state.nodes['Zetteli:2'] ];
+ state.nodes['Stack:5']['zettelis'] = [ state.nodes['Zetteli:2'], state.nodes['Zetteli:3'] ];
  state.data['stack(id: 5)'] = state.nodes['Stack:5']; 
  state.data['allStacks'] = [state.nodes['Stack:5']]
 
- const store = new GraphQLStore(state);
+ const store = new GraphQLStore();
+ const bootstrapQuery = gql`
+ {
+     allStacks {
+         id
+         __typename
+         name
+         zettelis(last: 2) {
+             id
+             __typename
+             tags
+             body
+         }
+     }
+     stack(id: 5) {
+         id
+         __typename
+         name
+         zettelis(last: 2) {
+             id
+             __typename
+             tags
+             body
+         }
+     }
+ }
+ `;
+const bootstrapData = {
+    allStacks: state.data['allStacks'],
+    stack: state.data['stack(id: 5)'],
+}
+ store.write(bootstrapQuery, bootstrapData);
 
- describe.skip('proxy store', () => {
+ describe('proxy store', () => {
     describe('reading', () => {
         let simpleQuery = gql`
         query {
@@ -127,7 +158,7 @@ const state = {
                         },
                     },
                 };
-                expect(argResponse).toEqual(result);
+                expect(result).toEqual(argResponse);
             });
             it('can handle a query with variables', () => {
                 // TODO
@@ -149,7 +180,7 @@ const state = {
                         },
                     },
                 };
-                expect(argResponse).toEqual(result);
+                expect(result).toEqual(argResponse);
                 // Proxy has to do indirection here, look up the right field.
             });
         });
@@ -307,7 +338,7 @@ const state = {
             expect(store.readQuery(query)).toEqual(value);
         });
         // Skipping because when I print the store this makes the output hard to read
-        it.skip('Can write a loooong array', () => {
+        it('Can write a looooong array', () => {
             const N = 10000;
             const longArray: any[] = [];
             for(let i = 0; i < N; i++) {
@@ -318,7 +349,7 @@ const state = {
                 };
             }
             const query = gql`
-            query {
+            query { 
               longArray { __typename id value }
             }
           `;
@@ -327,8 +358,10 @@ const state = {
                     longArray: longArray,
                 },
             };
+            const start = process.hrtime()[1];
             store.writeQuery(query, value);
             const x = store.readQuery(query).data.longArray.map((v: any) => v.id);
+            console.log('plain ms', (process.hrtime()[1] - start)/ 1000000);
             expect(x.length).toBe(N);
             // Doing the deep comparison is slow, so we skip it.
             // expect(store.readQuery(query)).toEqual(value);
@@ -438,7 +471,6 @@ const state = {
             store.writeQuery(query, value);
             store.writeQuery(query2, value2);
             expect(store.readQuery(query2)).toEqual(value2);
-            console.log(JSON.stringify(store, null, 2));
             expect(store.readQuery(query).data.refA.payload).toEqual('B');
         });
         it('throws an error if a query field is missing in the data', () => {
