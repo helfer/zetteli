@@ -170,6 +170,7 @@ export default class Store {
     };
 
     // TODO: Figure out how to type the return value here
+    // TODO: Make a version that doesn't use proxies but copies the object instead?
     // Read just reads once, returns an immutable result.
     // Challenge: if two queries read the exact same node/subtree out of the graph,
     // those subtrees should be referentially equal. Not sure how to do that right now.
@@ -271,6 +272,44 @@ export default class Store {
         return key ? this.nodeIndex[key] : undefined;
     }
 
+    private writeArrayNode(
+        node: GraphNode,
+        storeName: string,
+        field: FieldNode,
+        data: SerializableObject[],
+        info: WriteInfo,
+    ): GraphNode {
+        // If it's a simple array
+        // Create an intermediate node to represent the array
+        const existingArrayNode = node.get(storeName);
+        let arrayNode: ArrayGraphNode;
+        if( existingArrayNode instanceof ArrayGraphNode) {
+            arrayNode = existingArrayNode;
+        } else {
+            arrayNode = new ArrayGraphNode(info.txInfo);
+        }
+        // Create a child node for each element in the array.
+        data.forEach( (arrayElement, i) => {
+            const currentElement = arrayNode.get(i);
+            const childNode = this.writeSelectionSet(
+                currentElement instanceof GraphNode ? currentElement : undefined,
+                field.selectionSet as SelectionSetNode,
+                arrayElement,
+                info,
+            );
+            arrayNode = arrayNode.set(i, childNode, info.txInfo);
+            childNode.addParent(arrayNode, i);
+        });
+        // Set the field on the parent node.
+        const parentNode = node.set(
+            storeName,
+            arrayNode,
+            info.txInfo,
+        );
+        arrayNode.addParent(parentNode, storeName);
+        return parentNode;
+    }
+
     // TODO: Pass only what the field needs to know to the field. Hold back all other info.
     private writeField(
         node: GraphNode,
@@ -284,35 +323,13 @@ export default class Store {
             return node.set(storeName, data, info.txInfo);
         } else {
             if (Array.isArray(data)) {
-                // If it's a simple array
-                    // Create an intermediate node to represent the array
-                    const existingArrayNode = node.get(storeName);
-                    let arrayNode: ArrayGraphNode;
-                    if( existingArrayNode instanceof ArrayGraphNode) {
-                        arrayNode = existingArrayNode;
-                    } else {
-                        arrayNode = new ArrayGraphNode(info.txInfo);
-                    }
-                    // Create a child node for each element in the array.
-                    data.forEach( (arrayElement, i) => {
-                        const currentElement = arrayNode.get(i);
-                        const childNode = this.writeSelectionSet(
-                            currentElement instanceof GraphNode ? currentElement : undefined,
-                            field.selectionSet as SelectionSetNode,
-                            arrayElement,
-                            info,
-                        );
-                        arrayNode = arrayNode.set(i, childNode, info.txInfo);
-                        childNode.addParent(arrayNode, i);
-                    });
-                    // Set the field on the parent node.
-                    const parentNode = node.set(
-                        storeName,
-                        arrayNode,
-                        info.txInfo,
-                    );
-                    arrayNode.addParent(parentNode, storeName);
-                    return parentNode;
+                return this.writeArrayNode(
+                    node,
+                    storeName,
+                    field,
+                    data,
+                    info,
+                );
                 // If it's a nested array
                     // Recurse in this function, create the child nodes when it's not an array
                     // any more. Set parent on all the great* grandchildren.
