@@ -226,8 +226,22 @@ const bootstrapData = {
         describe('query with named fragments on interface and union types', () => {
 
         }); */
-
-        // TODO: Test for nested arrays etc.
+        describe('nested arrays', () => {
+            it('can write + read an array nested 6 levels deep', () => {
+                const data = {
+                    authorNested: [[[[[[{ id: '5', __typename: 'Author', name: 'Tony Judt' }]]]]]],
+                };
+                const query = gql`{
+                    authorNested {
+                        id
+                        __typename
+                        name
+                    }
+                }`;
+                store.write(query, data);
+                expect(store.read(query)).toEqual(data);
+            });
+        });
     });
     describe('writing', () => {
         it('Can write a simple query without arguments and read it back', () => {

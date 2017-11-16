@@ -273,14 +273,12 @@ export default class Store {
     }
 
     private writeArrayNode(
-        node: GraphNode,
-        storeName: string,
+        node: GraphNode | ArrayGraphNode,
+        storeName: string | number,
         field: FieldNode,
         data: SerializableObject[],
         info: WriteInfo,
     ): GraphNode {
-        // If it's a simple array
-        // Create an intermediate node to represent the array
         const existingArrayNode = node.get(storeName);
         let arrayNode: ArrayGraphNode;
         if( existingArrayNode instanceof ArrayGraphNode) {
@@ -290,15 +288,20 @@ export default class Store {
         }
         // Create a child node for each element in the array.
         data.forEach( (arrayElement, i) => {
-            const currentElement = arrayNode.get(i);
-            const childNode = this.writeSelectionSet(
-                currentElement instanceof GraphNode ? currentElement : undefined,
-                field.selectionSet as SelectionSetNode,
-                arrayElement,
-                info,
-            );
-            arrayNode = arrayNode.set(i, childNode, info.txInfo);
-            childNode.addParent(arrayNode, i);
+            if (Array.isArray(arrayElement)) {
+                // recurse for nested arrays
+                arrayNode = this.writeArrayNode(arrayNode, i, field, arrayElement, info);
+            } else {
+                const currentElement = arrayNode.get(i);
+                const childNode = this.writeSelectionSet(
+                    currentElement instanceof GraphNode ? currentElement : undefined,
+                    field.selectionSet as SelectionSetNode,
+                    arrayElement,
+                    info,
+                );
+                arrayNode = arrayNode.set(i, childNode, info.txInfo);
+                childNode.addParent(arrayNode, i);
+            }
         });
         // Set the field on the parent node.
         const parentNode = node.set(
