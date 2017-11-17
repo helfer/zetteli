@@ -287,13 +287,14 @@ const bootstrapData = {
             expect(store.readQuery(simpleNamedFragmentQuery)).toEqual(simpleResponse);
         });
 
-        it.skip('query with conditional fragments (non-union/interface type)', () => {
+        it.skip('query with inline fragment on interface or union type', () => {
 
         });
 
-        it.skip('query with named fragments on interface and union types', () => {
+        it.skip('query with named fragments on interface or union type', () => {
 
         });
+
         describe('nested arrays', () => {
             it('can write + read an array nested 6 levels deep', () => {
                 const data = {
@@ -311,6 +312,7 @@ const bootstrapData = {
             });
         });
     });
+
     describe('writing', () => {
         it('Can write a simple query without arguments and read it back', () => {
             const query = gql`
@@ -420,7 +422,7 @@ const bootstrapData = {
             expect(store.readQuery(query)).toEqual(value);
         });
         // Skipping because when I print the store this makes the output hard to read
-        it('Can write a looooong array', () => {
+        it.skip('Can write a looooong array', () => {
             const N = 10000;
             const longArray: any[] = [];
             for(let i = 0; i < N; i++) {
@@ -518,10 +520,31 @@ const bootstrapData = {
             // Read the result only after the second write succeeded.
             expect(firstResult).toEqual(value);
         });
-        it.skip('Merges new data with existing data in the store if it overlaps', () => {
-            expect(false).toBe(true);
+        it('Merges new data with existing data in the store if it overlaps', () => {
+            const query1 = gql`{
+                mergeObj {
+                    firstName
+                }
+            }`;
+            const query2 = gql`{
+                mergeObj {
+                    lastName
+                }
+            }`;
+            const fullQuery = gql`{
+                mergeObj {
+                    firstName
+                    lastName
+                }
+            }`;
+            const data1 = { data: { mergeObj: { firstName: 'Peter' } } };
+            const data2 = { data: { mergeObj: { lastName: 'Pan' } } };
+            const fullData = { data: { mergeObj: { firstName: 'Peter', lastName: 'Pan' } } };
+            store.writeQuery(query1, data1);
+            store.writeQuery(query2, data2);
+            expect(store.readQuery(fullQuery)).toEqual(fullData);
         });
-        it('properly normalizes when writing objects', () => {
+        it('normalizes objects with the same id', () => {
             const query = gql`
             query A{
               refA{ id __typename payload }
@@ -554,6 +577,32 @@ const bootstrapData = {
             store.writeQuery(query2, value2);
             expect(store.readQuery(query2)).toEqual(value2);
             expect(store.readQuery(query).data.refA.payload).toEqual('B');
+        });
+        it('Merges fields of objects with the same id across writes', () => {
+            const query1 = gql`{
+                alias1 {
+                    __id
+                    firstName
+                }
+            }`;
+            const query2 = gql`{
+                alias2 {
+                    __id
+                    lastName
+                }
+            }`;
+            const fullQuery = gql`{
+                alias1 {
+                    firstName
+                    lastName
+                }
+            }`;
+            const data1 = { data: { alias1: { __id: 'test-128382', firstName: 'Peter' } } };
+            const data2 = { data: { alias2: { __id: 'test-128382', lastName: 'Pan' } } };
+            const fullData = { data: { alias1: { firstName: 'Peter', lastName: 'Pan' } } };
+            store.writeQuery(query1, data1);
+            store.writeQuery(query2, data2);
+            expect(store.readQuery(fullQuery)).toEqual(fullData);
         });
         it('throws an error if a query field is missing in the data', () => {
             const query = gql`
