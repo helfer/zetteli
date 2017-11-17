@@ -736,6 +736,34 @@ const bootstrapData = {
             expect(false).toBe(true);
         })
     });
+    describe('observers', () => {
+        it('Can observe a simple query and get the current result', () => {
+            const query = gql`
+            {
+                obs {
+                    name
+                }
+            }`;
+            const data = {
+                obs: { name: 'Watch this.' },
+            };
+            const data2 = {
+                obs: { name: 'Now see me change' },
+            };
+            store.write(query, data);
+            store.observe(query).subscribe({
+                next: (result) => {
+                    console.log('result', result);
+                },
+                error: (e) => {
+                    console.error(e);
+                }
+            });
+            setTimeout(() => store.write(query, data2), 10);
+            return new Promise(resolve => setTimeout(resolve, 100));
+        });
+
+    });
     describe('optimistic transactions', () => {
 
     });

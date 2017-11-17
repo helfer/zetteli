@@ -44,8 +44,8 @@ type UnsubscribeFunction = () => void;
 
 interface Subscriber {
     next: (o: SerializableObject) => void;
-    error: (e: Error) => void;
-    complete: () => void;
+    error?: (e: Error) => void;
+    complete?: () => void;
 }
 
 interface Observable {
@@ -73,6 +73,7 @@ interface ReadInfo {
     context?: any,
     query: DocumentNode,
     rootId: string,
+    rootNode: GraphNode | undefined,
     fragmentDefinitions: FragmentMap,
 }
 
@@ -100,6 +101,14 @@ export class GraphNode {
 
     private notifySubscribers(tx: TransactionInfo) {
         tx.subscribersToNotify = tx.subscribersToNotify.concat(this.subscribers);
+    }
+
+    public subscribe(s: Subscriber) {
+        this.subscribers.push(s); // TODO: make this a set and not a list
+    }
+
+    public unsubscribe(s: Subscriber) {
+        this.subscribers = this.subscribers.filter(sub => sub !== s);
     }
 
     // Copy parents over from old node, creating a new reference of the parent where necessary
@@ -166,8 +175,24 @@ export class ArrayGraphNode extends GraphNode {
 export default class Store {
     public nodeIndex: NodeIndex;
     private lastTransactionId = 0;
+    private activeSubscribers: Map<Subscriber, { query: DocumentNode, context?: ReadContext }> = new Map();
     constructor(/* private data: { QUERY: GraphNode } */) {
         this.nodeIndex = Object.create(null);
+    }
+
+    private getReadInfo(query: DocumentNode, context?: ReadContext): ReadInfo {
+        const rootId = context && context.rootId || QUERY_ROOT_ID;
+        const variables = context && context.variables || Object.create(null);
+        const fragmentDefinitions = getFragmentDefinitionMap(query);
+        const rootNode = this.nodeIndex[rootId];
+        return {
+            query,
+            variables,
+            context,
+            rootId,
+            rootNode,
+            fragmentDefinitions,
+        };
     }
 
     public readQuery(query: DocumentNode, variables?: object) {
@@ -182,24 +207,49 @@ export default class Store {
     // Read just reads once, returns an immutable result.
     // Challenge: if two queries read the exact same node/subtree out of the graph,
     // those subtrees should be referentially equal. Not sure how to do that right now.
-    public read(query: DocumentNode, context?: ReadContext): object {
-        const rootId = context && context.rootId || QUERY_ROOT_ID;
-        const rootSelectionSet = getOperationDefinitionOrThrow(query).selectionSet;
-        const variables = context && context.variables || Object.create(null);
-        const rootNode = this.nodeIndex[rootId];
-        const fragmentDefinitions = getFragmentDefinitionMap(query);
-        if (!rootNode) {
-            return rootNode;
+    // -> maybe by keeping the selection set on the node and comparing it. If it's
+    // the same, return the same proxy. Equality is only guaranteed for named fragments
+    // initially, but later we might extend it to any way you write the query.
+    public read(query: DocumentNode, context?: ReadContext): SerializableObject | undefined {
+        const readInfo = this.getReadInfo(query, context);
+        if (!readInfo.rootNode) {
+            return undefined; // This must be undefined
         }
-        const readInfo: ReadInfo = {
-            query,
-            variables,
-            context,
-            rootId,
-            fragmentDefinitions,
-        };
-        return rootNode.getProxy(rootSelectionSet, readInfo);
+        return readInfo.rootNode.getProxy(getOperationDefinitionOrThrow(query).selectionSet, readInfo);
     } 
+
+    public observe(query: DocumentNode, context?: ReadContext): Observable {
+        return {
+            subscribe: (subscriber: Subscriber) => {
+                const readInfo = this.getReadInfo(query, context);
+                if(typeof readInfo.rootNode === 'undefined') {
+                    throw new Error(`Cannot subscribe to non-existent node with id ${readInfo.rootId}`);
+                }
+
+                readInfo.rootNode.subscribe(subscriber);
+                // 1. Add subscriber to list of subscribers for rootId graph node
+                // 2. Whenever rootId is changed, check if any of the observed fields have changed
+                // 3. If rootId is deleted, call error on observable
+
+                this.activeSubscribers.set(subscriber, { query, context });
+                setTimeout(() => {
+                    const data = this.read(query, context);
+                    if (data) {
+                        subscriber.next(data);
+                    } else {
+                        subscriber.error && subscriber.error(new Error('No data returned for query'));
+                    }
+                }, 0)
+
+                // On unsubscribe, remove subscriber from list of subscribers for that graph node.
+                const rn = readInfo.rootNode;
+                return () => {
+                    this.activeSubscribers.delete(subscriber);
+                    rn.unsubscribe(subscriber);
+                }
+            }
+        }
+    }
 
     // Return a boolean that indicates whether anything in the store has changed.
     public write(query: DocumentNode, data: SerializableObject, context?: WriteContext): boolean {
@@ -241,6 +291,22 @@ export default class Store {
         }
 
         this.nodeIndex[rootId] = this.writeSelectionSet(rootNode, rootSelectionSet, data, writeInfo);
+
+        if(txInfo.subscribersToNotify.length) {
+            txInfo.subscribersToNotify.forEach( s => {
+                setTimeout(() => {
+                    const { query, context } = this.activeSubscribers.get(s);
+                    if(query) {
+                        const data = this.read(query, context);
+                        if (data) {
+                            s.next(data);
+                        } else {
+                            s.error && s.error(new Error('Subscription error: node was removed'));
+                        }
+                    }
+                }, 0);
+            });
+        }
 
         return true;
     }
@@ -367,21 +433,6 @@ export default class Store {
                 );
                 childNode.addParent(parentNode, storeName);
                 return parentNode; 
-            }
-        }
-    }
-
-    public observe(query: DocumentNode, context: ReadContext): Observable {
-        return {
-            subscribe: (subscriber: Subscriber) => {
-                // 1. Add subscriber to list of subscribers for rootId graph node
-                // 2. Whenever rootId is changed, check if any of the observed fields have changed
-                // 3. If rootId is deleted, call complete on observable
-
-                throw new Error('Subscribe not implemented yet');
-                // return () => null;
-
-                // On unsubscribe, remove subscriber from list of subscribers for that graph node.
             }
         }
     }
