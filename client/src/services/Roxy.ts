@@ -68,6 +68,14 @@ interface WriteInfo {
     txInfo: TransactionInfo, 
 }
 
+interface ReadInfo {
+    variables: SerializableObject;
+    context?: any,
+    query: DocumentNode,
+    rootId: string,
+    fragmentDefinitions: FragmentMap,
+}
+
 type NodeIndex = { [key: string]: GraphNode };
 
 const QUERY_ROOT_ID = 'QUERY';
@@ -134,8 +142,8 @@ export class GraphNode {
     public get(key: string | number): GraphNode | SerializableValue | undefined {
         return this.data[key];
     }
-    public getProxy(selectionSet: SelectionSetNode, variables: SerializableObject) {
-        return new Proxy(this.data, new ObjectHandler(selectionSet, variables));
+    public getProxy(selectionSet: SelectionSetNode, info: ReadInfo) {
+        return new Proxy(this.data, new ObjectHandler(selectionSet, info));
     }
 
     public addParent(node: GraphNode, key: string | number) {
@@ -148,10 +156,10 @@ export class GraphNode {
 }
 
 export class ArrayGraphNode extends GraphNode {
-    public getProxy(selectionSet: SelectionSetNode, variables: SerializableObject) {
+    public getProxy(selectionSet: SelectionSetNode, info: ReadInfo) {
         // TODO: this is a hack
         const arr = Object.keys(this.data).map(node => this.data[node]);
-        return new Proxy(arr, new ArrayHandler(selectionSet, variables));
+        return new Proxy(arr, new ArrayHandler(selectionSet, info));
     }
 }
 
@@ -179,10 +187,18 @@ export default class Store {
         const rootSelectionSet = getOperationDefinitionOrThrow(query).selectionSet;
         const variables = context && context.variables || Object.create(null);
         const rootNode = this.nodeIndex[rootId];
+        const fragmentDefinitions = getFragmentDefinitionMap(query);
         if (!rootNode) {
             return rootNode;
         }
-        return rootNode.getProxy(rootSelectionSet, variables);
+        const readInfo: ReadInfo = {
+            query,
+            variables,
+            context,
+            rootId,
+            fragmentDefinitions,
+        };
+        return rootNode.getProxy(rootSelectionSet, readInfo);
     } 
 
     // Return a boolean that indicates whether anything in the store has changed.
@@ -453,6 +469,7 @@ function getFieldNodeFromSelectionSet(
     selectionSet: SelectionSetNode,
     fieldName: string,
     data: SerializableObject,
+    info: ReadInfo,
 ): FieldNode | undefined {
     let matchingNode: FieldNode | undefined = undefined;
     selectionSet.selections.find((node: SelectionNode) => {
@@ -465,15 +482,19 @@ function getFieldNodeFromSelectionSet(
                 matchingNode = node;
                 return true;
             }
-        } else if (node.kind === 'InlineFragment') {
-            if (isMatchingFragment(node, data)) {
-                matchingNode = getFieldNodeFromSelectionSet(node.selectionSet, fieldName, data);
+        } else {
+            let fragment: InlineFragmentNode | FragmentDefinitionNode;
+            if (node.kind === 'InlineFragment') {
+                fragment = node;
+            } else if (node.kind === 'FragmentSpread') {
+                fragment = info.fragmentDefinitions[node.name.value];
+            } else {
+                throw new Error(`Unrecognized node kind ${(node as FieldNode).kind}`);
+            }
+            if (isMatchingFragment(fragment, data)) {
+                matchingNode = getFieldNodeFromSelectionSet(fragment.selectionSet, fieldName, data, info);
                 return !!matchingNode;
             }
-        } else if (node.kind === 'FragmentSpread') {
-            // To support this, we just need to pass in the fragment map that we construct when we get
-            // the document.
-            console.error('Named fragment reading not implemented yet');
         }
         return false;
     });
@@ -496,13 +517,44 @@ export class ArrayHandler {
 }
 
 export class ObjectHandler {
-    public constructor(private selectionSet: SelectionSetNode, private variables: SerializableObject) {
+    public constructor(
+        private selectionSet: SelectionSetNode,
+        private info: ReadInfo,
+    ) {
+    }
+
+    private getFieldsInSelectionSet(selectionSet: SelectionSetNode, data: GraphNodeData): string[] {
+        let keys: string[] = [];
+        selectionSet.selections.forEach((node: SelectionNode) => {
+            if (node.kind === 'Field') {
+                if (node.alias) {
+                    keys.push(node.alias.value);
+                } else {
+                    keys.push(node.name.value);
+                }
+            } else if (node.kind === 'InlineFragment') {
+                if (isMatchingFragment(node, data)) {
+                    keys = keys.concat(this.getFieldsInSelectionSet(node.selectionSet, data));
+                }
+            } else if (node.kind === 'FragmentSpread') {
+                const fragment = this.info.fragmentDefinitions[node.name.value]
+                if (!fragment) {
+                    throw new Error(`Named fragment ${node.name.value} missing in query ${this.info.query}`);
+                }
+                if (isMatchingFragment(fragment, data)) {
+                    keys = keys.concat(this.getFieldsInSelectionSet(fragment.selectionSet, data));
+                } 
+            } else {
+                throw new Error(`Encountered node of unknown kind: ${(node as FieldNode).kind}`)
+            }
+        });
+        return keys;
     }
 
     public get(target: GraphNodeData, name: string): any {
-        const node = getFieldNodeFromSelectionSet(this.selectionSet, name, target);
+        const node = getFieldNodeFromSelectionSet(this.selectionSet, name, target, this.info);
         if (node) {
-            const storeName = getStoreName(node, this.variables);
+            const storeName = getStoreName(node, this.info.variables);
             const value = target[storeName]
             if (typeof value === 'undefined') {
                 console.log('unexpected undefined value at ', storeName);
@@ -511,9 +563,9 @@ export class ObjectHandler {
             } else if (node.selectionSet) {
                 if(value instanceof ArrayGraphNode) {
                     // return new Proxy(target[storeName], this.getArrayHandler(node.selectionSet.selections, variables));
-                    return (value as ArrayGraphNode).getProxy(node.selectionSet, this.variables);
+                    return (value as ArrayGraphNode).getProxy(node.selectionSet, this.info);
                 }
-                return (value as GraphNode).getProxy(node.selectionSet, this.variables);
+                return (value as GraphNode).getProxy(node.selectionSet, this.info);
             }
             // It's a scalar
             return value;
@@ -523,17 +575,9 @@ export class ObjectHandler {
         }
     }
 
-    public ownKeys(): string[] {
+    public ownKeys(target: GraphNodeData): string[] {
         // TODO: check this more carefully, and make it work with fragments.
-       return this.selectionSet.selections.map((node: SelectionNode) => {
-            if (node.kind === 'Field') {
-                if (node.alias) {
-                    return node.alias.value;
-                }
-                return node.name.value;
-            }
-            return '';
-        }).filter(n => !!n);
+        return this.getFieldsInSelectionSet(this.selectionSet, target);
     }
 
     public getOwnPropertyDescriptor(target: GraphNodeData, prop: string) {

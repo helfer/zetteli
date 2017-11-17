@@ -210,22 +210,90 @@ const bootstrapData = {
             });
         });
 
-        /*
-        describe('query with inline fragments', () => {
+        it('query with inline fragment without type condition', () => {
+            let simpleFragmentQuery = gql`
+            query {
+                allStacks {
+                    ... {
+                        id
+                        name
+                    }
+                }
+            }
+            `;
+            expect(store.readQuery(simpleFragmentQuery)).toEqual(simpleResponse);
+        });
+
+        it('query with inline fragment with matching type condition', () => {
+            let simpleFragmentQuery = gql`
+            query {
+                allStacks {
+                    ... on Stack {
+                        id
+                        name
+                    }
+                }
+            }
+            `;
+            expect(store.readQuery(simpleFragmentQuery)).toEqual(simpleResponse);
+        });
+
+        it('query with nested fragments', () => {
+            let simpleFragmentQuery = gql`
+            query {
+                allStacks {
+                    ... on Stack {
+                        id
+                        ... {
+                            name
+                        }
+                    }
+                }
+            }
+            `;
+            expect(store.readQuery(simpleFragmentQuery)).toEqual(simpleResponse);
+        });
+
+        it('query with inline fragment with non-matching type condition', () => {
+            let simpleFragmentQuery = gql`
+            query {
+                allStacks {
+                    ... {
+                        id
+                        name
+                    }
+                    ... on ReallyNotAStack {
+                        __typename
+                    }
+                }
+            }
+            `;
+            expect(store.readQuery(simpleFragmentQuery)).toEqual(simpleResponse);
+        });
+
+        it('query with a simple named fragment', () => {
+            let simpleNamedFragmentQuery = gql`
+            query {
+                allStacks {
+                    ... F1
+                }
+            }
+
+            fragment F1 on Stack {
+                id
+                name
+            }
+            `;
+            expect(store.readQuery(simpleNamedFragmentQuery)).toEqual(simpleResponse);
+        });
+
+        it.skip('query with conditional fragments (non-union/interface type)', () => {
 
         });
 
-        describe('query with named fragments', () => {
+        it.skip('query with named fragments on interface and union types', () => {
 
         });
-
-        describe('query with conditional fragments (non-union/interface type)', () => {
-
-        });
-
-        describe('query with named fragments on interface and union types', () => {
-
-        }); */
         describe('nested arrays', () => {
             it('can write + read an array nested 6 levels deep', () => {
                 const data = {
