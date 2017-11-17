@@ -466,6 +466,119 @@ const bootstrapData = {
             store.writeQuery(query, value);
             expect(store.readQuery(query)).toEqual(value);
         });
+        describe('fragments', () => {
+            it('Can write a query containing an inline fragment without type condition', () => {
+                const query = gql`
+                query {
+                  inlineFragmentObj {
+                      ... {
+                        id
+                      }
+                  }
+                }
+              `;
+              const value = {
+                  data: {
+                      inlineFragmentObj: {
+                          id: 999,
+                      },
+                  },
+              };
+              store.writeQuery(query, value);
+              expect(store.readQuery(query)).toEqual(value);
+            });
+            it('Can write a query containing inline fragments with type condition', () => {
+                const query = gql`
+                query {
+                  inlineFragmentObj2 {
+                      ... on Horse {
+                        __typename
+                        id
+                        numLegs
+                      }
+                      ... on Camel {
+                          numBumps
+                      }
+                  }
+                }
+              `;
+              const value = {
+                  data: {
+                      inlineFragmentObj2: {
+                          __typename: 'Horse',
+                          id: 999,
+                          numLegs: 4,
+                      },
+                  },
+              };
+              store.writeQuery(query, value);
+              expect(store.readQuery(query)).toEqual(value);
+            });
+        });
+        it('Can write a query containing named fragments', () => {
+            const query = gql`
+            query {
+              inlineFragmentObj2 {
+                  ...HF
+                  ...CF
+              }
+            }
+
+            fragment HF on Horse {
+                __typename
+                id
+                numLegs
+            }
+            fragment CF on Camel {
+                numBumps
+            }
+          `;
+          const value = {
+              data: {
+                  inlineFragmentObj2: {
+                      __typename: 'Horse',
+                      id: 999,
+                      numLegs: 4,
+                  },
+              },
+          };
+          store.writeQuery(query, value);
+          expect(store.readQuery(query)).toEqual(value);
+        });
+        it('Can write a query containing nested named fragments', () => {
+            const query = gql`
+            query {
+              inlineFragmentObj2 {
+                  ...HF2
+                  ...CF2
+              }
+            }
+
+            fragment HB on Horse {
+                __typename
+                id
+            }
+            fragment HF2 on Horse {
+                ...HB
+                numLegs
+            }
+            fragment CF2 on Camel {
+                numBumps
+            }
+          `;
+          const value = {
+              data: {
+                  inlineFragmentObj2: {
+                      __typename: 'Horse',
+                      id: 999,
+                      numLegs: 4,
+                  },
+              },
+          };
+          store.writeQuery(query, value);
+          expect(store.readQuery(query)).toEqual(value);
+        });
+    });
         it('Can overwrite existing values', () => {
             const query = gql`
             query A($key: String){
@@ -623,7 +736,7 @@ const bootstrapData = {
             expect(false).toBe(true);
         })
     });
-    describe('optimistic updates', () => {
+    describe('optimistic transactions', () => {
 
     });
  });
