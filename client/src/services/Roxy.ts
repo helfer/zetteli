@@ -1,5 +1,28 @@
  // Do it right or don't do it. No any committed. No fuzzy typing.
 
+/*
+Atlas high-level structure
+
+Atlas optimstic writes:
+- Enter the transaction into the transaction log (so we can undo it later), return a handle (commit, rollback)
+- Pass down in writeInfo wether the write is optimsitic or not.
+- If nothing in the object changed, return the same reference.
+- If there's a new field, use set and get back an optimistic version.
+  - must propagate optimistic updates up to the root to preserve referential equality
+  - must link old object to the new optimstic version for consistency.
+  - if an optimistic object is being written, put it in the optimistic index.
+  - tag the graph node as optimsitic (just for book keeping)
+
+Atlas optimsitic reads:
+- Find the rootId in the optimstic index. If it's not there, try the normal index.
+- Just do the rest of the reading as you usually would.
+
+
+
+
+*/
+
+
  import {
     print,
 
