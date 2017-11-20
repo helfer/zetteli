@@ -49,12 +49,12 @@ type JSONScalar = object;
 
 type SerializableValue = SerializableObject | Number | String | JSONScalar | null;
 
-interface ReadContext {
+interface ReadContext { // TODO: Rename this to Options.
     // query: DocumentNode;
     variables?: SerializableObject;
     context?: SerializableObject;
     rootId?: string; // default 'QUERY', can be things like 'Stack:5', 'QUERY/allStacks'
-    optimistic?: boolean;
+    isOptimistic?: boolean;
 }
 
 type WriteContext = ReadContext;
@@ -78,6 +78,7 @@ interface Observable {
 interface TransactionInfo {
     id: number,
     subscribersToNotify: Subscriber[];
+    isOptimistic: boolean,
 }
 
 interface FragmentMap { [key: string]: FragmentDefinitionNode }
@@ -85,15 +86,17 @@ interface FragmentMap { [key: string]: FragmentDefinitionNode }
 interface WriteInfo {
     variables: SerializableObject;
     context?: any,
+    isOptimistic: boolean,
     fragmentDefinitions: FragmentMap,
     query: DocumentNode,
     rootId: string,
-    txInfo: TransactionInfo, 
+    txInfo: TransactionInfo,
 }
 
 interface ReadInfo {
     variables: SerializableObject;
     context?: any,
+    isOptimistic: boolean,
     query: DocumentNode,
     rootId: string,
     rootNode: GraphNode | undefined,
@@ -113,21 +116,34 @@ export class GraphNode {
     public parents: { node: GraphNode, key: string | number }[] = [];
     public indexEntry: { index: NodeIndex, key: string };
     public subscribers: Subscriber[] = [];
+    public optimisticSubscribers: Subscriber[] = [];
     private transactionId: number; // The transaction this node was written by.
+    private isOptimistic: boolean;
     protected data: GraphNodeData;
     private newerVersion: GraphNode | undefined;
+    private newerOptimsticVersion: GraphNode | undefined;
 
     public constructor(tx: TransactionInfo, data?: { [key: string]: GraphNode | GraphNode[] | SerializableValue }) {
         this.transactionId = tx.id;
         this.data = data || Object.create(null);
+        this.isOptimistic = tx.isOptimistic;
     }
 
     private notifySubscribers(tx: TransactionInfo) {
-        tx.subscribersToNotify = tx.subscribersToNotify.concat(this.subscribers);
+        // optimistic subscribers are interested in every update. non-optimistic subscribers
+        // are only interested in non-optimistic updates
+        tx.subscribersToNotify = tx.subscribersToNotify.concat(this.optimisticSubscribers);
+        if (!tx.isOptimistic) {
+            tx.subscribersToNotify = tx.subscribersToNotify.concat(this.subscribers);
+        }
     }
 
-    public subscribe(s: Subscriber) {
-        this.subscribers.push(s); // TODO: make this a set and not a list
+    public subscribe(s: Subscriber, optimistic = false) {
+        if (optimistic) {
+            this.optimisticSubscribers.push(s);
+        } else {
+            this.subscribers.push(s); // TODO: make this a set and not a list
+        }
     }
 
     public unsubscribe(s: Subscriber) {
@@ -145,7 +161,16 @@ export class GraphNode {
         });
         this.indexEntry = previousNode.indexEntry;
         if (this.indexEntry) {
-            this.indexEntry.index[this.indexEntry.key] = this;
+            if (tx.isOptimistic) {
+                throw new Error('Optimistic index update not implemented');
+                // TODO: refactor the whole index handling. GraphNodes should know their
+                // own ID, and they can perfectly well update the index. We just need
+                // to give them a reference to it. Optimistic nodes update the optimistc
+                // index, normal nodes update the normal index. It's as simple as that.
+                // this.indexEntry.index[this.indexEntry.key] = this;
+            } else {
+                this.indexEntry.index[this.indexEntry.key] = this;
+            }
         }
     }
 
@@ -155,19 +180,27 @@ export class GraphNode {
             // Always set on the newest version
             return this.newerVersion.set(key, value, tx);
         }
+        if (tx.isOptimistic && this.newerOptimsticVersion) {
+            return this.newerOptimsticVersion.set(key, value, tx);
+        }
         // TODO: if value is an array, treat it differently.
         if (this.data[key] === value) {
             return this;
         }
         if (this.transactionId === tx.id) {
             // During a transaction, we only copy the node for the first change.
+            // i.e. graph nodes are mutable for the duration of a transaction
             this.data[key] = value;
             return this;
         }
         const newNode = new GraphNode(tx, { ...this.data, [key]: value });
         newNode.adoptParents(this, tx);
         this.notifySubscribers(tx);
-        this.newerVersion = newNode;
+        if (tx.isOptimistic) {
+            this.newerOptimsticVersion = newNode;
+        } else {
+            this.newerVersion = newNode;
+        }
         return newNode;
     }
 
@@ -196,22 +229,26 @@ export class ArrayGraphNode extends GraphNode {
 }
 
 export default class Store {
-    public nodeIndex: NodeIndex;
+    public nodeIndex: NodeIndex; // TODO: make this private!
+    public optimisticNodeIndex: NodeIndex;
     private lastTransactionId = 0;
     private activeSubscribers: Map<Subscriber, { query: DocumentNode, context?: ReadContext }> = new Map();
     constructor(/* private data: { QUERY: GraphNode } */) {
+        // TODO: add options like: schema, storeResolvers, etc.
         this.nodeIndex = Object.create(null);
     }
 
     private getReadInfo(query: DocumentNode, context?: ReadContext): ReadInfo {
         const rootId = context && context.rootId || QUERY_ROOT_ID;
         const variables = context && context.variables || Object.create(null);
+        const isOptimistic = context && context.isOptimistic || false;
         const fragmentDefinitions = getFragmentDefinitionMap(query);
         const rootNode = this.nodeIndex[rootId];
         return {
             query,
             variables,
             context,
+            isOptimistic,
             rootId,
             rootNode,
             fragmentDefinitions,
@@ -229,14 +266,14 @@ export default class Store {
     // TODO: Make a version that doesn't use proxies but copies the object instead?
     // Read just reads once, returns an immutable result.
     // Challenge: if two queries read the exact same node/subtree out of the graph,
-    // those subtrees should be referentially equal. Not sure how to do that right now.
-    // -> maybe by keeping the selection set on the node and comparing it. If it's
+    // those subtrees should be referentially equal.
+    // -> maybe by keeping the selection set on the node and comparing it could work. If it's
     // the same, return the same proxy. Equality is only guaranteed for named fragments
     // initially, but later we might extend it to any way you write the query.
     public read(query: DocumentNode, context?: ReadContext): SerializableObject | undefined {
         const readInfo = this.getReadInfo(query, context);
         if (!readInfo.rootNode) {
-            return undefined; // This must be undefined
+            return undefined; // Or should we throw an error here?
         }
         return readInfo.rootNode.getProxy(getOperationDefinitionOrThrow(query).selectionSet, readInfo);
     } 
@@ -274,11 +311,12 @@ export default class Store {
         }
     }
 
-    // Return a boolean that indicates whether anything in the store has changed.
+    // TODO: Return a boolean that indicates whether anything in the store has changed.
     public write(query: DocumentNode, data: SerializableObject, context?: WriteContext): boolean {
         const txInfo: TransactionInfo = {
             id: this.lastTransactionId++,
             subscribersToNotify: [],
+            isOptimistic: context && context.isOptimistic || false,
         };
         const rootSelectionSet = getOperationDefinitionOrThrow(query).selectionSet;
         const fragmentDefinitionMap = getFragmentDefinitionMap(query)
@@ -307,13 +345,25 @@ export default class Store {
         const writeInfo: WriteInfo = {
             variables: context && context.variables || {},
             context: context && context.context || undefined,
+            isOptimistic: context && context.isOptimistic || false,
             fragmentDefinitions: fragmentDefinitionMap,
             query,
             rootId,
             txInfo,
         }
 
-        this.nodeIndex[rootId] = this.writeSelectionSet(rootNode, rootSelectionSet, data, writeInfo);
+        // TODO: Refactor to make nodeIndex a class. That way we can just call "set" here and provide
+        // the write context to decide whether it should get the optimistic one or the normal one.
+        const newRootNode = this.writeSelectionSet(rootNode, rootSelectionSet, data, writeInfo);
+        if (newRootNode === rootNode) {
+            return false; // This write changed nothing in the store, so we're done.
+        }
+
+        if (writeInfo.isOptimistic) {
+            this.optimisticNodeIndex[rootId] = newRootNode;
+        } else {
+            this.nodeIndex[rootId] = newRootNode;
+        }
 
         if(txInfo.subscribersToNotify.length) {
             txInfo.subscribersToNotify.forEach( s => {
