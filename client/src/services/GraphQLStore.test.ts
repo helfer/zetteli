@@ -1,5 +1,10 @@
 import gql from 'graphql-tag';
-import GraphQLStore from './Roxy';
+import GraphQLStore, {
+    SerializableObject,
+} from './Roxy';
+import {
+    DocumentNode,
+} from 'graphql';
 
 const state = {
     nodes: {
@@ -645,7 +650,6 @@ const bootstrapData = {
           store.writeQuery(query, value);
           expect(store.readQuery(query)).toEqual(value);
         });
-    });
         it('Can overwrite existing values', () => {
             const query = gql`
             query A($key: String){
@@ -832,6 +836,41 @@ const bootstrapData = {
 
     });
     describe('optimistic transactions', () => {
-
+        let query: DocumentNode;
+        let data: SerializableObject;
+        let optimisticData: SerializableObject;
+        beforeEach(() => {
+            query = gql`
+            {
+                glass {
+                    phrase
+                    who
+                }
+            }`;
+            data = {
+                glass: {
+                    phrase: 'Half Empty',
+                    who: 'Pessimist',
+                },
+            };
+            optimisticData = {
+                glass: {
+                    phrase: 'Half full',
+                    who: 'Optimist',
+                },
+            };
+            store.write(query, data);
+            store.write(query, optimisticData, { isOptimistic: true });
+        })
+        it('optimistic writes are ignored by non-optimistic readers', () => {
+            expect(store.read(query)).toEqual(data);
+        });
+        it('optimistic writes can be read by optimistic readers', () => {
+            expect(store.read(query, { isOptimistic: true })).toEqual(optimisticData);
+        });
+        // Don't affect non-optimistic readers
+        // Don't affect non-optimistic observers
+        // Affect optimsitic readers
+        // Affect optimstic observers
     });
  });

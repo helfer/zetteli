@@ -41,13 +41,13 @@ Atlas optimsitic reads:
 
 // const _parents = Symbol.for('parent');
 
-interface SerializableObject {
+export interface SerializableObject {
     [key: string]: SerializableValue[] | SerializableValue;
 }
 
 type JSONScalar = object;
 
-type SerializableValue = SerializableObject | Number | String | JSONScalar | null;
+export type SerializableValue = SerializableObject | Number | String | JSONScalar | null;
 
 interface ReadContext { // TODO: Rename this to Options.
     // query: DocumentNode;
@@ -114,7 +114,7 @@ interface GraphNodeData {
 export class GraphNode {
     public readonly __type = 'GraphNode';
     public parents: { node: GraphNode, key: string | number }[] = [];
-    public indexEntry: { index: NodeIndex, key: string };
+    public indexEntry: { index: NodeIndex, optimisticIndex: NodeIndex, key: string };
     public subscribers: Subscriber[] = [];
     public optimisticSubscribers: Subscriber[] = [];
     private transactionId: number; // The transaction this node was written by.
@@ -167,7 +167,7 @@ export class GraphNode {
                 // own ID, and they can perfectly well update the index. We just need
                 // to give them a reference to it. Optimistic nodes update the optimistc
                 // index, normal nodes update the normal index. It's as simple as that.
-                // this.indexEntry.index[this.indexEntry.key] = this;
+                this.indexEntry.optimisticIndex[this.indexEntry.key] = this;
             } else {
                 this.indexEntry.index[this.indexEntry.key] = this;
             }
@@ -215,8 +215,8 @@ export class GraphNode {
         this.parents.push({ node, key });
     }
 
-    public setIndexEntry(index: NodeIndex, key: string) {
-        this.indexEntry = { index, key };
+    public setIndexEntry(index: NodeIndex, optimisticIndex: NodeIndex, key: string) {
+        this.indexEntry = { index, optimisticIndex, key };
     }
 }
 
@@ -236,6 +236,7 @@ export default class Store {
     constructor(/* private data: { QUERY: GraphNode } */) {
         // TODO: add options like: schema, storeResolvers, etc.
         this.nodeIndex = Object.create(null);
+        this.optimisticNodeIndex = Object.create(null);
     }
 
     private getReadInfo(query: DocumentNode, context?: ReadContext): ReadInfo {
@@ -243,7 +244,11 @@ export default class Store {
         const variables = context && context.variables || Object.create(null);
         const isOptimistic = context && context.isOptimistic || false;
         const fragmentDefinitions = getFragmentDefinitionMap(query);
-        const rootNode = this.nodeIndex[rootId];
+        let rootNode = this.nodeIndex[rootId];
+        if (isOptimistic && this.optimisticNodeIndex[rootId]) {
+            // TODO: encapsulate this logic in the index.
+            rootNode = this.optimisticNodeIndex[rootId];
+        }
         return {
             query,
             variables,
@@ -416,8 +421,12 @@ export default class Store {
         });
         const indexKey = getStoreKeyFromObject(data);
         if (indexKey) {
-            newNode.setIndexEntry(this.nodeIndex, indexKey);
-            this.nodeIndex[indexKey] = newNode;
+            newNode.setIndexEntry(this.nodeIndex, this.optimisticNodeIndex, indexKey);
+            if (info.isOptimistic) {
+                this.optimisticNodeIndex[indexKey] = newNode;
+            } else {
+                this.nodeIndex[indexKey] = newNode;
+            }
         }
         return newNode;
     }
