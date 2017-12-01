@@ -1,3 +1,4 @@
+/* 
 import gql from 'graphql-tag';
 import GraphQLStore, {
     SerializableObject,
@@ -868,9 +869,15 @@ const bootstrapData = {
         it('optimistic writes can be read by optimistic readers', () => {
             expect(store.read(query, { isOptimistic: true })).toEqual(optimisticData);
         });
-        // Don't affect non-optimistic readers
-        // Don't affect non-optimistic observers
-        // Affect optimsitic readers
         // Affect optimstic observers
+        // Don't affect non-optimistic observers
+
+        // Can quickly apply 1000 optimistic updates, roll back the first one and reapply the 999 others.
+
+        // Can stack two optimistic updates on top of each other
+
+        // Can roll back optimistic updates.
     });
  });
+
+ */

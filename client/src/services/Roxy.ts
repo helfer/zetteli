@@ -20,7 +20,7 @@ Atlas optimsitic reads:
 
 
 
-*/
+
 
 
  import {
@@ -59,9 +59,9 @@ interface ReadContext { // TODO: Rename this to Options.
 
 type WriteContext = ReadContext;
 
-/* interface ProxyHandler {
-    get: (obj: GraphNode, name: string) => any;
-} */
+// interface ProxyHandler {
+//     get: (obj: GraphNode, name: string) => any;
+// }
 
 type UnsubscribeFunction = () => void;
 
@@ -162,7 +162,7 @@ export class GraphNode {
         this.indexEntry = previousNode.indexEntry;
         if (this.indexEntry) {
             if (tx.isOptimistic) {
-                throw new Error('Optimistic index update not implemented');
+                // throw new Error('Optimistic index update not implemented');
                 // TODO: refactor the whole index handling. GraphNodes should know their
                 // own ID, and they can perfectly well update the index. We just need
                 // to give them a reference to it. Optimistic nodes update the optimistc
@@ -233,7 +233,7 @@ export default class Store {
     public optimisticNodeIndex: NodeIndex;
     private lastTransactionId = 0;
     private activeSubscribers: Map<Subscriber, { query: DocumentNode, context?: ReadContext }> = new Map();
-    constructor(/* private data: { QUERY: GraphNode } */) {
+    constructor() {
         // TODO: add options like: schema, storeResolvers, etc.
         this.nodeIndex = Object.create(null);
         this.optimisticNodeIndex = Object.create(null);
@@ -520,15 +520,61 @@ export default class Store {
     }
 
     // transaction
-    public tx(update: (store: Store) => void): void {
+    public tx(update: (store: Store) => void) {
+        // TODO: should it be possible to do non-optimistic transactions? Might be useful for undo/redo.
+
+        // Ideal optimistic transaction process:
+        // 1. Enter transaction into Transaction Write-Ahead-Log
+        // 2. Persist t-log changes to disk
+        // 3. Apply optimistic transaction changes in memory
+        //    - Read from current optimistic state
+        //    - Write to current optimistic state
+        // 4. Write transaction effects to disk in one go (need to collect nodes that have changed)
+        // 5. Mark transaction as complete in t-log
+
+        // Rolling back an optimistic transaction
+        // 1. filter the transaction log to remove the transaction in question
+        // 2. reapply all other transactions in the transaction log
+        //  - Ideally run this as one transaction from the perspective of nodes so we can keep mutating
+        // nodes instead of having to copy them.
+        // To do this, a transaction id needs to be assigned
+
+        // Optimizations we might want to do later:
+        // - Roll back only until a certain transaction, then apply everything after that again (if there
+        // are any things to apply)
+        // - Skip applying a transaction and just use the previous result if the input to the transaction
+        // hasn't changed.
+        // - Commute transactions that are commutable when reapplying optimstic updates.
+        // - Partially apply an update, then do a read in the middle (that doesn't see any of the updates),
+        // then resume updating. Ideally this means that our updates can be done in chunks and then applied
+        // in an atomic fashion such that the actual application of the update takes just a few ms, the fewer
+        // the better.
+
+        // Transaction (update, options) => handle
+        // - turns into [input node set],  [output node set], status, update, options
+        // when reapplying transactions, it would be great to just be able to jump to the last transaction
+        // and use that state immediately, without having to undo/redo anything to get to that point. Then
+        // from that point we could redo transactions, skipping those where the input set hasn't changed.
+        // So basically, we'd want to store snapshots. It's not clear to me if we'd really gain anything from
+        // that though... Maybe something to figure out later.
+
+        // Problem: It is possible to have multiple disjoint roots in the store. If that wasn't possible and
+        // we could know the exact entry points, then only the known root nodes would have to be preserved
+        // as input and output nodes. All other nodes would automatically be linked to those. Actually, that might
+        // not be true either because of the nodes in the index.
+
         update(this);
-        throw new Error('TODO: store transaction');
+        // throw new Error('TODO: store transaction');
+        return {
+            commit() { },
+            rollback() { },
+        };
     }
 
-    /* private getHandler(query: SelectionSetNode, context: ReadContext): ProxyHandler {
-        // TODO: make this more efficient later
-        return { get(obj: GraphNode, name: string) { return obj[name] } };
-    } */
+    // private getHandler(query: SelectionSetNode, context: ReadContext): ProxyHandler {
+    //     // TODO: make this more efficient later
+    //     return { get(obj: GraphNode, name: string) { return obj[name] } };
+    // }
 }
 
 function getOperationDefinitionOrThrow(query: DocumentNode): OperationDefinitionNode {
@@ -728,3 +774,5 @@ export class ObjectHandler {
     public deleteProperty(){ return false; }
     public defineProperty(){ return false; }
 }
+
+*/
