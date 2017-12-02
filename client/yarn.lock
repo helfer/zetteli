@@ -215,6 +215,12 @@ apollo-link-http@^0.7.0:
     apollo-fetch "^0.6.0"
     graphql "^0.11.0"
 
+apollo-link-queue@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/apollo-link-queue/-/apollo-link-queue-1.0.1.tgz#2f055a51c0a82307f71be2c9d89b419d8df164be"
+  dependencies:
+    apollo-link "^0.7.0"
+
 apollo-link-retry@^0.8.0:
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/apollo-link-retry/-/apollo-link-retry-0.8.0.tgz#8fb2b7268cafaa92ee7583b32749ff2f40aca3d5"

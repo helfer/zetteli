@@ -12,7 +12,7 @@ import uuid from 'uuid';
 
 import OptimisticLink from './OptimisticLink';
 import SerializingLink from './SerializingLink';
-import OnOffLink from './OnOffLink';
+import QueueLink from 'apollo-link-queue';
 import DebounceLink from './DebounceLink';
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType, SerializedZetteli } from '../components/Zetteli';
@@ -73,7 +73,7 @@ export default class GraphQLClient implements ZetteliClient {
         
         this.subscribers = [];
 
-        const offlineLink = new OnOffLink();
+        const offlineLink = new QueueLink();
 
         // TODO(helfer): Technically I should remove the listeners when the app closes,
         // but since I only create one it shouldn't matter in practice.
