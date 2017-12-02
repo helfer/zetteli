@@ -10,7 +10,7 @@ import {
 } from 'apollo-link-retry';
 import uuid from 'uuid';
 
-import OptimisticLink from './OptimisticLink';
+import OptimisticLink from 'apollo-link-optimistic';
 import SerializingLink from './SerializingLink';
 import QueueLink from 'apollo-link-queue';
 import DebounceLink from './DebounceLink';

@@ -16,6 +16,7 @@
     "apollo-fetch": "^0.6.0",
     "apollo-link": "^0.7.0",
     "apollo-link-http": "^0.7.0",
+    "apollo-link-optimistic": "^0.1.0",
     "apollo-link-queue": "^1.0.1",
     "apollo-link-retry": "^0.8.0",
     "codecov": "^2.3.0",
