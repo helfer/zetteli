@@ -208,6 +208,12 @@ apollo-fetch@^0.6.0:
   dependencies:
     isomorphic-fetch "^2.2.1"
 
+apollo-link-debounce@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/apollo-link-debounce/-/apollo-link-debounce-1.0.1.tgz#6c6c637118c142370b7e96ba5146ba2627a8161c"
+  dependencies:
+    apollo-link "^0.7.0"
+
 apollo-link-http@^0.7.0:
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/apollo-link-http/-/apollo-link-http-0.7.0.tgz#cf75e9e2537d785deefff2cd1ae2ff0dc1c88300"
@@ -230,6 +236,12 @@ apollo-link-queue@^1.0.1:
 apollo-link-retry@^0.8.0:
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/apollo-link-retry/-/apollo-link-retry-0.8.0.tgz#8fb2b7268cafaa92ee7583b32749ff2f40aca3d5"
+
+apollo-link-serialize@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/apollo-link-serialize/-/apollo-link-serialize-1.0.1.tgz#7676dd3373df1ff096a542f6a9d69f01ffe6ee72"
+  dependencies:
+    apollo-link "^0.7.0"
 
 apollo-link@^0.7.0:
   version "0.7.0"

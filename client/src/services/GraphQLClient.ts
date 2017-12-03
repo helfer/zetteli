@@ -11,9 +11,9 @@ import {
 import uuid from 'uuid';
 
 import OptimisticLink from 'apollo-link-optimistic';
-import SerializingLink from './SerializingLink';
+import SerializingLink from 'apollo-link-serialize';
 import QueueLink from 'apollo-link-queue';
-import DebounceLink from './DebounceLink';
+import DebounceLink from 'apollo-link-debounce';
 import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType, SerializedZetteli } from '../components/Zetteli';
 import {
@@ -82,17 +82,12 @@ export default class GraphQLClient implements ZetteliClient {
 
         this.link = ApolloLink.from([
             new OptimisticLink(),
-            // As long as we don't have separate debounce per zetteli, we have
-            // to keep the deboune up here. If we were able to debounce per zetteli,
-            // we could move it closer to the network.
             new DebounceLink(UPDATE_DEBOUNCE_MS),
             new SerializingLink(),
             new RetryLink({
                 // TODO(helfer): What's up with the types here?
-                // TODO(helfer): Reduce this number to 10 or so when you
-                // put in the offline link.
                 max: () => Number.POSITIVE_INFINITY,
-                delay: () => 500,
+                delay: () => 50,
                 interval: (delay, count) => Math.min(delay * 2 ** count, 10000),
             }),
             offlineLink,
