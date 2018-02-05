@@ -208,9 +208,9 @@ apollo-fetch@^0.6.0:
   dependencies:
     isomorphic-fetch "^2.2.1"
 
-apollo-link-debounce@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/apollo-link-debounce/-/apollo-link-debounce-1.0.1.tgz#6c6c637118c142370b7e96ba5146ba2627a8161c"
+apollo-link-debounce@next:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/apollo-link-debounce/-/apollo-link-debounce-2.0.0.tgz#051193b5396e056a2b87b09a2ffe404c1ab0e4f3"
   dependencies:
     apollo-link "^0.7.0"
 

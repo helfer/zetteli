@@ -26,8 +26,8 @@ export default class Navbar extends React.PureComponent<Props, never> {
             }}
           >
             <Link className="item" to="/">Home</Link>
-            <Link className="item" to="/archive">Archive</Link>
-            <Link className="item" to="/settings">Settings</Link>
+            <Link className="item" to="./archive">Archive</Link>
+            <Link className="item" to="./settings">Settings</Link>
             <div className="right menu">
               <div className="item">
                 <div className="ui transparent icon input">
