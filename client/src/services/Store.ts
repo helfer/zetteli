@@ -70,15 +70,15 @@ export default class Store<T> {
         // notify only once per tick
         if (this.notified[String(isOptimisticAction)]) { return; }
         this.notified[String(isOptimisticAction)] = true;
-        setTimeout(() => this.notified[String(isOptimisticAction)] = false, 0);
+        requestAnimationFrame(() => { this.notified[String(isOptimisticAction)] = false; });
 
         this.subscribers.forEach(s => {
             if (isOptimisticAction && !s.includeOptimisticUpdates) {
                 return;
             }
-            // NOTE(helfer): We call setTimeout here so that errors thrown
+            // NOTE(helfer): We call requestAnimationFrame here so that errors thrown
             // from subscribers don't have to be caught by the store.
-            setTimeout(() => s.subscriber(), 0);
+            requestAnimationFrame(() => s.subscriber());
         });
     }
 
