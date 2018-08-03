@@ -3,6 +3,7 @@ import { isValidStackId } from '../../utils/random';
 
 export interface ZetteliType {
     id: string;
+    versionId: number;
     tags: string[];
     datetime: Date;
     body: string;

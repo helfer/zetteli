@@ -18,6 +18,17 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
         };
     }
 
+    // TODO: rename sid to stackId
+    static makeCreateZetteliEvent(sid: string, opId: string = '' ) {
+        return {
+            type: 'ZetteliCreated',
+            eventSchemaId: 0,
+            opId,
+            eventTime: new Date(),
+            payload: JSON.stringify({ sid }),
+        };
+    }
+
     static parse(zli: any) {
         // NOTE(helfer): If performance becomes an issue we could copy instead of mutating
         return {
@@ -47,9 +58,16 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
     }
 
     create(sid: string, zli: ZetteliType) {
-        return this.db('zettelis')
-            .insert(SQLZetteliConnector.serialize({ ...zli, sid }))
-            .then( ids => zli.id );
+        return this.db.transaction( tx => {
+            return tx.insert(SQLZetteliConnector.makeCreateZetteliEvent(sid))
+            .into('log')
+            .then( ([versionId]) => {
+                console.log('versionId', versionId)
+                return tx.insert(SQLZetteliConnector.serialize({ ...zli, sid, versionId }))
+                .into('zettelis')
+                .then( ids => zli.id );
+            });
+        });
     }
 
     update(zli: ZetteliType) {

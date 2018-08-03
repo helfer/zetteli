@@ -29,6 +29,7 @@ scalar DateTime
 
 type Zetteli {
     id: String!
+    versionId: Int!
     datetime: DateTime!
     tags: [String!]!
     body: String!
@@ -43,6 +44,7 @@ input ZetteliInput {
 
 type Stack {
     id: String!
+    versionId: Int!
     name: String!
     public: Boolean!
     createdAt: DateTime!

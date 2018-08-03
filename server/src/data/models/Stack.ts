@@ -3,6 +3,7 @@ import { isValidStackId } from '../../utils/random';
 
 export interface StackType {
     id: string;
+    versionId: number;
     name: string;
     public: boolean;
     createdAt: Date;
