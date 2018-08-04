@@ -19,13 +19,13 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
     }
 
     // TODO: rename sid to stackId
-    static makeCreateZetteliEvent(sid: string, opId: string = '' ) {
+    static makeCreateZetteliEvent(zetteliId: string, stackId: string, opId: string = '' ) {
         return {
             type: 'ZetteliCreated',
-            eventSchemaId: 0,
+            eventSchemaId: 1,
             opId,
             eventTime: new Date(),
-            payload: JSON.stringify({ sid }),
+            payload: JSON.stringify({ stackId, zetteliId }),
         };
     }
 
@@ -59,10 +59,9 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
 
     create(sid: string, zli: ZetteliType) {
         return this.db.transaction( tx => {
-            return tx.insert(SQLZetteliConnector.makeCreateZetteliEvent(sid))
+            return tx.insert(SQLZetteliConnector.makeCreateZetteliEvent(zli.id, sid))
             .into('log')
             .then( ([versionId]) => {
-                console.log('versionId', versionId)
                 return tx.insert(SQLZetteliConnector.serialize({ ...zli, sid, versionId }))
                 .into('zettelis')
                 .then( ids => zli.id );
