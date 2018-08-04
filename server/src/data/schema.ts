@@ -8,6 +8,7 @@ import Stack, { StackType } from './models/Stack';
 // import InMemoryZetteliConnector from './connectors/InMemoryZetteliConnector';
 import SQLZetteliConnector from './connectors/SQLZetteliConnector';
 import SQLStackConnector from './connectors/SQLStackConnector';
+import SQLLogConnector from './connectors/SQLLogConnector';
 
 // TODO(helfer): get this working, you shouldn't duplicate...
 // import knexConfig from './config/knexfile';
@@ -33,6 +34,7 @@ type Zetteli {
     datetime: DateTime!
     tags: [String!]!
     body: String!
+    # _versionId: Int # We don't need it now, but we should add it later.
 }
 
 input ZetteliInput {
@@ -50,6 +52,7 @@ type Stack {
     createdAt: DateTime!
     settings: StackSettings!
     zettelis: [Zetteli]
+    log: Log
 }
 
 input StackInput {
@@ -68,9 +71,27 @@ input StackSettingsInput {
     defaultTags: [String]
 }
 
+type Log {
+    name: String
+    # partition: ID
+    currentVersionId: Int
+    events(sinceVersionId: Int!): [LogEvent]
+}
+
+type LogEvent {
+    id: Int!
+    opId: String!
+    type: String!
+    eventTime: DateTime!
+    eventSchemaId: Int!
+    payload: String # technically JSON
+}
+
+
 type Query {
     stack(id: String): Stack
     stacks: [Stack]
+    log: Log
 }
 
 type Mutation {
@@ -87,24 +108,32 @@ type Mutation {
 
 const zetteli = new Zetteli(new SQLZetteliConnector(knexConfig.development));
 const stack = new Stack(new SQLStackConnector(knexConfig.development));
+const logConnector = new SQLLogConnector(knexConfig.development);
 const resolvers = {
     Query: {
         stack(root: {}, args: { id: string }){
-            return Promise.all([
-                stack.get(args.id),
-                zetteli.getAll(args.id),
-            ]).then(([stack, zettelis]) => {
-                if(!stack){ return null; }
-                return {
-                    ...stack,
-                    zettelis,
-                };
-            });
+            return stack.get(args.id);
         },
         stacks(){
             // TODO(helfer): Remove empty argument that's just here because
             // the connector interface was made for zettelis where getAll takes an sid.
             return stack.getAll('');
+        },
+        log() {
+            return {
+                name: 'The Log',
+                currentVersionId: logConnector.getCurrentVersionId(),
+            };
+        }, 
+    },
+    Stack: {
+        zettelis(stack: StackType) {
+            return zetteli.getAll(stack.id);
+        },
+    },
+    Log: {
+        events(root: {}, args: { sinceVersionId: number }) {
+            return logConnector.getEvents(args.sinceVersionId);
         },
     },
     DateTime: DateTime,

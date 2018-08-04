@@ -32,20 +32,37 @@ export default class SQLStackConnector implements Connector<StackType> {
 
     get(id: string) {
         // TODO(helfer): Add timeouts to queries
-        return this.db('stacks')
-            .select('*')
-            .where('id', id)
-            .then( rows => {
-                return SQLStackConnector.parse(rows[0]);
-            });
+        return this.db.transaction( tx => {
+            return tx('log')
+            .max('id')
+            .then( ([row]) => {
+                return tx('stacks')
+                .select('*')
+                .where('id', id)
+                .then( rows => {
+                    return {
+                        ...SQLStackConnector.parse(rows[0]),
+                        log: { currentVersionId: row['max("id")'] },
+                    };
+                });
+            })
+        });
     }
 
     getAll(sid: string) {
-        return this.db('stacks')
-            .select('*')
-            .then(rows => 
-                rows.map(SQLStackConnector.parse)
-            );
+        return this.db.transaction( tx => {
+            return tx('log')
+            .max('id')
+            .then( ([row]) => {
+                console.log('cvid', row['max("id")']);
+            return tx('stacks')
+                .select('*')
+                .then(rows => 
+                    rows.map(SQLStackConnector.parse)
+                    .map( (s: StackType) => ({ ...s, log: { currentVersionId: row['max("id")'] } }) )
+                );
+            });
+        });
     }
 
     // TODO(helfer): remove the id argument here and for ZetteliType
