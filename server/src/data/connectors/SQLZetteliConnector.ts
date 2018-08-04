@@ -40,6 +40,18 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
         };
     }
 
+    // zli is only a fragment of the zetteli
+    static makeDeleteZetteliEvent(id: string, opId: string = '') {
+        return {
+            type: 'ZetteliDeleted',
+            eventSchemaId: 0,
+            opId,
+            eventTime: new Date(),
+            payload: JSON.stringify({ id }),
+        };
+    }
+
+
     static parse(zli: any) {
         // NOTE(helfer): If performance becomes an issue we could copy instead of mutating
         return {
@@ -94,9 +106,15 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
     }
 
     delete(id: string) {
-        return this.db('zettelis')
-            .where('id', id)
-            .del()
-            .then(numRows => numRows > 0);
+        return this.db.transaction( tx => {
+            return tx.insert(SQLZetteliConnector.makeDeleteZetteliEvent(id))
+            .into('log')
+            .then( ([versionId]) => {
+                return tx('zettelis')
+                .where('id', id)
+                .del()
+                .then(numRows => numRows > 0);
+            });
+        });
     }
 }
