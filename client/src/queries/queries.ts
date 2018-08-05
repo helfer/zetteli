@@ -35,6 +35,7 @@ query getStack($sid: String!) {
         tags
         body
       }
+      log { currentVersionId }
   }
 }`;
 
@@ -48,8 +49,75 @@ export interface GetAllZettelisResult {
               defaultTags: string[],
           },
           zettelis: SerializedZetteli[],
+          log: { currentVersionId: number },
       }
   };
+}
+
+export const getLogEventsQuery = gql`
+query getLogEvents($sinceVersionId: Int!) {
+    log {
+        events(sinceVersionId: $sinceVersionId) {
+          id
+          type
+          payload
+        }
+    }
+}
+`;
+
+export interface LogEvent {
+    id: number;
+    type: string;
+    payload: string; // TODO: make this JSON and determined type based on `type` field
+}
+
+export interface GetLogEventsResult {
+    data: {
+        log: {
+            events: LogEvent[],
+        },
+    };
+}
+
+export function makeProcessLogEventAction(event: LogEvent) {
+    // TODO: Make the payload JSON so you don't have to do this.
+    const payload: any = JSON.parse(event.payload);
+
+    // TODO: Unify these actions with the actions used to process queries and mutations
+    return (state: BaseState) => {
+        if (event.type === 'ZetteliCreated') {
+            // TODO: Make this support multiple stacks.
+
+            // make sure the zetteli doesn't already exist
+            if (state.zettelis.find( z => z.id === payload.zetteli.id)) {
+                return state;
+            }
+            return {
+                ...state,
+                zettelis: [ ...state.zettelis, payload.zetteli ],
+            }; 
+        } else if (event.type === 'ZetteliUpdated') {
+            return {
+                ...state,
+                zettelis: state.zettelis.map(z => {
+                    if (z.id === payload.id) {
+                        return { ...z, ...payload };
+                    }
+                    return z;
+                }),
+            };
+        } else if (event.type === 'ZetteliDeleted') {
+            return {
+                ...state,
+                zettelis: state.zettelis.filter(z => z.id !== payload.id),
+            };
+        } else {
+            // ignore unknown event types
+            console.warn('Unkown event type:', event.type);
+            return state;
+        }
+    };
 }
 
 export const createZetteliMutation = gql`

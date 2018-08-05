@@ -28,6 +28,9 @@ import {
     makeDeleteZetteliAction,
     getAllZettelisQuery,
     GetAllZettelisResult,
+    getLogEventsQuery,
+    GetLogEventsResult,
+    makeProcessLogEventAction,
 } from '../queries/queries';
 
 import Store from './Store';
@@ -48,6 +51,7 @@ export interface BaseState {
 }
 
 const UPDATE_DEBOUNCE_MS = 400;
+const POLLING_INTERVAL = 5000;
 
 export default class GraphQLClient implements ZetteliClient {
     // TODO(helfer): Rename to stackId.
@@ -106,6 +110,14 @@ export default class GraphQLClient implements ZetteliClient {
 
     broadcastUpdate = () => {
         this.subscribers.forEach(subscriber => subscriber());
+    }
+
+    subscribeToEventLog(startVersionId: number): void {
+        // TODO: Clean up the naming in these functions.
+        this.pollEventLog(startVersionId)
+        .then((versionId: number) => {
+            setTimeout(() => this.subscribeToEventLog(versionId), POLLING_INTERVAL);
+        });
     }
 
     createNewZetteli(): Promise<string> {
@@ -260,6 +272,10 @@ export default class GraphQLClient implements ZetteliClient {
                         zettelis: [],
                     }));
                 }
+
+                // TODO: Start the subscription in a better place
+                this.subscribeToEventLog(res.data.stack.log.currentVersionId);
+
                 return this.store.dispatch(state => ({
                     ...state,
                     ready: true,
@@ -281,6 +297,26 @@ export default class GraphQLClient implements ZetteliClient {
                     resolve(this.store.getOptimisticState().zettelis);
                 }
             });
+        });
+    }
+
+    private pollEventLog(sinceVersionId: number): Promise<number> {
+        const operation = {
+            query: getLogEventsQuery,
+            variables: { sinceVersionId },
+        };
+        return makePromise(this.observableRequest(operation))
+        .then( (result: GetLogEventsResult) => {
+            const events = result.data.log.events;
+
+            events.forEach(event => {
+                this.store.dispatch(makeProcessLogEventAction(event));
+            });
+
+            if (events.length === 0) {
+                return sinceVersionId;
+            }
+            return events[events.length - 1].id;
         });
     }
 
