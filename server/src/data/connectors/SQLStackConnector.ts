@@ -54,7 +54,6 @@ export default class SQLStackConnector implements Connector<StackType> {
             return tx('log')
             .max('id')
             .then( ([row]) => {
-                console.log('cvid', row['max("id")']);
             return tx('stacks')
                 .select('*')
                 .then(rows => 

@@ -10,6 +10,10 @@ import SQLZetteliConnector from './connectors/SQLZetteliConnector';
 import SQLStackConnector from './connectors/SQLStackConnector';
 import SQLLogConnector from './connectors/SQLLogConnector';
 
+import { PubSub } from 'graphql-subscriptions';
+
+const EVENT_LOG_POLLING_INTERVAL = 250;
+
 // TODO(helfer): get this working, you shouldn't duplicate...
 // import knexConfig from './config/knexfile';
 const knexConfig = {
@@ -104,7 +108,13 @@ type Mutation {
     deleteStack(id: String!): Boolean
 }
 
+type Subscription {
+    currentVersionId: String
+    events(since: Int): [LogEvent]
+}
 `;
+
+export const pubsub = new PubSub();
 
 const zetteli = new Zetteli(new SQLZetteliConnector(knexConfig.development));
 const stack = new Stack(new SQLStackConnector(knexConfig.development));
@@ -157,8 +167,38 @@ export const resolvers = {
         deleteStack(root: {}, args: { id: string }) {
             return stack.delete(args.id);
         }
+    },
+    Subscription: {
+        events: {
+            resolve: (p: any) => p,
+            subscribe: (root: {}, args: { since: number }) => {
+                return eventsSince(args.since);
+            }
+        }
     }
 }
+
+const eventsSince = (since: number) => ({
+    '@@asyncIterator': () => {
+        let currentOffset = since;
+        return {
+            next: () => new Promise( resolve => {
+                const tryFetchEvents = () => logConnector.getEvents(currentOffset).then( events => {
+                    if (events.length > 0) {
+                        currentOffset = events[events.length -1].id;
+                        resolve({
+                            done: false,
+                            value: events,
+                        })
+                    } else {
+                        setTimeout(tryFetchEvents, EVENT_LOG_POLLING_INTERVAL);
+                    }
+                });
+                tryFetchEvents();
+            }),
+        };
+    },
+});
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
