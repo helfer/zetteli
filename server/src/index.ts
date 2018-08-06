@@ -8,6 +8,11 @@ import {
 
 import schema from './data/schema'; 
 
+
+import { createServer } from 'http';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { execute, subscribe } from 'graphql';
+
 const PORT = 3010;
 
 const app = express();
@@ -19,9 +24,23 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use('/graphql', bodyParser.json(), graphqlExpress({ schema }));
-app.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
+app.use('/graphiql', graphiqlExpress({endpointURL: '/graphql' }));
+
+const server = createServer(app);
 
 // tslint:disable-next-line no-console-log
-app.listen(PORT, () => console.log(
+server.listen(PORT, () => console.log(
     `GraphiQL is now running on http://localhost:${PORT}/graphiql`
 ));
+
+SubscriptionServer.create(
+  {
+    schema,
+    execute,
+    subscribe,
+  },
+  {
+    server,
+    path: '/subscriptions',
+  },
+);

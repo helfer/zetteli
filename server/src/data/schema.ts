@@ -24,7 +24,7 @@ const knexConfig = {
 
 // import TestData from './test/TestData';
 
-const typeDefs = `
+export const typeDefs = `
 
 scalar DateTime
 
@@ -109,7 +109,7 @@ type Mutation {
 const zetteli = new Zetteli(new SQLZetteliConnector(knexConfig.development));
 const stack = new Stack(new SQLStackConnector(knexConfig.development));
 const logConnector = new SQLLogConnector(knexConfig.development);
-const resolvers = {
+export const resolvers = {
     Query: {
         stack(root: {}, args: { id: string }){
             return stack.get(args.id);
