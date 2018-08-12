@@ -25,6 +25,7 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
             eventSchemaId: 1,
             opId,
             eventTime: new Date(),
+            sid: stackId,
             payload: JSON.stringify({ zetteli: zli, stackId }),
         };
     }
@@ -36,6 +37,7 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
             eventSchemaId: 0,
             opId,
             eventTime: new Date(),
+            sid: '',
             payload: JSON.stringify(zli),
         };
     }
@@ -47,6 +49,7 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
             eventSchemaId: 0,
             opId,
             eventTime: new Date(),
+            sid: '',
             payload: JSON.stringify({ id }),
         };
     }
@@ -93,6 +96,11 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
     }
 
     update(zli: ZetteliType) {
+        // TODO: strictly speaking we should do this in the following order:
+        // 1. verify that the zetteli exists (and check permissions if applicable)
+        // 2. add the log event
+        // 3. update the zetteli
+        // That's a lot more work than before!
         return this.db.transaction( tx => {
             return tx.insert(SQLZetteliConnector.makeUpdateZetteliEvent(zli))
             .into('log')
@@ -106,6 +114,11 @@ export default class SQLZetteliConnector implements Connector<ZetteliType> {
     }
 
     delete(id: string) {
+        // TODO: strictly speaking we should do this in the following order:
+        // 1. verify that the zetteli exists (and check permissions if applicable)
+        // 2. add the log event
+        // 3. delete the zetteli
+        // That's a lot more work than just straight out deleting!
         return this.db.transaction( tx => {
             return tx.insert(SQLZetteliConnector.makeDeleteZetteliEvent(id))
             .into('log')

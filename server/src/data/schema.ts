@@ -5,6 +5,7 @@ import {
 
 import Zetteli, { ZetteliType } from './models/Zetteli';
 import Stack, { StackType } from './models/Stack';
+import { LogEvent } from './models/LogEvent';
 // import InMemoryZetteliConnector from './connectors/InMemoryZetteliConnector';
 import SQLZetteliConnector from './connectors/SQLZetteliConnector';
 import SQLStackConnector from './connectors/SQLStackConnector';
@@ -29,7 +30,6 @@ const knexConfig = {
 // import TestData from './test/TestData';
 
 export const typeDefs = `
-
 scalar DateTime
 
 type Zetteli {
@@ -55,8 +55,8 @@ type Stack {
     public: Boolean!
     createdAt: DateTime!
     settings: StackSettings!
-    zettelis: [Zetteli]
-    log: Log
+    zettelis: [Zetteli!]!
+    log: Log!
 }
 
 input StackInput {
@@ -68,7 +68,7 @@ input StackInput {
 }
 
 type StackSettings {
-    defaultTags: [String]
+    defaultTags: [String!]!
 }
 
 input StackSettingsInput {
@@ -76,9 +76,9 @@ input StackSettingsInput {
 }
 
 type Log {
-    name: String
+    name: String!
     # partition: ID
-    currentVersionId: Int
+    currentVersionId: Int!
     events(sinceVersionId: Int!): [LogEvent]
 }
 
@@ -86,15 +86,16 @@ type LogEvent {
     id: Int!
     opId: String!
     type: String!
+    sid: String! # stackId
     eventTime: DateTime!
     eventSchemaId: Int!
-    payload: String # technically JSON
+    payload: String! # technically JSON
 }
 
 
 type Query {
-    stack(id: String): Stack
-    stacks: [Stack]
+    stack(id: String!): Stack
+    stacks: [Stack!]!
     log: Log
 }
 
@@ -110,7 +111,7 @@ type Mutation {
 
 type Subscription {
     currentVersionId: String
-    events(since: Int): [LogEvent]
+    events(stackId: String!, sinceVersionId: Int!): [LogEvent!]!
 }
 `;
 
@@ -171,16 +172,16 @@ export const resolvers = {
     Subscription: {
         events: {
             resolve: (p: any) => p,
-            subscribe: (root: {}, args: { since: number }) => {
-                return eventsSince(args.since);
+            subscribe: (root: {}, args: { stackId: string, sinceVersionId: number }) => {
+                return eventsSince(args.stackId, args.sinceVersionId);
             }
         }
     }
 }
 
-const eventsSince = (since: number) => ({
+const eventsSince = (stackId: string, sinceVersionId: number) => ({
     '@@asyncIterator': () => {
-        let currentOffset = since;
+        let currentOffset = sinceVersionId;
         return {
             next: () => new Promise( resolve => {
                 const tryFetchEvents = () => logConnector.getEvents(currentOffset).then( events => {
@@ -188,7 +189,8 @@ const eventsSince = (since: number) => ({
                         currentOffset = events[events.length -1].id;
                         resolve({
                             done: false,
-                            value: events,
+                            // TODO: add stackId to update and delete events so we can filter events
+                            value: events.filter(((e: LogEvent) => !e.sid || e.sid === stackId )),
                         })
                     } else {
                         setTimeout(tryFetchEvents, EVENT_LOG_POLLING_INTERVAL);
