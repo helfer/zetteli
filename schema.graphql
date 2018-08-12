@@ -1,0 +1,86 @@
+# This schema is a copy of the server schema. We need it here for apollo-codegen.
+# For the time being I'm keeing it in sync by copying manually.
+
+scalar DateTime
+
+type Zetteli {
+    id: String!
+    versionId: Int!
+    datetime: DateTime!
+    tags: [String!]!
+    body: String!
+    # _versionId: Int # We don't need it now, but we should add it later.
+}
+
+input ZetteliInput {
+    id: String!
+    datetime: DateTime
+    tags: [String!]
+    body: String
+}
+
+type Stack {
+    id: String!
+    versionId: Int!
+    name: String!
+    public: Boolean!
+    createdAt: DateTime!
+    settings: StackSettings!
+    zettelis: [Zetteli!]!
+    log: Log!
+}
+
+input StackInput {
+    id: String!
+    name: String!
+    public: Boolean!
+    createdAt: DateTime!
+    settings: StackSettingsInput!
+}
+
+type StackSettings {
+    defaultTags: [String!]!
+}
+
+input StackSettingsInput {
+    defaultTags: [String]
+}
+
+type Log {
+    name: String!
+    # partition: ID
+    currentVersionId: Int!
+    events(sinceVersionId: Int!): [LogEvent]
+}
+
+type LogEvent {
+    id: Int!
+    opId: String!
+    type: String!
+    sid: String! # stackId
+    eventTime: DateTime!
+    eventSchemaId: Int!
+    payload: String! # technically JSON
+}
+
+
+type Query {
+    stack(id: String!): Stack
+    stacks: [Stack!]!
+    log: Log
+}
+
+type Mutation {
+    createZetteli(sid: String!, z: ZetteliInput!): String
+    updateZetteli(z: ZetteliInput!): Boolean
+    deleteZetteli(id: String!): Boolean
+
+    createStack(s: StackInput!): Boolean
+    updateStack(s: StackInput!): Boolean
+    deleteStack(id: String!): Boolean
+}
+
+type Subscription {
+    currentVersionId: String
+    events(stackId: String!, sinceVersionId: Int!): [LogEvent!]!
+}

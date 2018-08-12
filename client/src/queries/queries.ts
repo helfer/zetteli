@@ -1,8 +1,7 @@
 import gql from 'graphql-tag';
-import { SerializedZetteli, ZetteliType } from '../components/Zetteli';
+import { ZetteliType } from '../components/Zetteli';
 import { BaseState } from '../services/GraphQLClient';
 // TODO(helfer): Generate the typings in this file from the queries
-import { StackType } from '../components/StackList';
 
 export const stackListQuery = gql`
   query getStackList {
@@ -14,14 +13,8 @@ export const stackListQuery = gql`
   }
 `;
 
-export interface StackListQueryResult {
-    data: {
-        stacks: StackType[];
-    };
-}
-
 export const getAllZettelisQuery = gql`
-query getStack($sid: String!) {
+query getAllZettelis($sid: String!) {
   stack(id: $sid) {
       id
       name
@@ -39,21 +32,6 @@ query getStack($sid: String!) {
   }
 }`;
 
-export interface GetAllZettelisResult {
-  data: {
-      stack: {
-          id: string,
-          name: string,
-          public: boolean,
-          settings: {
-              defaultTags: string[],
-          },
-          zettelis: SerializedZetteli[],
-          log: { currentVersionId: number },
-      }
-  };
-}
-
 export const getLogEventsQuery = gql`
 query getLogEvents($sinceVersionId: Int!) {
     log {
@@ -66,18 +44,20 @@ query getLogEvents($sinceVersionId: Int!) {
 }
 `;
 
+export const getNewLogEventsSubscription = gql`
+subscription getNewLogEvents($stackId: String!, $sinceVersionId: Int!) {
+    events(stackId: $stackId, sinceVersionId: $sinceVersionId) {
+        id
+        type
+        payload
+    }
+}
+`;
+
 export interface LogEvent {
     id: number;
     type: string;
     payload: string; // TODO: make this JSON and determined type based on `type` field
-}
-
-export interface GetLogEventsResult {
-    data: {
-        log: {
-            events: LogEvent[],
-        },
-    };
 }
 
 export function makeProcessLogEventAction(event: LogEvent) {
@@ -121,7 +101,7 @@ export function makeProcessLogEventAction(event: LogEvent) {
 }
 
 export const createZetteliMutation = gql`
-mutation create($sid: String!, $id: String!, $tags : [String!]!, $datetime: DateTime!, $body: String!) {
+mutation createZetteli($sid: String!, $id: String!, $tags : [String!]!, $datetime: DateTime!, $body: String!) {
   createZetteli(
     sid: $sid,
     z: {
@@ -133,41 +113,23 @@ mutation create($sid: String!, $id: String!, $tags : [String!]!, $datetime: Date
   )
 }`;
 
-export interface CreateZetteliResult {
-  data: {
-      createZetteli: string;
-  };
-  context: {
-      isOptimistic: boolean;
-  };
-}
-
-export function makeCreateZetteliAction(zli: ZetteliType, result: CreateZetteliResult) {
+export function makeCreateZetteliAction(zli: ZetteliType, id: string) {
     return (state: BaseState) => {
         return {
             ...state,
-            zettelis: [ ...state.zettelis, { ...zli, id: result.data.createZetteli }],
+            zettelis: [ ...state.zettelis, { ...zli, id }],
         };
     };
 }
 
 export const deleteZetteliMutation = gql`
-mutation del($id: String!) {
+mutation deleteZetteli($id: String!) {
   deleteZetteli(id: $id)
 }`;
 
-export interface DeleteZetteliResult {
-  data: {
-      deleteZetteli: boolean;
-  };
-  context: {
-      isOptimistic: boolean;
-  };
-}
-
-export function makeDeleteZetteliAction(id: string, result: DeleteZetteliResult) {
+export function makeDeleteZetteliAction(id: string, success: boolean) {
     return (state: BaseState) => {
-        if (!result.data.deleteZetteli) {
+        if (!success) {
             return state;
         }
         return {
@@ -178,26 +140,13 @@ export function makeDeleteZetteliAction(id: string, result: DeleteZetteliResult)
 }
 
 export const updateZetteliMutation = gql`
-mutation update($z: ZetteliInput!){
+mutation updateZetteli($z: ZetteliInput!){
   updateZetteli(z: $z)
 }`;
 
-export interface UpdateZetteliVariables {
-  z: ZetteliType;
-}
-
-export interface UpdateZetteliResult {
-    data: {
-        updateZetteli: boolean,
-    };
-    context: {
-        isOptimistic: boolean,
-    };
-}
-
-export function makeUpdateZetteliAction(zli: ZetteliType, result: UpdateZetteliResult) {
+export function makeUpdateZetteliAction(zli: ZetteliType, success: boolean) {
     return (state: BaseState) => {
-        if (!result.data.updateZetteli) {
+        if (!success) {
             return state;
         }
         return {

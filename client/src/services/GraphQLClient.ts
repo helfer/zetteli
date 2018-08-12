@@ -18,22 +18,27 @@ import { ZetteliClient } from './ZetteliClient';
 import { ZetteliType, SerializedZetteli } from '../components/Zetteli';
 import {
     updateZetteliMutation,
-    UpdateZetteliResult,
     makeUpdateZetteliAction,
     createZetteliMutation,
     makeCreateZetteliAction,
-    CreateZetteliResult,
     deleteZetteliMutation,
-    DeleteZetteliResult,
     makeDeleteZetteliAction,
     getAllZettelisQuery,
-    GetAllZettelisResult,
-    getLogEventsQuery,
-    GetLogEventsResult,
     makeProcessLogEventAction,
+    getNewLogEventsSubscription,
 } from '../queries/queries';
 
+import { getNewLogEvents } from '../queries/__generated__/getNewLogEvents';
+import { createZetteli } from '../queries/__generated__/createZetteli';
+import { updateZetteli } from '../queries/__generated__/updateZetteli';
+import { deleteZetteli } from '../queries/__generated__/deleteZetteli';
+import { getAllZettelis } from '../queries/__generated__/getAllZettelis';
+
 import Store from './Store';
+
+import { WebSocketLink } from 'apollo-link-ws';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
+const WS_GRAPHQL_ENDPOINT = 'ws://localhost:3010/graphql';
 
 export interface BaseState {
     loading: boolean;
@@ -51,7 +56,6 @@ export interface BaseState {
 }
 
 const UPDATE_DEBOUNCE_MS = 400;
-const POLLING_INTERVAL = 5000;
 
 export default class GraphQLClient implements ZetteliClient {
     // TODO(helfer): Rename to stackId.
@@ -61,6 +65,7 @@ export default class GraphQLClient implements ZetteliClient {
     private subscribers: Function[];
 
     private link: ApolloLink;
+    private wsSubscriptionLink: ApolloLink;
 
     constructor({ sid, uri }: { sid: string, uri: string }) {
         this.sid = sid;
@@ -98,6 +103,11 @@ export default class GraphQLClient implements ZetteliClient {
             new HttpLink({ uri }),
         ]);
 
+        const wsclient = new SubscriptionClient(WS_GRAPHQL_ENDPOINT, {
+            reconnect: true
+          });
+        this.wsSubscriptionLink = new WebSocketLink(wsclient);
+
     }
 
     subscribe = (func: () => void) => {
@@ -113,10 +123,28 @@ export default class GraphQLClient implements ZetteliClient {
     }
 
     subscribeToEventLog(startVersionId: number): void {
-        // TODO: Clean up the naming in these functions.
-        this.pollEventLog(startVersionId)
-        .then((versionId: number) => {
-            setTimeout(() => this.subscribeToEventLog(versionId), POLLING_INTERVAL);
+
+        // TODO: rerun query on disconnect if query is no longer active.
+
+        // subscriptions !!!
+        const op = {
+            query: getNewLogEventsSubscription,
+            variables: {
+                stackId: this.sid,
+                sinceVersionId: startVersionId
+            },
+        };
+        
+        execute(this.wsSubscriptionLink, op).subscribe({
+            next: (result: { data: getNewLogEvents }) => {
+                const events = result.data.events;
+
+                events.forEach(event => {
+                    this.store.dispatch(makeProcessLogEventAction(event));
+                });
+            },
+            error: (e) => { throw new Error(e); },
+            complete: () => { throw new Error('Subscription complete. Wait? Why does this happen?'); },
         });
     }
 
@@ -147,12 +175,17 @@ export default class GraphQLClient implements ZetteliClient {
 
         let rollback: () => void;
         this.observableRequest(operation)
-            .map((res: CreateZetteliResult) => {
+            .map((res: { data: createZetteli, context: { isOptimistic: boolean } }) => {
                 if (rollback) { rollback(); }
-                rollback = this.store.dispatch(
-                    makeCreateZetteliAction(zli, res),
-                    res.context && res.context.isOptimistic,
-                );
+                if (res.data.createZetteli === null) {
+                    return;
+                } else {
+                    rollback = this.store.dispatch(
+                        makeCreateZetteliAction(zli, res.data.createZetteli),
+                        res.context && res.context.isOptimistic,
+                    );
+                }
+
             })
             .subscribe({
                 error(e: Error) {
@@ -189,10 +222,10 @@ export default class GraphQLClient implements ZetteliClient {
 
         let rollback: () => void;
         this.observableRequest(operation)
-          .map((res: DeleteZetteliResult) => {
+          .map((res: { data: deleteZetteli, context: { isOptimistic: boolean } }) => {
               if (rollback) { rollback(); }
               rollback = this.store.dispatch(
-                makeDeleteZetteliAction(id, res),
+                makeDeleteZetteliAction(id, res.data.deleteZetteli || false),
                 res.context && res.context.isOptimistic
               );
           }).subscribe({
@@ -225,10 +258,10 @@ export default class GraphQLClient implements ZetteliClient {
         };
 
         let rollback: () => void;
-        this.observableRequest(operation).map((res: UpdateZetteliResult) => {
+        this.observableRequest(operation).map((res: { data: updateZetteli, context: { isOptimistic: boolean } }) => {
             if (rollback) { rollback(); }
             rollback = this.store.dispatch(
-              makeUpdateZetteliAction(data, res),
+              makeUpdateZetteliAction(data, res.data.updateZetteli || false),
               res.context && res.context.isOptimistic
             );
         }).subscribe({
@@ -261,8 +294,9 @@ export default class GraphQLClient implements ZetteliClient {
         };
 
         makePromise(this.observableRequest(operation))
-            .then( (res: GetAllZettelisResult) => {
-                if (res.data.stack === null) {
+            .then( (res: { data: getAllZettelis }) => {
+                const stack = res.data.stack;
+                if (stack === null) {
                     return this.store.dispatch(state => ({
                         ...state,
                         ready: true,
@@ -271,21 +305,17 @@ export default class GraphQLClient implements ZetteliClient {
                         stack: {},
                         zettelis: [],
                     }));
+                } else {
+                    // TODO: Start the subscription in a better place
+                    this.subscribeToEventLog(stack.log.currentVersionId);
+                    return this.store.dispatch(state => ({
+                        ...state,
+                        ready: true,
+                        loading: false,
+                        stack,
+                        zettelis: stack.zettelis.map(this.parseZetteli),
+                    }));
                 }
-
-                // TODO: Start the subscription in a better place
-                this.subscribeToEventLog(res.data.stack.log.currentVersionId);
-
-                return this.store.dispatch(state => ({
-                    ...state,
-                    ready: true,
-                    loading: false,
-                    stack: {
-                        ...res.data.stack,
-                        zettelis: undefined
-                    },
-                    zettelis: res.data.stack.zettelis.map(this.parseZetteli),
-                }));
             });
         return new Promise((resolve, reject) => {
             const unsubscribe = this.store.subscribe(() => {
@@ -297,26 +327,6 @@ export default class GraphQLClient implements ZetteliClient {
                     resolve(this.store.getOptimisticState().zettelis);
                 }
             });
-        });
-    }
-
-    private pollEventLog(sinceVersionId: number): Promise<number> {
-        const operation = {
-            query: getLogEventsQuery,
-            variables: { sinceVersionId },
-        };
-        return makePromise(this.observableRequest(operation))
-        .then( (result: GetLogEventsResult) => {
-            const events = result.data.log.events;
-
-            events.forEach(event => {
-                this.store.dispatch(makeProcessLogEventAction(event));
-            });
-
-            if (events.length === 0) {
-                return sinceVersionId;
-            }
-            return events[events.length - 1].id;
         });
     }
 
