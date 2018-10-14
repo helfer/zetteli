@@ -67,6 +67,10 @@ export default class GraphQLClient implements ZetteliClient {
     private link: ApolloLink;
     private wsSubscriptionLink: ApolloLink;
 
+    private currentVersionId: number;
+
+    private eventLogSubscription: ZenObservable.Subscription | null = null;
+
     constructor({ sid, uri }: { sid: string, uri: string }) {
         this.sid = sid;
         this.store = new Store({
@@ -108,6 +112,16 @@ export default class GraphQLClient implements ZetteliClient {
           });
         this.wsSubscriptionLink = new WebSocketLink(wsclient);
 
+        wsclient.onDisconnected(() => {
+            if (this.eventLogSubscription && !this.eventLogSubscription.closed) {
+                this.eventLogSubscription.unsubscribe();
+                this.eventLogSubscription = null;
+            }
+        });
+        wsclient.onReconnected(() => {
+            this.subscribeToEventLog();
+        });
+
     }
 
     subscribe = (func: () => void) => {
@@ -122,7 +136,7 @@ export default class GraphQLClient implements ZetteliClient {
         this.subscribers.forEach(subscriber => subscriber());
     }
 
-    subscribeToEventLog(startVersionId: number): void {
+    subscribeToEventLog(): void {
 
         // TODO: rerun query on disconnect if query is no longer active.
 
@@ -131,16 +145,16 @@ export default class GraphQLClient implements ZetteliClient {
             query: getNewLogEventsSubscription,
             variables: {
                 stackId: this.sid,
-                sinceVersionId: startVersionId
+                sinceVersionId: this.currentVersionId,
             },
         };
-        
-        execute(this.wsSubscriptionLink, op).subscribe({
+
+        this.eventLogSubscription = execute(this.wsSubscriptionLink, op).subscribe({
             next: (result: { data: getNewLogEvents }) => {
                 const events = result.data.events;
-
                 events.forEach(event => {
                     this.store.dispatch(makeProcessLogEventAction(event));
+                    this.currentVersionId = event.id;
                 });
             },
             error: (e) => { throw new Error(e); },
@@ -307,7 +321,8 @@ export default class GraphQLClient implements ZetteliClient {
                     }));
                 } else {
                     // TODO: Start the subscription in a better place
-                    this.subscribeToEventLog(stack.log.currentVersionId);
+                    this.currentVersionId = stack.log.currentVersionId;
+                    this.subscribeToEventLog();
                     return this.store.dispatch(state => ({
                         ...state,
                         ready: true,

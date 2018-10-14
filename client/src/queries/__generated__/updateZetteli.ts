@@ -1,7 +1,7 @@
 /* tslint:disable */
 // This file was automatically generated and should not be edited.
 
-import { ZetteliInput } from "../../../../__generated__/globalTypes";
+import { ZetteliInput } from "../../../__generated__/globalTypes";
 
 // ====================================================
 // GraphQL mutation operation: updateZetteli

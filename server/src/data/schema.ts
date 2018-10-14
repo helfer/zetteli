@@ -57,6 +57,24 @@ type Stack {
     settings: StackSettings!
     zettelis: [Zetteli!]!
     log: Log!
+    zettelisConnection(last: Int!, before: String): ZetteliConnection! # I don't need first and after (yet)
+}
+
+type ZetteliConnection {
+    edges: [ZetteliEdge!]!
+    pageInfo: PageInfo!
+}
+
+type ZetteliEdge {
+    node: Zetteli!
+    cursor: String!
+}
+
+type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    # firstCursor: String # Just an idea for not having to return every bloody cursor
+    # lastCursor: String
 }
 
 input StackInput {
