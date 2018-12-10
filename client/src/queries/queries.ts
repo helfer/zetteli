@@ -62,7 +62,7 @@ export interface LogEvent {
 
 export function makeProcessLogEventAction(event: LogEvent) {
     // TODO: Make the payload JSON so you don't have to do this.
-    const payload: any = JSON.parse(event.payload);
+    const payload: Record<string, any> = JSON.parse(event.payload);
 
     // TODO: Unify these actions with the actions used to process queries and mutations
     return (state: BaseState) => {
@@ -101,7 +101,12 @@ export function makeProcessLogEventAction(event: LogEvent) {
 }
 
 export const createZetteliMutation = gql`
-mutation createZetteli($sid: String!, $id: String!, $tags : [String!]!, $datetime: DateTime!, $body: String!) {
+mutation createZetteli(
+    $sid: String!
+    $id: String!
+    $tags : [String!]!
+    $datetime: DateTime!
+    $body: String!) @serialize(key: [$id]) {
   createZetteli(
     sid: $sid,
     z: {
@@ -123,7 +128,7 @@ export function makeCreateZetteliAction(zli: ZetteliType, id: string) {
 }
 
 export const deleteZetteliMutation = gql`
-mutation deleteZetteli($id: String!) {
+mutation deleteZetteli($id: String!) @serialize(key: [$id]) {
   deleteZetteli(id: $id)
 }`;
 
@@ -140,7 +145,7 @@ export function makeDeleteZetteliAction(id: string, success: boolean) {
 }
 
 export const updateZetteliMutation = gql`
-mutation updateZetteli($z: ZetteliInput!){
+mutation updateZetteli($key: String, $z: ZetteliInput!) @serialize(key: [$key]) {
   updateZetteli(z: $z)
 }`;
 

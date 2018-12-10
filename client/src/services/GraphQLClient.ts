@@ -97,12 +97,7 @@ export default class GraphQLClient implements ZetteliClient {
             new OptimisticLink(),
             new DebounceLink(UPDATE_DEBOUNCE_MS),
             new SerializingLink(),
-            new RetryLink({
-                // TODO(helfer): What's up with the types here?
-                max: () => Number.POSITIVE_INFINITY,
-                delay: () => 50,
-                interval: (delay, count) => Math.min(delay * 2 ** count, 10000),
-            }),
+            new RetryLink(),
             offlineLink,
             new HttpLink({ uri }),
         ]);
@@ -175,7 +170,6 @@ export default class GraphQLClient implements ZetteliClient {
             query: createZetteliMutation,
             variables: { ...zli },
             context: {
-                serializationKey: zli.id,
                 optimisticResponse: {
                     data: {
                         createZetteli: zli.id,
@@ -222,7 +216,6 @@ export default class GraphQLClient implements ZetteliClient {
             query: deleteZetteliMutation,
             variables: { id },
             context: {
-                serializationKey: id,
                 optimisticResponse: {
                     data: {
                         deleteZetteli: true,
@@ -256,10 +249,9 @@ export default class GraphQLClient implements ZetteliClient {
     updateZetteli(id: string, data: ZetteliType): Promise<boolean> {
         const operation = {
             query: updateZetteliMutation,
-            variables: { z: data },
+            variables: { key: id, z: data },
             context: {
                 debounceKey: id,
-                serializationKey: id,
                 optimisticResponse: {
                     data : {
                         updateZetteli: true,

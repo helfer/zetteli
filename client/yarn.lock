@@ -83,7 +83,7 @@
     "@types/events" "*"
     "@types/node" "*"
 
-"@types/zen-observable@^0.8.0":
+"@types/zen-observable@0.8.0", "@types/zen-observable@^0.8.0":
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/@types/zen-observable/-/zen-observable-0.8.0.tgz#8b63ab7f1aa5321248aad5ac890a485656dcea4d"
 
@@ -223,46 +223,65 @@ apollo-fetch@^0.6.0:
   dependencies:
     isomorphic-fetch "^2.2.1"
 
-apollo-link-debounce@next:
+apollo-link-debounce@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/apollo-link-debounce/-/apollo-link-debounce-2.1.0.tgz#8bf34988d94ab28d73d23de0cf26777235a6bfd7"
+  dependencies:
+    apollo-link "^1.2.2"
+    zen-observable-ts "^0.8.9"
+
+apollo-link-http-common@^0.2.6:
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/apollo-link-http-common/-/apollo-link-http-common-0.2.6.tgz#47b9012500599fe343e2e87378026384b4fc8c1f"
+  dependencies:
+    apollo-link "^1.2.4"
+
+apollo-link-http@^1.5.7:
+  version "1.5.7"
+  resolved "https://registry.yarnpkg.com/apollo-link-http/-/apollo-link-http-1.5.7.tgz#098615c427a910ec8c5817476bbabe68c586b339"
+  dependencies:
+    apollo-link "^1.2.4"
+    apollo-link-http-common "^0.2.6"
+
+apollo-link-optimistic@^2.0.0:
   version "2.0.0"
-  resolved "https://registry.yarnpkg.com/apollo-link-debounce/-/apollo-link-debounce-2.0.0.tgz#051193b5396e056a2b87b09a2ffe404c1ab0e4f3"
+  resolved "https://registry.yarnpkg.com/apollo-link-optimistic/-/apollo-link-optimistic-2.0.0.tgz#172cdbc057ff894c6060597e4fb23348c013348b"
   dependencies:
     apollo-link "^0.7.0"
 
-apollo-link-http@^0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/apollo-link-http/-/apollo-link-http-0.7.0.tgz#cf75e9e2537d785deefff2cd1ae2ff0dc1c88300"
+apollo-link-optimistic@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/apollo-link-optimistic/-/apollo-link-optimistic-3.0.0.tgz#925e5bd8c1deaef212b3d2ed8d63d91ed3aec5c7"
   dependencies:
-    apollo-fetch "^0.6.0"
-    graphql "^0.11.0"
+    apollo-link "^1.2.4"
+    apollo-link-optimistic "^2.0.0"
 
-apollo-link-optimistic@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/apollo-link-optimistic/-/apollo-link-optimistic-0.1.0.tgz#ebf51350a3ab29cbb1244a302b55b79661d53f25"
+apollo-link-queue@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/apollo-link-queue/-/apollo-link-queue-2.2.0.tgz#d315ff722b5a82ac766c27cc14b39ac356c28c64"
   dependencies:
-    apollo-link "^0.7.0"
+    apollo-link "^1.2.3"
 
-apollo-link-queue@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/apollo-link-queue/-/apollo-link-queue-1.0.1.tgz#2f055a51c0a82307f71be2c9d89b419d8df164be"
+apollo-link-retry@^2.2.6:
+  version "2.2.6"
+  resolved "https://registry.yarnpkg.com/apollo-link-retry/-/apollo-link-retry-2.2.6.tgz#aa17e08b4a115ddcbdd70444ced254d3c915fc44"
   dependencies:
-    apollo-link "^0.7.0"
+    "@types/zen-observable" "0.8.0"
+    apollo-link "^1.2.4"
 
-apollo-link-retry@^0.8.0:
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/apollo-link-retry/-/apollo-link-retry-0.8.0.tgz#8fb2b7268cafaa92ee7583b32749ff2f40aca3d5"
-
-apollo-link-serialize@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/apollo-link-serialize/-/apollo-link-serialize-1.0.1.tgz#7676dd3373df1ff096a542f6a9d69f01ffe6ee72"
+apollo-link-serialize@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/apollo-link-serialize/-/apollo-link-serialize-3.1.0.tgz#a81b534f0befe915274c7c09c95c31433c2432fc"
   dependencies:
-    apollo-link "^0.7.0"
+    apollo-link "^1.2.4"
+    apollo-utilities "^1.0.26"
+    zen-observable-ts "^0.8.11"
 
-apollo-link-ws@^0.7.0:
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/apollo-link-ws/-/apollo-link-ws-0.6.0.tgz#41a551368d0cbd138a61e9e45e8355aaf32409de"
+apollo-link-ws@^1.0.10:
+  version "1.0.10"
+  resolved "https://registry.yarnpkg.com/apollo-link-ws/-/apollo-link-ws-1.0.10.tgz#9fb5489a36f5fcb0d139b6ada0eea979ecad3967"
   dependencies:
-    subscriptions-transport-ws "^0.9.0"
+    apollo-link "^1.2.4"
 
 apollo-link@^0.7.0:
   version "0.7.0"
@@ -272,9 +291,22 @@ apollo-link@^0.7.0:
     graphql "^0.11.3"
     zen-observable-ts "^0.5.0"
 
+apollo-link@^1.2.2, apollo-link@^1.2.3, apollo-link@^1.2.4:
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/apollo-link/-/apollo-link-1.2.4.tgz#ab4d21d2e428db848e88b5e8f4adc717b19c954b"
+  dependencies:
+    apollo-utilities "^1.0.0"
+    zen-observable-ts "^0.8.11"
+
 apollo-utilities@^0.2.0-beta.0:
   version "0.2.0-beta.2"
   resolved "https://registry.yarnpkg.com/apollo-utilities/-/apollo-utilities-0.2.0-beta.2.tgz#95b61e00fa0cb67f6af65921484bca33114d55e1"
+
+apollo-utilities@^1.0.0, apollo-utilities@^1.0.26:
+  version "1.0.26"
+  resolved "https://registry.yarnpkg.com/apollo-utilities/-/apollo-utilities-1.0.26.tgz#589c66bf4d16223531351cf667a230c787def1da"
+  dependencies:
+    fast-json-stable-stringify "^2.0.0"
 
 app-root-path@^2.0.1:
   version "2.0.1"
@@ -1900,6 +1932,10 @@ fast-deep-equal@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-1.0.0.tgz#96256a3bc975595eb36d82e9929d060d893439ff"
 
+fast-json-stable-stringify@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/fast-json-stable-stringify/-/fast-json-stable-stringify-2.0.0.tgz#d5142c0caee6b1189f87d3a76111064f86c8bbf2"
+
 fast-levenshtein@~2.0.4:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
@@ -2265,7 +2301,7 @@ graphql-tag@^2.4.2:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/graphql-tag/-/graphql-tag-2.4.2.tgz#6a63297d8522d03a2b72d26f1b239aab343840cd"
 
-graphql@^0.11.0, graphql@^0.11.3:
+graphql@^0.11.3:
   version "0.11.3"
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-0.11.3.tgz#9934e2df28f17d397a85f83cb39d1d179bffef47"
   dependencies:
@@ -5478,7 +5514,7 @@ style-loader@0.18.2:
     loader-utils "^1.0.2"
     schema-utils "^0.3.0"
 
-subscriptions-transport-ws@^0.9.0, subscriptions-transport-ws@^0.9.14:
+subscriptions-transport-ws@^0.9.14:
   version "0.9.14"
   resolved "https://registry.yarnpkg.com/subscriptions-transport-ws/-/subscriptions-transport-ws-0.9.14.tgz#a39e08edba89ee4cfd95f30484c55d865f5d8451"
   dependencies:
@@ -6309,3 +6345,13 @@ yargs@~3.10.0:
 zen-observable-ts@^0.5.0:
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/zen-observable-ts/-/zen-observable-ts-0.5.0.tgz#c5021e7ac486fc281f6126d574673cfb6daf0069"
+
+zen-observable-ts@^0.8.11, zen-observable-ts@^0.8.9:
+  version "0.8.11"
+  resolved "https://registry.yarnpkg.com/zen-observable-ts/-/zen-observable-ts-0.8.11.tgz#d54a27cd17dc4b4bb6bd008e5c096af7fcb068a9"
+  dependencies:
+    zen-observable "^0.8.0"
+
+zen-observable@^0.8.0:
+  version "0.8.11"
+  resolved "https://registry.yarnpkg.com/zen-observable/-/zen-observable-0.8.11.tgz#d3415885eeeb42ee5abb9821c95bb518fcd6d199"
