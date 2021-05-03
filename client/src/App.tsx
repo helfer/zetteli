@@ -12,11 +12,14 @@ import StackList from './components/StackList';
 import { ZetteliType } from './components/Zetteli';
 
 const stacks = [{
-  id: 'a',
-  name: 'a',
+  id: '1xzM7SfZw6NsWALQ',
+  name: 'personal',
 }, {
-  id: 'b',
-  name: 'stackB',
+  id: 't4sEloAMzAyKOk2P',
+  name: 'zetteli',
+}, {
+  id: 'CHePGxwEU1xVpkP8',
+  name: 'finance'
 }];
 
 class App extends React.Component<{}, { search: string }> {

@@ -60,5 +60,6 @@
     "testonly": "react-scripts-ts test --env=jsdom",
     "coverage": "codecov -f coverage/*.json",
     "eject": "react-scripts-ts eject"
-  }
+  },
+  "proxy": "http://localhost:3010"
 }

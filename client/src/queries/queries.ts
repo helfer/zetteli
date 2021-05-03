@@ -62,6 +62,7 @@ export interface LogEvent {
 
 export function makeProcessLogEventAction(event: LogEvent) {
     // TODO: Make the payload JSON so you don't have to do this.
+    // tslint:disable-next-line: no-any
     const payload: Record<string, any> = JSON.parse(event.payload);
 
     // TODO: Unify these actions with the actions used to process queries and mutations

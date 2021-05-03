@@ -38,7 +38,7 @@ import Store from './Store';
 
 import { WebSocketLink } from 'apollo-link-ws';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
-const WS_GRAPHQL_ENDPOINT = 'ws://localhost:3010/graphql';
+const WS_GRAPHQL_ENDPOINT = location.origin.replace(/^http/, 'ws') + '/graphql'; 
 
 export interface BaseState {
     loading: boolean;

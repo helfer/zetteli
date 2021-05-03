@@ -11,8 +11,7 @@ import { ZetteliType } from './Zetteli';
 import preventDefault from '../utils/preventDefault';
 import Stack from './Stack';
 
-// TODO(helfer): Pull this out into a config file
-const URI = 'http://localhost:3010/graphql';
+const URI = '/graphql';
 
 // const today = (z: ZetteliType) => {
 //   return moment().isSame(moment(z.datetime), 'd');
