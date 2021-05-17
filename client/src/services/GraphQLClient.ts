@@ -24,11 +24,11 @@ import {
     deleteZetteliMutation,
     makeDeleteZetteliAction,
     getAllZettelisQuery,
-    makeProcessLogEventAction,
-    getNewLogEventsSubscription,
+    // makeProcessLogEventAction,
+    // getNewLogEventsSubscription,
 } from '../queries/queries';
 
-import { getNewLogEvents } from '../queries/__generated__/getNewLogEvents';
+// import { getNewLogEvents } from '../queries/__generated__/getNewLogEvents';
 import { createZetteli } from '../queries/__generated__/createZetteli';
 import { updateZetteli } from '../queries/__generated__/updateZetteli';
 import { deleteZetteli } from '../queries/__generated__/deleteZetteli';
@@ -36,9 +36,9 @@ import { getAllZettelis } from '../queries/__generated__/getAllZettelis';
 
 import Store from './Store';
 
-import { WebSocketLink } from 'apollo-link-ws';
-import { SubscriptionClient } from 'subscriptions-transport-ws';
-const WS_GRAPHQL_ENDPOINT = location.origin.replace(/^http/, 'ws') + '/graphql'; 
+// import { WebSocketLink } from 'apollo-link-ws';
+// import { SubscriptionClient } from 'subscriptions-transport-ws';
+// const WS_GRAPHQL_ENDPOINT = location.origin.replace(/^http/, 'ws') + '/graphql'; 
 
 export interface BaseState {
     loading: boolean;
@@ -65,11 +65,11 @@ export default class GraphQLClient implements ZetteliClient {
     private subscribers: Function[];
 
     private link: ApolloLink;
-    private wsSubscriptionLink: ApolloLink;
+    // private wsSubscriptionLink: ApolloLink;
 
     private currentVersionId: number;
 
-    private eventLogSubscription: ZenObservable.Subscription | null = null;
+    // private eventLogSubscription: ZenObservable.Subscription | null = null;
 
     constructor({ sid, uri }: { sid: string, uri: string }) {
         this.sid = sid;
@@ -102,6 +102,7 @@ export default class GraphQLClient implements ZetteliClient {
             new HttpLink({ uri }),
         ]);
 
+        /*
         const wsclient = new SubscriptionClient(WS_GRAPHQL_ENDPOINT, {
             reconnect: true
           });
@@ -116,7 +117,7 @@ export default class GraphQLClient implements ZetteliClient {
         wsclient.onReconnected(() => {
             this.subscribeToEventLog();
         });
-
+        */
     }
 
     subscribe = (func: () => void) => {
@@ -132,7 +133,8 @@ export default class GraphQLClient implements ZetteliClient {
     }
 
     subscribeToEventLog(): void {
-
+        throw new Error('subscriptions are disabled');
+        /*
         // TODO: rerun query on disconnect if query is no longer active.
 
         // subscriptions !!!
@@ -155,6 +157,7 @@ export default class GraphQLClient implements ZetteliClient {
             error: (e) => { throw new Error(e); },
             complete: () => { throw new Error('Subscription complete. Wait? Why does this happen?'); },
         });
+        */
     }
 
     createNewZetteli(): Promise<string> {
@@ -314,7 +317,7 @@ export default class GraphQLClient implements ZetteliClient {
                 } else {
                     // TODO: Start the subscription in a better place
                     this.currentVersionId = stack.log.currentVersionId;
-                    this.subscribeToEventLog();
+                    // this.subscribeToEventLog();
                     return this.store.dispatch(state => ({
                         ...state,
                         ready: true,
