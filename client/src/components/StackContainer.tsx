@@ -133,7 +133,12 @@ ${z.body}
     }
 
     renderTodayStack = () => {
-        return this.renderStack(this.state.zettelis.filter(last2days));
+        const twoDaysZettelis: ZetteliType[] = this.state.zettelis.filter(last2days);
+        if (twoDaysZettelis.length > 1) {
+            return this.renderStack(twoDaysZettelis);
+        } else {
+            return this.renderStack(this.state.zettelis.slice(-2))
+        }
     }
 
     renderStack = (filteredZettelis: ZetteliType[]) => (
