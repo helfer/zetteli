@@ -19,7 +19,7 @@
     "graphql-iso-date": "^3.3.0",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^2.23.0",
-    "knex": "^0.13.0",
+    "knex": "^2.4.0",
     "sqlite3": "^5.0.2",
     "subscriptions-transport-ws": "^0.9.14",
     "typescript": "^2.5.2"
